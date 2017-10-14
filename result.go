@@ -160,23 +160,36 @@ type RoundTrip struct {
 func (rt *RoundTrip) MarshalJSON() ([]byte, error) {
 	type Alias RoundTrip
 
-	f := make(map[string]interface{})
+	delay := make(map[string]interface{})
+	if rt.RTT() != InvalidDuration {
+		delay["rtt"] = rt.RTT()
+	}
+	if rt.SendDelay() != InvalidDuration {
+		delay["send_delay"] = rt.SendDelay()
+	}
+	if rt.ReceiveDelay() != InvalidDuration {
+		delay["receive_delay"] = rt.ReceiveDelay()
+	}
+
+	ipdv := make(map[string]interface{})
 	if rt.IPDV != InvalidDuration {
-		f["round_trip"] = rt.IPDV
+		ipdv["round_trip"] = rt.IPDV
 	}
 	if rt.SendIPDV != InvalidDuration {
-		f["send"] = rt.SendIPDV
+		ipdv["send"] = rt.SendIPDV
 	}
 	if rt.ReceiveIPDV != InvalidDuration {
-		f["receive"] = rt.ReceiveIPDV
+		ipdv["receive"] = rt.ReceiveIPDV
 	}
 
 	j := &struct {
 		*Alias
-		Fields map[string]interface{} `json:"ipdv"`
+		Delay map[string]interface{} `json:"delay"`
+		IPDV  map[string]interface{} `json:"ipdv"`
 	}{
-		Alias:  (*Alias)(rt),
-		Fields: f,
+		Alias: (*Alias)(rt),
+		Delay: delay,
+		IPDV:  ipdv,
 	}
 	return json.Marshal(j)
 }
