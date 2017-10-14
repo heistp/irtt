@@ -44,6 +44,8 @@ for a in $*; do
 	esac
 done
 
+go generate
+
 for p in $pkgs; do
 	eval $env go $action -tags \'$tags\' $race -ldflags=\"$ldflags\" $linkshared $p
 done
