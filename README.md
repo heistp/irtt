@@ -1,4 +1,4 @@
-# IRTT (Isochrounous Round-Trip Time)
+# IRTT (Isochronous Round-Trip Time)
 
 IRTT tests round-trip time, one-way delay and IPDV (jitter) using UDP packets
 sent on a fixed period, and optionally writes results to JSON. It was initially
