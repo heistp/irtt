@@ -1,0 +1,26 @@
+# Log files
+*.log
+
+# Old files
+old
+
+# Profiles
+client.pprof
+server.pprof
+
+# Executables
+/irtt
+/irtt.exe
+
+# VIM
+*.swp
+.tags
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
