@@ -1,0 +1,116 @@
+package irtt
+
+import (
+	"encoding/binary"
+	"time"
+)
+
+type paramType int
+
+const paramsMaxLen = 64
+
+const (
+	pDuration = iota + 1
+	pInterval
+	pLength
+	pStampAt
+	pClock
+	pDSCP
+)
+
+// Params are the test parameters sent to and received from the server.
+type Params struct {
+	Duration time.Duration `json:"duration"`
+	Interval time.Duration `json:"interval"`
+	Length   int           `json:"length"`
+	StampAt  StampAt       `json:"stamp_at"`
+	Clock    Clock         `json:"clock"`
+	DSCP     int           `json:"dscp"`
+}
+
+func parseParams(b []byte) (*Params, error) {
+	p := &Params{}
+	for pos := 0; pos < len(b); {
+		n, err := p.readParam(b[pos:])
+		if err != nil {
+			return nil, err
+		}
+		pos += n
+	}
+	return p, nil
+}
+
+func (p *Params) bytes() []byte {
+	b := make([]byte, paramsMaxLen)
+	pos := 0
+	pos += binary.PutUvarint(b[pos:], pDuration)
+	pos += binary.PutVarint(b[pos:], int64(p.Duration))
+	pos += binary.PutUvarint(b[pos:], pInterval)
+	pos += binary.PutVarint(b[pos:], int64(p.Interval))
+	pos += binary.PutUvarint(b[pos:], pLength)
+	pos += binary.PutVarint(b[pos:], int64(p.Length))
+	pos += binary.PutUvarint(b[pos:], pStampAt)
+	pos += binary.PutVarint(b[pos:], int64(p.StampAt))
+	pos += binary.PutUvarint(b[pos:], pClock)
+	pos += binary.PutVarint(b[pos:], int64(p.Clock))
+	pos += binary.PutUvarint(b[pos:], pDSCP)
+	pos += binary.PutVarint(b[pos:], int64(p.DSCP))
+	return b[:pos]
+}
+
+func (p *Params) readParam(b []byte) (int, error) {
+	pos := 0
+	t, n, err := readUvarint(b[pos:])
+	if err != nil {
+		return 0, err
+	}
+	pos += n
+	v, n, err := readVarint(b[pos:])
+	if err != nil {
+		return 0, err
+	}
+	pos += n
+	switch t {
+	case pDuration:
+		p.Duration = time.Duration(v)
+	case pInterval:
+		p.Interval = time.Duration(v)
+	case pLength:
+		p.Length = int(v)
+	case pStampAt:
+		p.StampAt = StampAt(v)
+	case pClock:
+		p.Clock = Clock(v)
+	case pDSCP:
+		p.DSCP = int(v)
+	default:
+		return 0, Errorf(UnknownParam, "unknown negotiation param (0x%x = %d)", t, v)
+	}
+	return pos, nil
+}
+
+func readUvarint(b []byte) (v uint64, n int, err error) {
+	v, n = binary.Uvarint(b)
+	if n == 0 {
+		err = Errorf(ShortParamBuffer,
+			"param buffer too short for uvarint (%d)", len(b))
+	}
+	if n < 0 {
+		err = Errorf(ParamOverflow,
+			"param value overflow for uvarint (read %d)", n)
+	}
+	return
+}
+
+func readVarint(b []byte) (v int64, n int, err error) {
+	v, n = binary.Varint(b)
+	if n == 0 {
+		err = Errorf(ShortParamBuffer,
+			"param buffer too short for varint (%d)", len(b))
+	}
+	if n < 0 {
+		err = Errorf(ParamOverflow,
+			"param value overflow for varint (read %d)", n)
+	}
+	return v, n, nil
+}
