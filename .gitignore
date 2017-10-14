@@ -12,6 +12,10 @@ server.pprof
 /irtt
 /irtt.exe
 
+# JSON output files
+*.json
+*.json.gz
+
 # VIM
 *.swp
 .tags
