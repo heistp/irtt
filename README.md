@@ -65,12 +65,11 @@ measurements for the excellent [Flent](https://flent.org) tool, which was
 developed by and for the Bufferbloat project. However, IRTT could be useful as a
 general purpose tool as well. The goals of this project are to:
 
-- Accurately measure relevant network metrics, including latency, jitter,
-	packet loss and other undesirable behavior
+- Accurately measure latency and other relevant metrics of network behavior
 - Produce statistics via both human and machine parseable output
 - Provide for reasonably secure use on both public and private servers
 - Support small packet sizes for [VoIP traffic](https://www.cisco.com/c/en/us/support/docs/voice/voice-quality/7934-bwidth-consume.html) simulation
-- Support DSCP
+- Support relevant socket options, including DSCP
 - Use a single UDP port for deployment simplicity
 - Provide an API for embedding and extensibility
 
