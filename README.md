@@ -1,4 +1,4 @@
-# IRTT (Isochronous Round-Trip Time)
+# IRTT (Isochronous Round-Trip Tester)
 
 IRTT measures round-trip time and other metrics using UDP packets sent on a
 fixed period, and produces both human and machine parseable output.
