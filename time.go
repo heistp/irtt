@@ -241,3 +241,29 @@ func midpoint(t1 time.Time, t2 time.Time) time.Time {
 	// we'll live without nanosecond rounding here
 	return t1.Add(t2.Sub(t1) / 2)
 }
+
+// rdur rounds a Duration for improved readability.
+func rdur(dur time.Duration) time.Duration {
+	d := dur
+	if d < 0 {
+		d = -d
+	}
+	if d < 1000 {
+		return dur
+	} else if d < 10000 {
+		return dur.Round(10 * time.Nanosecond)
+	} else if d < 100000 {
+		return dur.Round(100 * time.Nanosecond)
+	} else if d < 1000000 {
+		return dur.Round(1 * time.Microsecond)
+	} else if d < 100000000 {
+		return dur.Round(10 * time.Microsecond)
+	} else if d < 1000000000 {
+		return dur.Round(100 * time.Microsecond)
+	} else if d < 10000000000 {
+		return dur.Round(10 * time.Millisecond)
+	} else if d < 60000000000 {
+		return dur.Round(100 * time.Millisecond)
+	}
+	return dur.Round(time.Second)
+}

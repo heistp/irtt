@@ -206,7 +206,7 @@ duration 1 second and interval 200ms:
 % irtt client localhost
 [Connecting] connecting to localhost
 [Connected] connected to 127.0.0.1:2112
-[WaitForPackets] waiting 1.126992ms for final packets
+[WaitForPackets] waiting 1.13ms for final packets
 
                         Min    Mean  Median     Max  Stddev
                         ---    ----  ------     ---  ------
