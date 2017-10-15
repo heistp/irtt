@@ -389,7 +389,7 @@ func (c *Client) wait(ctx context.Context) (err error) {
 	dwait := c.Waiter.Wait(c.rec)
 	if dwait > 0 {
 		c.rec.Wait = dwait
-		c.eventf(WaitForPackets, "waiting %s for final packets", dwait)
+		c.eventf(WaitForPackets, "waiting %s for final packets", rdur(dwait))
 		select {
 		case <-time.After(dwait):
 		case <-ctx.Done():

@@ -13,7 +13,6 @@ import (
 	"strings"
 	"syscall"
 	"text/tabwriter"
-	"time"
 )
 
 func clientUsage() {
@@ -403,29 +402,4 @@ func (c *clientHandler) OnReceived(seqno Seqno, rt Timestamps, length int,
 
 func (c *clientHandler) OnEvent(ev *Event) {
 	printf("%s", ev)
-}
-
-func rdur(dur time.Duration) time.Duration {
-	d := dur
-	if d < 0 {
-		d = -d
-	}
-	if d < 1000 {
-		return dur
-	} else if d < 10000 {
-		return dur.Round(10 * time.Nanosecond)
-	} else if d < 100000 {
-		return dur.Round(100 * time.Nanosecond)
-	} else if d < 1000000 {
-		return dur.Round(1 * time.Microsecond)
-	} else if d < 100000000 {
-		return dur.Round(10 * time.Microsecond)
-	} else if d < 1000000000 {
-		return dur.Round(100 * time.Microsecond)
-	} else if d < 10000000000 {
-		return dur.Round(10 * time.Millisecond)
-	} else if d < 60000000000 {
-		return dur.Round(100 * time.Millisecond)
-	}
-	return dur.Round(time.Second)
 }
