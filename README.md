@@ -10,12 +10,12 @@ IRTT is still under active development, and as such has not yet met all of its
 
 - non-isochronous send schedules are still under consideration, which would be a
 	significant design change
+- it is not yet capable of distinguishing between upstream and downstream packet
+	loss
 - there's more work to do for public server security
 - the JSON output format, packet format and API are all not finalized
 - it is only available in source form
 - it has only had basic testing on a couple of platforms
-- it is not yet capable of distinguishing between upstream and downstream packet
-	loss
 
 That said, it is working and can be used today. I would appreciate any feedback,
 which you can send under Issues. However, it could be useful to first review the
