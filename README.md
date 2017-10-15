@@ -251,19 +251,22 @@ duration 1 second and interval 200ms:
 
 1) Why not just use ping?
 
-	 Ping may be the preferred tool when measuring minimum latency.  Because IRTT
-	 runs in userspace, latencies are likely to be marginally higher and more
-	 variable than the results reported by ping, due to task scheduling
-	 variability and more to do in the stack. That said, there are advantages
-	 that IRTT has over ping when minimum RTT is not what you're measuring:
+	 Ping may be the preferred tool when measuring minimum latency, or for other
+	 reasons. Because IRTT runs in userspace, latencies are likely to be
+	 marginally higher and more variable than the results reported by ping, due to
+	 task scheduling variability and more to do in the stack. That said, there are
+	 advantages that IRTT has over ping when minimum RTT is not what you're
+	 measuring:
 
 	 - Some device vendors prioritize ICMP, so ping may not be an accurate measure
 		 of user-perceived latency.
-	 - Ping does not measure OWD, IPDV or upstream vs downstream packet loss.
-	 - IRTT offers protection from port scanning for private servers with HMACs.
-	 - IRTT can fill with custom payloads.
+	 - In addition to RTT, IRTT also measures OWD, IPDV and upstream vs downstream
+		 packet loss.
+	 - IRTT can use HMACs to protect private servers from unauthorized discovery
+		 and use.
 	 - IRTT has a three-way handshake to prevent test traffic redirection from
 		 spoofed source IPs.
+	 - IRTT can fill the payload with random data.
 
 1) Why is the receive rate 0 when a single packet is sent?
 
@@ -287,7 +290,7 @@ have been received, there is no waiting period for final packets.
 4) I see you use MD5 for the HMAC. Isn't that insecure?
 
    MD5 should not have practical vulnerabilities when used as a message authenticate
-code. See [this page](https://en.wikipedia.org/wiki/Hash-based_message_authentication_code#Security) for more info. Regardless, high performance is considered more important in this case given what we're trying to protect.
+code. See [this page](https://en.wikipedia.org/wiki/Hash-based_message_authentication_code#Security) for more info.
 
 5) Will you add unit tests?
 
@@ -299,7 +302,7 @@ view of them. If there is a bug, it means one of two things:
 
    So when there is a bug, I like to not only fix it, but if I have time, fix the
 reason it exists in the first place. That said, there are places where IRTT
-could use some unit tests.
+could use some unit tests, I just don't believe that 100% coverage is necessary.
 
 6) Are there any plans for translation to other languages?
 
