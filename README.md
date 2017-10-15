@@ -177,7 +177,12 @@ Currently, IRTT is only available in source form. To build it, you must:
 If you're not familiar with the `go` tool, the build.sh script may be used as an
 example of how to cross-compile to different platforms or minimize the binary
 size. For example, `build.sh min linux-amd64` would compile a minimized binary
-for Linux on AMD64. See build.sh for more info.
+for Linux on AMD64. See build.sh for more info and a "source-documented" list of
+platforms that the script supports.
+
+For more on cross-compilation, see [this
+page](http://golang.org/doc/install/source#environment) for a full list of valid GOOS
+GOARCH combinations.
 
 ### Quick Start
 
