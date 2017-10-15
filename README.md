@@ -11,7 +11,7 @@ IRTT is still under active development, and as such has not yet met all of its
 - non-isochronous send schedules are still under consideration, which would be a
 	significant design change
 - there's more work to do for public server security
-- the JSON output format and API are both not finalized
+- the JSON output format, packet format and API are all not finalized
 - it is only available in source form
 - it has only had basic testing on a couple of platforms
 - it is not yet capable of distinguishing between upstream and downstream packet
@@ -239,6 +239,8 @@ duration 1 second and interval 200ms:
 
 ### JSON Format
 
+*TBD ASAP*
+
 ## Internals
 
 ### Packet Format
@@ -247,8 +249,49 @@ duration 1 second and interval 200ms:
 
 ## Frequently Asked Questions
 
-*TBD*
+*TBD ASAP*
 
 ## TODO and Roadmap
 
-*TBD*
+Definitely...
+
+- Implement server received packets feedback (to distinguish between upstream
+	and downstream packet loss)
+- Allow specifying two out of three of interval, bitrate and packet size to the
+	client
+- Refactor packet manipulation to improve maintainability and prevent multiple
+	validations
+- Add a subcommand to the CLI to convert JSON to CSV
+- Improve robustness and security of public servers:
+	- Add bitrate limiting
+	- Improve server close by repeating close packets up to some limit
+	- Limit open requests to prevent the equivalent of a "syn flood"
+	- Add per-IP limiting
+- Add different server authentication modes:
+	- none (no conn token in header, for local use)
+	- token (what we have today, 64-bit token in header)
+	- nacl-hmac (hmac key negotiated with public/private key encryption)
+- Show IPDV in continuous output
+- Add a way to keep out "internal" info from JSON, like IP, hostname, and a
+	subcommand to strip these details after the JSON is created
+- Add more relevant statistics, including more info on outliers and a textual
+	histogram(?)
+- Add ability for client to request random fill from server
+- Allow Client Dial to try multiple IPs when a hostname is given
+
+Possibly...
+
+- Allow non-isochronous send schedules
+- Write an irtt.Timer implementation that uses Linux timerfd
+- Use pflag options: https://github.com/spf13/pflag
+- Implement graceful server shutdown
+- Implement zero downtime restart
+- Add unit tests
+- Add supported for load balanced connections (packets for same connection that
+	come from multiple addresses)
+- Use unsafe package to increase packet buffer modification and comparison performance
+- Add compression for second timestamp monotonic value as diff from first
+- Add encryption
+- Add estimate for HMAC calculation time and correct send timestamp by this time
+- Implement web interface for client and server
+- Add NAT hole punching
