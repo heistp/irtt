@@ -51,10 +51,10 @@ submitting a new bug or feature request.
 
 Latency is an under-appreciated metric in network and application performance.
 There is a certain hard to quantify but visceral *"latency stress"* that comes
-from waiting in expectation after a web page click, or straining through a
-delayed and garbled VoIP conversation. I think that relieving this stress for
-others may be what subconciously drives those who work on latency related
-projects.
+from waiting in expectation after a web page click, straining through a delayed
+and garbled VoIP conversation, or losing at your favorite online game (unless
+you'd like "lag" as an excuse). I think that relieving this stress for others
+may be what drives those who work on latency related projects.
 
 The [Bufferbloat](https://www.bufferbloat.net/projects/) and related projects
 aim to reduce "chaotic and laggy network performance", which is what in my
@@ -153,7 +153,9 @@ intervals. However, the advantages are:
 
 As a consequence of storing results in memory, packet sequence numbers are fixed
 at 32-bits. If all 2^32 sequence numbers were used, the results would require
-almost 275 Gb of RAM, which is not likely to be a limit reached any time soon.
+almost 275 Gb of RAM to record while the test is running, which is not likely
+to be a number reached any time soon. That is why 64-bit sequence numbers are
+unnecessary at this time.
 
 #### Use of Go
 
