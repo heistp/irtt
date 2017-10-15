@@ -146,9 +146,13 @@ result takes up to 64 bytes in memory (8 64-bit timestamps, explained later), so
 this limits the effective duration of the test, especially at very small send
 intervals. However, the advantages are:
 
-- Statistical analysis (like calculation of the median) is more easily performed on fixed arrays in memory than on running data values
-- Not accessing the disk during the test prevents inadvertently affecting the
-	results
+- It's easier to perform statistical analysis (like calculation of the median)
+	on fixed arrays than on running data values
+- We don't need to either send client timestamps to the server, or maintain a
+	local running window of sent packet info, because they're all in memory, no
+	matter when server replies come back
+- Not accessing the disk during the test to write test output prevents
+	inadvertently affecting the results
 - It simplifies the API
 
 As a consequence of storing results in memory, packet sequence numbers are fixed
