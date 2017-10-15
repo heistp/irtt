@@ -254,28 +254,28 @@ duration 1 second and interval 200ms:
 1) Why not just use ping?
 
 	 Ping may be the preferred tool when measuring minimum latency, or for other
-	 reasons. Because IRTT runs in userspace, latencies are likely to be
-	 marginally higher and more variable than the results reported by ping, due to
-	 task scheduling variability and more to do in the stack. That said, there are
+	 reasons. IRTT's reported latency is likely to be somewhat higher and more
+	 variable than the results reported by ping, due to task scheduling
+	 variability and more to do in the stack and program. That said, there are
 	 advantages that IRTT has over ping when minimum RTT is not what you're
 	 measuring:
 
 	 - Some device vendors prioritize ICMP, so ping may not be an accurate measure
 		 of user-perceived latency.
-	 - In addition to RTT, IRTT also measures OWD, IPDV and upstream vs downstream
-		 packet loss.
+	 - In addition to round-trip time, IRTT also measures OWD, IPDV and upstream
+	   vs downstream packet loss.
 	 - IRTT can use HMACs to protect private servers from unauthorized discovery
 		 and use.
 	 - IRTT has a three-way handshake to prevent test traffic redirection from
 		 spoofed source IPs.
 	 - IRTT can fill the payload with random data.
 
-1) Why is the receive rate 0 when a single packet is sent?
+2) Why is the receive rate 0 when a single packet is sent?
 
    Receive rate is measured from the time the first packet is received to the time
 the last packet is received. For a single packet, those times are the same.
 
-2) Why does the default test with a one second duration run for around 800ms?
+3) Why does the default test with a one second duration run for around 800ms?
 
    The test duration is exclusive, meaning requests will not be sent exactly at
 or after the test duration has elapsed. In this case, the interval is 200ms, and
@@ -283,30 +283,41 @@ the fifth and final request is sent at around 800ms from the start of the test.
 The test ends when the final reply is received from the server. If all packets
 have been received, there is no waiting period for final packets.
 
-3) Why does wait fall back to fixed duration when duration is less than RTT?
+4) Why does wait fall back to fixed duration when duration is less than RTT?
 
    If a full RTT has not elapsed, there is no way to know how long an
 	 appropriate wait time would be, so the wait falls back to a default fixed
 	 time (default is 4 seconds).
 
-4) I see you use MD5 for the HMAC. Isn't that insecure?
+5) Why don't you include median values for send call time, timer error and
+server processing time?
 
-   MD5 should not have practical vulnerabilities when used as a message authenticate
+   Those values aren't stored for each round trip, and it's difficult to do a
+	 running calculation of the median, although
+	 [this method](https://rhettinger.wordpress.com/2010/02/06/lost-knowledge/) of
+	 using skip lists appears to have promise. I may consider it for the future,
+	 but so far it isn't a high priority.
+
+6) I see you use MD5 for the HMAC. Isn't that insecure?
+
+   MD5 should not have practical vulnerabilities when used in a message authenticate
 code. See [this page](https://en.wikipedia.org/wiki/Hash-based_message_authentication_code#Security) for more info.
 
-5) Will you add unit tests?
+7) Will you add unit tests?
 
    Maybe some. Although I appreciate unit tests, I probably have a dissenting
 view of them. If there is a bug, it means one of two things:
 
 	1. There is a typo or very simple logical error
-	2. There is a design problem that makes it hard to determine what the code will do (there should be no such problems)
+	2. There is a design problem that makes it hard to determine what the code will do, making whack-a-mole like logical errors inevitable (there should be no such problems)
 
-   So when there is a bug, I like to not only fix it, but if I have time, fix the
-reason it exists in the first place. That said, there are places where IRTT
-could use some unit tests, I just don't believe that 100% coverage is necessary.
+	 So when there is a bug, I like to not only fix it, but if I have time, fix
+	 the reason it exists in the first place, so that we don't see bugs in that
+	 second category. That said, there are places where IRTT falls short of this
+	 (packet manipulation) and places where it could use some unit tests. I just
+	 don't believe that 100% coverage is necessary.
 
-6) Are there any plans for translation to other languages?
+8) Are there any plans for translation to other languages?
 
    While some parts of the API were designed to keep i18n possible, there is no
 support for it built in to the Go standard libraries. It should be possible, but
@@ -358,6 +369,7 @@ Possibly...
 - Add estimate for HMAC calculation time and correct send timestamp by this time
 - Implement web interface for client and server
 - Add NAT hole punching
+- Implement median for timer error, send call time and server processing time
 
 Open questions...
 
