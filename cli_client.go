@@ -322,6 +322,7 @@ func printResult(r *Result) {
 	}
 	printf("     bytes sent/received: %d/%d", r.BytesSent, r.BytesReceived)
 	printf("       send/receive rate: %s / %s", r.SendRate, r.ReceiveRate)
+	printf("           packet length: %d bytes", r.Config.Length)
 	printf("             timer stats: %d/%d (%.2f%%) missed, %.2f%% error",
 		r.TimerMisses, r.ExpectedPacketsSent, r.TimerMissPercent,
 		r.TimerErrPercent)
