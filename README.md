@@ -43,6 +43,7 @@ submitting a new bug or feature request.
 	2. [Security](#security)
 6. [Frequently Asked Questions](#frequently-asked-questions)
 7. [TODO and Roadmap](#todo-and-roadmap)
+8. [Thanks](#thanks)
 
 ## Introduction
 
@@ -338,6 +339,8 @@ Definitely (in order of importance)...
 	histogram(?)
 - Add ability for client to request random fill from server
 - Allow Client Dial to try multiple IPs when a hostname is given
+- Refactor events. I was trying to make something internationalizable and
+	filterable as opposed to just writing to a log, but I'm not satisfied yet.
 
 Possibly...
 
@@ -355,3 +358,16 @@ Possibly...
 - Add estimate for HMAC calculation time and correct send timestamp by this time
 - Implement web interface for client and server
 - Add NAT hole punching
+
+Open questions...
+
+- Should I request a reserved IANA port?
+- Does exposing both monotonic and wall clock values open the server to any
+	timing attacks?
+- What do I do for IPDV and out of order packets?
+
+## Thanks
+
+Many thanks to both Toke Høiland-Jørgensen and Dave Täht for their valuable
+advice on this project. Any problems in design or implementation are entirely
+my own.
