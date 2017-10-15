@@ -41,7 +41,7 @@ submitting a new bug or feature request.
 5. [Internals](#internals)
 	1. [Packet Format](#packet-format)
 	2. [Security](#security)
-6. [Frequently Asked Question](#frequently-asked-questions)
+6. [Frequently Asked Questions](#frequently-asked-questions)
 7. [TODO and Roadmap](#todo-and-roadmap)
 
 ## Introduction
@@ -249,11 +249,67 @@ duration 1 second and interval 200ms:
 
 ## Frequently Asked Questions
 
-*TBD ASAP*
+1) Why not just use ping?
+
+	 Ping may be the preferred tool when measuring minimum latency.  Because IRTT
+	 runs in userspace, latencies are likely to be marginally higher and more
+	 variable than the results reported by ping, due to task scheduling
+	 variability and more to do in the stack. That said, there are advantages
+	 that IRTT has over ping when minimum RTT is not what you're measuring:
+
+	 - Some device vendors prioritize ICMP, so ping may not be an accurate measure
+		 of user-perceived latency.
+	 - Ping does not measure OWD, IPDV or upstream vs downstream packet loss.
+	 - IRTT offers protection from port scanning for private servers with HMACs.
+	 - IRTT can fill with custom payloads.
+	 - IRTT has a three-way handshake to prevent test traffic redirection from
+		 spoofed source IPs.
+
+1) Why is the receive rate 0 when a single packet is sent?
+
+   Receive rate is measured from the time the first packet is received to the time
+the last packet is received. For a single packet, those times are the same.
+
+2) Why does the default test with a one second duration run for around 800ms?
+
+   The test duration is exclusive, meaning requests will not be sent exactly at
+or after the test duration has elapsed. In this case, the interval is 200ms, and
+the fifth and final request is sent at around 800ms from the start of the test.
+The test ends when the final reply is received from the server. If all packets
+have been received, there is no waiting period for final packets.
+
+3) Why does wait fall back to fixed duration when duration is less than RTT?
+
+   If a full RTT has not elapsed, there is no way to know how long an
+	 appropriate wait time would be, so the wait falls back to a default fixed
+	 time (default is 4 seconds).
+
+4) I see you use MD5 for the HMAC. Isn't that insecure?
+
+   MD5 should not have practical vulnerabilities when used as a message authenticate
+code. See [this page](https://en.wikipedia.org/wiki/Hash-based_message_authentication_code#Security) for more info. Regardless, high performance is considered more important in this case given what we're trying to protect.
+
+5) Will you add unit tests?
+
+   Maybe some. Although I appreciate unit tests, I probably have a dissenting
+view of them. If there is a bug, it means one of two things:
+
+	1. There is a typo or very simple logical error
+	2. There is a design problem that makes it hard to determine what the code will do (there should be no such problems)
+
+   So when there is a bug, I like to not only fix it, but if I have time, fix the
+reason it exists in the first place. That said, there are places where IRTT
+could use some unit tests.
+
+6) Are there any plans for translation to other languages?
+
+   While some parts of the API were designed to keep i18n possible, there is no
+support for it built in to the Go standard libraries. It should be possible, but
+could be a challenge, and is not something I'm likely to undertake.
 
 ## TODO and Roadmap
 
-Definitely...
+Definitely (in order of importance)...
 
 - Implement server received packets feedback (to distinguish between upstream
 	and downstream packet loss)
