@@ -160,13 +160,14 @@ unnecessary at this time.
 #### Use of Go
 
 IRTT is written in Go. While that carries with it the disadvantage of a larger
-executable size than with C, for example, Go still has benefits that are
-useful for this application:
+executable size than with C, for example, and somewhat slower execution speed
+(although [not that much slower](https://benchmarksgame.alioth.debian.org/u64q/compare.php?lang=go&lang2=gcc), depending on the workload), Go still has benefits that are useful for this application:
 
-- It offers high execution speed and a low memory footprint by compiling to native executables
+- Go's target is network and server applications, with a focus on simplicity,
+	reliability and efficiency, which is appropriate for this project
+- Memory footprint tends to be significantly lower than with some interpreted
+	languages
 - It's easy to support a broad array of hardware and OS combinations
-- Its target is network and server applications with a focus on simplicity,
-	reliability and efficiency
 
 ## Getting Started
 
