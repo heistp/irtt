@@ -328,15 +328,15 @@ could be a challenge, and is not something I'm likely to undertake.
 
 ## TODO and Roadmap
 
-Definitely (in order of importance)...
+Definitely (in order of priority)...
 
+- Document JSON format
 - Implement server received packets feedback (to distinguish between upstream
 	and downstream packet loss)
 - Allow specifying two out of three of interval, bitrate and packet size to the
 	client
 - Refactor packet manipulation to improve maintainability and prevent multiple
 	validations
-- Add a subcommand to the CLI to convert JSON to CSV
 - Improve robustness and security of public servers:
 	- Add bitrate limiting
 	- Improve server close by repeating close packets up to some limit
@@ -346,7 +346,8 @@ Definitely (in order of importance)...
 	- none (no conn token in header, for local use)
 	- token (what we have today, 64-bit token in header)
 	- nacl-hmac (hmac key negotiated with public/private key encryption)
-- Show IPDV in continuous output
+- Add a subcommand to the CLI to convert JSON to CSV
+- Show IPDV in continuous (-v) output
 - Add a way to keep out "internal" info from JSON, like IP, hostname, and a
 	subcommand to strip these details after the JSON is created
 - Add more relevant statistics, including more info on outliers and a textual
