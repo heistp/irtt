@@ -222,6 +222,7 @@ duration 1 second and interval 200ms:
    packets sent/received: 5/5 (0.00% loss)
      bytes sent/received: 240/240
        send/receive rate: 2.4 Kbps / 2.4 Kbps
+           packet length: 48 bytes
              timer stats: 0/5 (0.00%) missed, 0.69% error
 ```
 
