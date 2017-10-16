@@ -44,8 +44,8 @@ func clientUsage() {
 	printf("               if extension is .json.gz, output is gzipped")
 	printf("               if extension is .json, output is not gzipped")
 	printf("               output to stdout is not gzipped, pipe to gzip if needed")
-	printf("-q             quiet, suppress all output")
-	printf("-v             verbose, show received packets")
+	printf("-q             quiet, suppress per-packet output")
+	printf("-qq            really quiet, suppress all output")
 	printf("-dscp dscp     dscp value (default %s, 0x prefix for hex), common values:", strconv.Itoa(DefaultDSCP))
 	printf("               0 (Best effort)")
 	printf("               8 (Bulk)")
@@ -124,7 +124,7 @@ func runClientCLI(args []string) {
 	var clockStr = fs.String("clock", DefaultClock.String(), "clock")
 	var outputStr = fs.String("o", "", "output file")
 	var quiet = fs.Bool("q", defaultQuiet, "quiet")
-	var verbose = fs.Bool("v", defaultVerbose, "verbose")
+	var reallyQuiet = fs.Bool("qq", defaultReallyQuiet, "really quiet")
 	var dscpStr = fs.String("dscp", strconv.Itoa(DefaultDSCP), "dscp value")
 	var dfStr = fs.String("df", DefaultDF.String(), "do not fragment")
 	var waitStr = fs.String("wait", DefaultWait.String(), "wait")
@@ -208,11 +208,15 @@ func runClientCLI(args []string) {
 		syscall.SIGHUP, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
 	go func() {
 		sig := <-sigs
-		printf("%s", sig)
+		if !*reallyQuiet {
+			printf("%s", sig)
+		}
 		cancel()
 
 		sig = <-sigs
-		printf("second interrupt, exiting")
+		if !*reallyQuiet {
+			printf("second interrupt, exiting")
+		}
 		os.Exit(exitCodeDoubleSignal)
 	}()
 
@@ -234,8 +238,8 @@ func runClientCLI(args []string) {
 	cfg.FillAll = *fillAll
 	cfg.Waiter = waiter
 	cfg.HMACKey = hmacKey
-	cfg.Handler = &clientHandler{*quiet, *verbose}
-	cfg.EventMask = AllEvents
+	cfg.Handler = &clientHandler{*quiet, *reallyQuiet}
+	cfg.EventMask = AllEvents ^ WaitForPackets
 	cfg.LockOSThread = *lockOSThread
 
 	// run test
@@ -246,7 +250,7 @@ func runClientCLI(args []string) {
 	}
 
 	// print results
-	if !*quiet {
+	if !*reallyQuiet {
 		printResult(r)
 	}
 
@@ -271,14 +275,12 @@ func printResult(r *Result) {
 	sps := r.ServerProcessingTimeStats
 
 	if r.SendErr != nil {
-		if r.SendErr == context.Canceled {
-			printf("\nEarly termination due to cancellation")
-		} else {
-			printf("\nEarly termination due to send error: %s", r.SendErr)
+		if r.SendErr != context.Canceled {
+			printf("\nTerminated due to send error: %s", r.SendErr)
 		}
 	}
 	if r.ReceiveErr != nil {
-		printf("\nEarly termination due to receive error: %s", r.ReceiveErr)
+		printf("\nTerminated due to receive error: %s", r.ReceiveErr)
 	}
 	printf("")
 
@@ -295,6 +297,7 @@ func printResult(r *Result) {
 
 	setTabWriter(tabwriter.AlignRight)
 
+	printf("--- %s irtt statistics --- ", r.Config.Supplied.RemoteAddress)
 	printf("\tMin\tMean\tMedian\tMax\tStddev\t")
 	printf("\t---\t----\t------\t---\t------\t")
 	printStats("RTT", rtts)
@@ -364,31 +367,30 @@ func writeResultJSON(r *Result, output string) error {
 }
 
 type clientHandler struct {
-	quiet   bool
-	verbose bool
+	quiet       bool
+	reallyQuiet bool
 }
 
-func (c *clientHandler) OnSent(seqno Seqno, rt Timestamps, length int,
-	rec *Recorder) {
+func (c *clientHandler) OnSent(seqno Seqno, rt Timestamps, length int, rec *Recorder) {
 }
 
 func (c *clientHandler) OnReceived(seqno Seqno, rt Timestamps, length int,
 	dup bool, rec *Recorder) {
-	if !c.quiet {
+	if !c.reallyQuiet {
 		if dup {
 			printf("DUP! len=%d seq=%d", length, seqno)
 			return
 		}
 
-		if c.verbose {
+		if !c.quiet {
 			rec.RLock()
 			defer rec.RUnlock()
 			rd := ""
-			if rt.ReceiveDelay() != 0 {
+			if rt.ReceiveDelay() != InvalidDuration {
 				rd = fmt.Sprintf(" rd=%s", rdur(rt.ReceiveDelay()))
 			}
 			sd := ""
-			if rt.SendDelay() != 0 {
+			if rt.SendDelay() != InvalidDuration {
 				sd = fmt.Sprintf(" sd=%s", rdur(rt.SendDelay()))
 			}
 			printf("seq=%d len=%d rtt=%s%s%s", seqno, length, rdur(rt.RTT()), rd, sd)
@@ -397,5 +399,7 @@ func (c *clientHandler) OnReceived(seqno Seqno, rt Timestamps, length int,
 }
 
 func (c *clientHandler) OnEvent(ev *Event) {
-	printf("%s", ev)
+	if !c.reallyQuiet {
+		printf("%s", ev)
+	}
 }

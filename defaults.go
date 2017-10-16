@@ -14,8 +14,8 @@ const (
 
 // Client defaults.
 const (
-	DefaultDuration                = time.Duration(1) * time.Second
-	DefaultInterval                = time.Duration(200) * time.Millisecond
+	DefaultDuration                = time.Duration(1) * time.Hour
+	DefaultInterval                = time.Duration(1) * time.Second
 	DefaultLength                  = 0
 	DefaultStampAt                 = AtBoth
 	DefaultClock                   = BothClocks

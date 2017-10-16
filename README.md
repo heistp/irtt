@@ -343,9 +343,8 @@ server processing time?
 
 Definitely (in order of priority)...
 
+- Fix panic with -clock none
 - Interface changes
-	- Don't write JSON to terminal with ctrl-C
-	- Make -v and default settings ping-like
 	- Default durations to seconds
 - Document JSON format and try to optimize
 - Implement server received packets feedback (to distinguish between upstream
