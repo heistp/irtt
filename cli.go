@@ -12,7 +12,7 @@ const exitCodeDoubleSignal = 3
 
 const defaultQuiet = false
 
-const defaultVerbose = false
+const defaultReallyQuiet = false
 
 const defaultHMACKey = ""
 
