@@ -277,26 +277,42 @@ duration 1 second and interval 200ms:
 		 spoofed source IPs.
 	 - IRTT can fill the payload with random data.
 
-2) Why is the receive rate 0 when a single packet is sent?
+2) Why is the send (or receive) delay negative?
+
+	 Fear not, you probably haven't traveled in time. The client and server
+	 clocks must be synchronized for one-way delay values to be meaningful.
+	 Well-configured NTP hosts may be able to synchronize within a few
+	 milliseconds. I have also heard that
+	 [PTP](https://en.wikipedia.org/wiki/Precision_Time_Protocol)
+	 ([Linux](http://linuxptp.sourceforge.net) implementation here) is capable of
+	 higher precision, but I've not tried it myself as I don't have any
+	 hardware that supports it.
+
+	 Note that client and server synchronization is not needed for either RTT or
+	 IPDV (even send and receive IPDV) values to be correct. RTT is measured with
+	 client times only, and since IPDV is measuring differences between successive
+	 packets, it's not affected by time synchronization.
+
+3) Why is the receive rate 0 when a single packet is sent?
 
    Receive rate is measured from the time the first packet is received to the time
-the last packet is received. For a single packet, those times are the same.
+   the last packet is received. For a single packet, those times are the same.
 
-3) Why does the default test with a one second duration run for around 800ms?
+4) Why does the default test with a one second duration run for around 800ms?
 
    The test duration is exclusive, meaning requests will not be sent exactly at
-or after the test duration has elapsed. In this case, the interval is 200ms, and
-the fifth and final request is sent at around 800ms from the start of the test.
-The test ends when the final reply is received from the server. If all packets
-have been received, there is no waiting period for final packets.
+   or after the test duration has elapsed. In this case, the interval is 200ms, and
+   the fifth and final request is sent at around 800ms from the start of the test.
+   The test ends when the final reply is received from the server. If all packets
+   have been received, there is no waiting period for final packets.
 
-4) Why does wait fall back to fixed duration when duration is less than RTT?
+5) Why does wait fall back to fixed duration when duration is less than RTT?
 
    If a full RTT has not elapsed, there is no way to know how long an
 	 appropriate wait time would be, so the wait falls back to a default fixed
 	 time (default is 4 seconds).
 
-5) Why don't you include median values for send call time, timer error and
+6) Why don't you include median values for send call time, timer error and
 server processing time?
 
    Those values aren't stored for each round trip, and it's difficult to do a
@@ -305,36 +321,33 @@ server processing time?
 	 using skip lists appears to have promise. I may consider it for the future,
 	 but so far it isn't a high priority.
 
-6) I see you use MD5 for the HMAC. Isn't that insecure?
+7) I see you use MD5 for the HMAC. Isn't that insecure?
 
    MD5 should not have practical vulnerabilities when used in a message authenticate
-code. See [this page](https://en.wikipedia.org/wiki/Hash-based_message_authentication_code#Security) for more info.
+   code. See [this page](https://en.wikipedia.org/wiki/Hash-based_message_authentication_code#Security)
+	 for more info.
 
-7) Will you add unit tests?
+8) Will you add unit tests?
 
-   Maybe some. Although I appreciate unit tests, I probably have a dissenting
-view of them. If there is a bug, it means one of two things:
+   Maybe some. I feel that the most important thing is that the design is clear
+	 enough that bugs are next to impossible. IRTT is not there yet though,
+	 particularly when it comes to packet manipulation.
 
-	1. There is a typo or very simple logical error
-	2. There is a design problem that makes it hard to determine what the code will do, making whack-a-mole like logical errors inevitable (there should be no such problems)
-
-	 So when there is a bug, I like to not only fix it, but if I have time, fix
-	 the reason it exists in the first place, so that we don't see bugs in that
-	 second category. That said, there are places where IRTT falls short of this
-	 (packet manipulation) and places where it could use some unit tests. I just
-	 don't believe that 100% coverage is necessary.
-
-8) Are there any plans for translation to other languages?
+9) Are there any plans for translation to other languages?
 
    While some parts of the API were designed to keep i18n possible, there is no
-support for it built in to the Go standard libraries. It should be possible, but
-could be a challenge, and is not something I'm likely to undertake.
+   support for it built in to the Go standard libraries. It should be possible,
+	 but could be a challenge, and is not something I'm likely to undertake myself.
 
 ## TODO and Roadmap
 
 Definitely (in order of priority)...
 
-- Document JSON format
+- Interface changes
+	- Don't write JSON to terminal with ctrl-C
+	- Make -v and default settings ping-like
+	- Default durations to seconds
+- Document JSON format and try to optimize
 - Implement server received packets feedback (to distinguish between upstream
 	and downstream packet loss)
 - Allow specifying two out of three of interval, bitrate and packet size to the
@@ -388,6 +401,7 @@ Open questions...
 
 ## Thanks
 
-Many thanks to both Toke Høiland-Jørgensen and Dave Täht for their valuable
+Many thanks to both Toke Høiland-Jørgensen and Dave Täht from the
+[Bufferbloat project](https://www.bufferbloat.net/) for their valuable
 advice on this project. Any problems in design or implementation are entirely
 my own.
