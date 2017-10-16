@@ -141,19 +141,18 @@ type Clock int
 
 // Clock constants.
 const (
-	NoClock    Clock = 0x00
 	Wall       Clock = 0x01
 	Monotonic  Clock = 0x02
 	BothClocks Clock = Wall | Monotonic
 )
 
-var tcs = [...]string{"none", "wall", "mono", "both"}
+var tcs = [...]string{"wall", "monotonic", "both"}
 
 func (tc Clock) String() string {
-	if int(tc) < 0 || int(tc) >= len(tcs) {
+	if int(tc) < 1 || int(tc) > len(tcs) {
 		return fmt.Sprintf("Clock:%d", tc)
 	}
-	return tcs[tc]
+	return tcs[tc-1]
 }
 
 // MarshalJSON implements the json.Marshaler interface.
@@ -165,10 +164,10 @@ func (tc Clock) MarshalJSON() ([]byte, error) {
 func ClockFromString(s string) (Clock, error) {
 	for i, v := range tcs {
 		if s == v {
-			return Clock(i), nil
+			return Clock(i + 1), nil
 		}
 	}
-	return NoClock, Errorf(InvalidClockString, "invalid Clock string: %s", s)
+	return Clock(0), Errorf(InvalidClockString, "invalid Clock string: %s", s)
 }
 
 // clockFromBools returns a Clock for wall and monotonic booleans.
@@ -182,7 +181,7 @@ func clockFromBools(w bool, m bool) Clock {
 	if m {
 		return Monotonic
 	}
-	return NoClock
+	return Clock(0)
 }
 
 // AllowStamp selects the timestamps that are allowed by the server.
