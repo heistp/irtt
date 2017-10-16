@@ -255,7 +255,7 @@ func runClientCLI(args []string) {
 
 	// write results to JSON
 	if *outputStr != "" {
-		if err := writeResultJSON(r, *outputStr); err != nil {
+		if err := writeResultJSON(r, *outputStr, ctx.Err() != nil); err != nil {
 			exitOnError(err, exitCodeRuntimeError)
 		}
 	}
@@ -332,11 +332,14 @@ func printResult(r *Result) {
 	flush()
 }
 
-func writeResultJSON(r *Result, output string) error {
+func writeResultJSON(r *Result, output string, cancelled bool) error {
 	var jout io.Writer
 
 	var gz bool
 	if output == "-" {
+		if cancelled {
+			return nil
+		}
 		jout = os.Stdout
 	} else {
 		gz = true
