@@ -10,7 +10,8 @@ import (
 // maxStampsInitCap is the maximum initial capacity of the Timestamps slice.
 // The size of Stamps is 64 bytes, so this should be up to 4 megs in RAM.
 // This allows around 65 seconds of recording at interval 1ms.
-const maxStampsInitCap = 64 * 1024
+//const maxStampsInitCap = 64 * 1024
+const maxStampsInitCap = 0
 
 // Recorder is used to record data during the test. It is available to the
 // Handler during the test for display of basic statistics, and may be used
@@ -52,7 +53,7 @@ func (r *Recorder) RUnlock() {
 
 func newRecorder(dur time.Duration, interval time.Duration) *Recorder {
 	pcap := pcount(dur, interval)
-	if pcap > maxStampsInitCap {
+	if maxStampsInitCap > 0 && pcap > maxStampsInitCap {
 		pcap = maxStampsInitCap
 	}
 	return &Recorder{
