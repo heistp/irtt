@@ -10,7 +10,7 @@ import (
 
 // settings for testing
 const dupsPercent = 0
-const dropRequests = false
+const dropsPercent = 0
 
 // the grace period after the max duration is up when the conn is closed.
 const durationGraceTime = 10 * time.Second
@@ -285,8 +285,8 @@ func (l *listener) readAndReply() (err error) {
 			continue
 		}
 
-		// for testing (usually false)
-		if dropRequests {
+		// simulate dropped packets, if necessary
+		if dropsPercent > 0 && rand.Float32() < dropsPercent {
 			continue
 		}
 
