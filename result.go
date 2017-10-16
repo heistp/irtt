@@ -22,6 +22,9 @@ func newResult(rec *Recorder, cfg *Config, serr error, rerr error) *Result {
 	r := &Result{Stats: stats, Config: cfg, SystemInfo: NewSystemInfo(),
 		SendErr: serr, ReceiveErr: rerr}
 
+	// calculate total duration
+	r.Duration = time.Since(r.Start)
+
 	// create RoundTrips array
 	r.RoundTrips = make([]RoundTrip, len(rec.Timestamps))
 	for i := 0; i < len(r.RoundTrips); i++ {
@@ -80,9 +83,6 @@ func newResult(rec *Recorder, cfg *Config, serr error, rerr error) *Result {
 	r.PacketsSent = r.SendCallStats.N
 	r.PacketsReceived = r.RTTStats.N + r.Duplicates
 
-	// calculate total duration
-	r.Duration = time.Since(r.Start)
-
 	// calculate expected packets sent based on the time between the first and
 	// last send
 	r.ExpectedPacketsSent = pcount(r.LastSent.Sub(r.FirstSend), r.Config.Interval)
@@ -90,7 +90,7 @@ func newResult(rec *Recorder, cfg *Config, serr error, rerr error) *Result {
 	// calculate timer stats
 	r.TimerErrPercent = 100 * float64(r.TimerErrorStats.Mean()) / float64(r.Config.Interval)
 
-	// for some reason, occasionally one more packet is sent than expected which
+	// for some reason, occasionally one more packet is sent than expected, which
 	// wraps around the uint, so just punt and hard prevent this for now
 	if r.ExpectedPacketsSent < r.PacketsSent {
 		r.TimerMisses = 0

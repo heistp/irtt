@@ -19,8 +19,8 @@ const InvalidDuration = time.Duration(math.MaxInt64)
 // comparing wall clock time. Comparisons between wall clock values are only as
 // accurate as the synchronization between the clocks that produced the values.
 type Time struct {
-	Wall int64         `json:"wall"`
-	Mono time.Duration `json:"monotonic"`
+	Wall int64         `json:"wall,omitempty"`
+	Mono time.Duration `json:"monotonic,omitempty"`
 }
 
 func newTime(t time.Time, clock Clock) Time {

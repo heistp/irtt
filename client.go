@@ -240,7 +240,7 @@ func (c *Client) send(ctx context.Context) error {
 	// lastly, set the HMAC
 	p.updateHMAC()
 
-	// start is the base time that monotonic timestamp values are from
+	// record the start time of the test and calculate the end
 	t := time.Now()
 	c.rec.Start = t
 	end := c.rec.Start.Add(c.Duration)
