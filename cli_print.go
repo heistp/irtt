@@ -35,7 +35,7 @@ func flush() {
 func exitOnError(err error, code int) {
 	if err != nil {
 		printTo = os.Stderr
-		printf("[Error] %s", err)
+		printf("Error: %s", err)
 		os.Exit(code)
 	}
 }

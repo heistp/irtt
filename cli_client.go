@@ -13,6 +13,7 @@ import (
 	"strings"
 	"syscall"
 	"text/tabwriter"
+	"time"
 )
 
 func clientUsage() {
@@ -112,12 +113,12 @@ func durationUsage() {
 // runClientCLI runs the client command line interface.
 func runClientCLI(args []string) {
 	// client flags
-	fs := flag.NewFlagSet("client", 0)
+	fs := flag.NewFlagSet("client", flag.ContinueOnError)
 	fs.Usage = func() {
 		usageAndExit(clientUsage, exitCodeBadCommandLine)
 	}
-	var duration = fs.Duration("d", DefaultDuration, "length of time to run test")
-	var interval = fs.Duration("i", DefaultInterval, "send interval")
+	var durationStr = fs.String("d", DefaultDuration.String(), "length of time to run test")
+	var intervalStr = fs.String("i", DefaultInterval.String(), "send interval")
 	var length = fs.Int("l", DefaultLength, "packet length")
 	var tsatStr = fs.String("ts", DefaultStampAt.String(), "stamp at")
 	var clockStr = fs.String("clock", DefaultClock.String(), "clock")
@@ -138,11 +139,25 @@ func runClientCLI(args []string) {
 	var ipv6 = fs.Bool("6", false, "IPv6 only")
 	var ttl = fs.Int("ttl", DefaultTTL, "IP time to live")
 	var lockOSThread = fs.Bool("thread", DefaultLockOSThread, "thread")
-	fs.Parse(args)
+	err := fs.Parse(args)
 
 	// start profiling, if enabled in build
 	if profileEnabled {
 		defer startProfile("./client.pprof").Stop()
+	}
+
+	// parse duration
+	duration, err := time.ParseDuration(*durationStr)
+	if err != nil {
+		exitOnError(fmt.Errorf("%s (use s for seconds)", err),
+			exitCodeBadCommandLine)
+	}
+
+	// parse interval
+	interval, err := time.ParseDuration(*intervalStr)
+	if err != nil {
+		exitOnError(fmt.Errorf("%s (use s for seconds)", err),
+			exitCodeBadCommandLine)
 	}
 
 	// determine IP version
@@ -223,8 +238,8 @@ func runClientCLI(args []string) {
 	cfg := NewDefaultConfig()
 	cfg.LocalAddress = *laddrStr
 	cfg.RemoteAddress = raddrStr
-	cfg.Duration = *duration
-	cfg.Interval = *interval
+	cfg.Duration = duration
+	cfg.Interval = interval
 	cfg.Length = *length
 	cfg.StampAt = at
 	cfg.Clock = clock
