@@ -343,8 +343,9 @@ server processing time?
 
 Definitely (in order of priority)...
 
-- Interface changes
-	- Default durations to seconds
+- Add a flag to disable per-packet results
+- Review programmatic panics so someone couldn't use one to bring the server
+	down with a malformed packet
 - Document JSON format and try to optimize
 - Implement server received packets feedback (to distinguish between upstream
 	and downstream packet loss)
@@ -374,6 +375,8 @@ Definitely (in order of priority)...
 
 Possibly...
 
+- Default durations to seconds
+- Don't output JSON on interrupt (maybe just to stdout)
 - Allow non-isochronous send schedules
 - Write an irtt.Timer implementation that uses Linux timerfd
 - Use pflag options: https://github.com/spf13/pflag
