@@ -764,7 +764,6 @@ the client, and since start of the process for the server
 
 Definitely (in order of priority)...
 
-- Don't write JSON to stdout on cancellation.
 - Print a nicer message for bad duration values.
 - Experiment with disabling garbage collector
 - Add a flag to disable per-packet results
@@ -799,7 +798,6 @@ Definitely (in order of priority)...
 
 Possibly...
 
-- Default durations to seconds
 - Don't output JSON on interrupt (maybe just to stdout)
 - Allow non-isochronous send schedules
 - Use pflag options: https://github.com/spf13/pflag
