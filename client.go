@@ -4,6 +4,7 @@ import (
 	"context"
 	"net"
 	"runtime"
+	"runtime/debug"
 	"sync"
 	"time"
 )
@@ -75,6 +76,12 @@ func (c *Client) Run(ctx context.Context) (r *Result, err error) {
 	// wait group for goroutine completion
 	wg := sync.WaitGroup{}
 
+	// collect before test
+	runtime.GC()
+
+	// disable GC
+	debug.SetGCPercent(-1)
+
 	// start receive
 	var rerr error
 	wg.Add(1)
@@ -104,6 +111,9 @@ func (c *Client) Run(ctx context.Context) (r *Result, err error) {
 
 	// wait for send and receive to complete
 	wg.Wait()
+
+	// re-enable GC
+	debug.SetGCPercent(100)
 
 	r = newResult(c.rec, c.Config, serr, rerr)
 	return

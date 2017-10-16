@@ -764,7 +764,7 @@ the client, and since start of the process for the server
 
 Definitely (in order of priority)...
 
-- Experiment with disabling garbage collector
+- Make sure no garbage created during data collection
 - Add a flag to disable per-packet results
 - Review programmatic panics so someone couldn't use one to bring the server
 	down with a malformed packet
