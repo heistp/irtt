@@ -39,9 +39,11 @@ func clientUsage() {
 	printf("               wall: wall clock only")
 	printf("               mono: monotonic clock only")
 	printf("               both: both clocks")
-	printf("-o file        write JSON output to file (or 'stdout' for stdout)")
-	printf("               extension .json or .json.gz added as appropriate")
-	printf("-nogzip        do not gzip JSON output")
+	printf("-o file        write JSON output to file (use '-' for stdout)")
+	printf("               if file has no extension, .json.gz is added, output is gzipped")
+	printf("               if extension is .json.gz, output is gzipped")
+	printf("               if extension is .json, output is not gzipped")
+	printf("               output to stdout is not gzipped, pipe to gzip if needed")
 	printf("-q             quiet, suppress all output")
 	printf("-v             verbose, show received packets")
 	printf("-dscp dscp     dscp value (default %s, 0x prefix for hex), common values:", strconv.Itoa(DefaultDSCP))
@@ -121,7 +123,6 @@ func runClientCLI(args []string) {
 	var tsatStr = fs.String("ts", DefaultStampAt.String(), "stamp at")
 	var clockStr = fs.String("clock", DefaultClock.String(), "clock")
 	var outputStr = fs.String("o", "", "output file")
-	var noGzip = fs.Bool("nogzip", false, "no GZIP")
 	var quiet = fs.Bool("q", defaultQuiet, "quiet")
 	var verbose = fs.Bool("v", defaultVerbose, "verbose")
 	var dscpStr = fs.String("dscp", strconv.Itoa(DefaultDSCP), "dscp value")
@@ -251,7 +252,7 @@ func runClientCLI(args []string) {
 
 	// write results to JSON
 	if *outputStr != "" {
-		if err := writeResultJSON(r, *outputStr, *noGzip); err != nil {
+		if err := writeResultJSON(r, *outputStr); err != nil {
 			exitOnError(err, exitCodeRuntimeError)
 		}
 	}
@@ -329,23 +330,18 @@ func printResult(r *Result) {
 	flush()
 }
 
-func writeResultJSON(r *Result, output string, noGzip bool) error {
+func writeResultJSON(r *Result, output string) error {
 	var jout io.Writer
 
-	addExtension := func(path string, ext string) string {
-		if strings.HasSuffix(path, ext) {
-			return path
-		}
-		return path + ext
-	}
-
-	if output == "stdout" {
+	var gz bool
+	if output == "-" {
 		jout = os.Stdout
 	} else {
-		if !noGzip {
-			output = addExtension(output, ".json.gz")
-		} else {
-			output = addExtension(output, ".json")
+		gz = true
+		if strings.HasSuffix(output, ".json") {
+			gz = false
+		} else if !strings.HasSuffix(output, ".json.gz") {
+			output = output + ".json.gz"
 		}
 		of, err := os.Create(output)
 		if err != nil {
@@ -354,7 +350,7 @@ func writeResultJSON(r *Result, output string, noGzip bool) error {
 		defer of.Close()
 		jout = of
 	}
-	if !noGzip {
+	if gz {
 		gzw := gzip.NewWriter(jout)
 		defer func() {
 			gzw.Flush()

@@ -165,15 +165,15 @@ func (rt *RoundTrip) MarshalJSON() ([]byte, error) {
 		delay["rtt"] = rt.RTT()
 	}
 	if rt.SendDelay() != InvalidDuration {
-		delay["send_delay"] = rt.SendDelay()
+		delay["send"] = rt.SendDelay()
 	}
 	if rt.ReceiveDelay() != InvalidDuration {
-		delay["receive_delay"] = rt.ReceiveDelay()
+		delay["receive"] = rt.ReceiveDelay()
 	}
 
 	ipdv := make(map[string]interface{})
 	if rt.IPDV != InvalidDuration {
-		ipdv["round_trip"] = rt.IPDV
+		ipdv["rtt"] = rt.IPDV
 	}
 	if rt.SendIPDV != InvalidDuration {
 		ipdv["send"] = rt.SendIPDV
