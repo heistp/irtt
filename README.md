@@ -343,7 +343,6 @@ server processing time?
 
 Definitely (in order of priority)...
 
-- Fix panic with -clock none
 - Interface changes
 	- Default durations to seconds
 - Document JSON format and try to optimize
