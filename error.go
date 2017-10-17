@@ -25,8 +25,10 @@ const (
 	FieldsLengthTooLarge
 	FieldsCapacityTooLarge
 	InvalidStampAtString
+	InvalidStampAtInt
 	InvalidAllowStampString
 	InvalidClockString
+	InvalidClockInt
 	InvalidSleepFactor
 	IntervalNotPermitted
 	InvalidWaitString
@@ -57,6 +59,7 @@ const (
 	NoSuitableAddressFound
 	OpenTimeout
 	InvalidServerRestriction
+	InvalidParamValue
 )
 
 // Error is an IRTT error.

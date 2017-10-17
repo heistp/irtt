@@ -73,14 +73,26 @@ func (p *Params) readParam(b []byte) (int, error) {
 	switch t {
 	case pDuration:
 		p.Duration = time.Duration(v)
+		if p.Duration <= 0 {
+			return 0, Errorf(InvalidParamValue, "duration %d is be <= 0", p.Duration)
+		}
 	case pInterval:
 		p.Interval = time.Duration(v)
+		if p.Interval <= 0 {
+			return 0, Errorf(InvalidParamValue, "interval %d is be <= 0", p.Interval)
+		}
 	case pLength:
 		p.Length = int(v)
 	case pStampAt:
-		p.StampAt = StampAt(v)
+		p.StampAt, err = StampAtFromInt(int(v))
+		if err != nil {
+			return 0, err
+		}
 	case pClock:
-		p.Clock = Clock(v)
+		p.Clock, err = ClockFromInt(int(v))
+		if err != nil {
+			return 0, err
+		}
 	case pDSCP:
 		p.DSCP = int(v)
 	default:
