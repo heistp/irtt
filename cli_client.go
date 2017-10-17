@@ -311,7 +311,6 @@ func printResult(r *Result) {
 
 	setTabWriter(tabwriter.AlignRight)
 
-	printf("--- %s irtt statistics --- ", r.Config.Supplied.RemoteAddress)
 	printf("\tMin\tMean\tMedian\tMax\tStddev\t")
 	printf("\t---\t----\t------\t---\t------\t")
 	printStats("RTT", rtts)
