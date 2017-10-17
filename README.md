@@ -5,11 +5,10 @@ fixed period, and produces both human and machine parseable output.
 
 ## Start Here!
 
-IRTT is still under active development, and as such has not yet met all of its
+IRTT is still under development, and as such has not yet met all of its
 [goals](#goals). In particular:
 
-- it is not yet capable of distinguishing between upstream and downstream packet
-	loss
+- it can't distinguish between upstream and downstream packet loss
 - there's more work to do for public server security
 - the JSON output format, packet format and API are all not finalized
 - it is only available in source form
@@ -54,7 +53,7 @@ Latency is an under-appreciated metric in network and application performance.
 There is a certain hard to quantify but visceral *"latency stress"* that comes
 from waiting in expectation after a web page click, straining through a delayed
 and garbled VoIP conversation, or losing at your favorite online game (unless
-you'd like "lag" as an excuse). I think that relieving this stress for others
+you like "lag" as an excuse). I think that relieving this stress for others
 may be what drives those who work on reducing latency.
 
 The [Bufferbloat](https://www.bufferbloat.net/projects/) and related projects
@@ -218,7 +217,6 @@ seq=2 len=48 rtt=297µs rd=108µs sd=189µs
 seq=3 len=48 rtt=353µs rd=135µs sd=218µs
 seq=4 len=48 rtt=336µs rd=108µs sd=229µs
 
---- localhost irtt statistics --- 
                         Min    Mean  Median     Max  Stddev
                         ---    ----  ------     ---  ------
                 RTT  70.2µs   288µs   336µs   386µs   126µs
@@ -481,8 +479,9 @@ statistics for the results
 },
 ```
 
-**Note:** In the `stats` object, a _duration stats_ class of object repeats and will
-not be repeated in the individual descriptions. It contains the following attributes:
+**Note:** In the `stats` object, a _duration stats_ class of object repeats and
+will not be repeated in the individual descriptions. It contains statistics about
+nanosecond duration values and has the following attributes:
 - `total` the total of the duration values
 - `n` the number of duration values
 - `min` the minimum duration value
