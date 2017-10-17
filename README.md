@@ -789,6 +789,7 @@ Definitely (in order of priority)...
 - Show IPDV in continuous (-v) output
 - Add a way to keep out "internal" info from JSON, like IP, hostname, and a
 	subcommand to strip these details after the JSON is created
+- Make it possible to add custom per-round-trip statistics programmatically
 - Add more relevant statistics, including more info on outliers and a textual
 	histogram(?)
 - Add ability for client to request random fill from server
