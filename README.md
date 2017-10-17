@@ -764,16 +764,18 @@ the client, and since start of the process for the server
 
 Definitely (in order of priority)...
 
-- Make sure no garbage created during data collection
-- Add a flag to disable per-packet results
 - Review programmatic panics so someone couldn't use one to bring the server
 	down with a malformed packet
 - Implement server received packets feedback (to distinguish between upstream
 	and downstream packet loss)
-- Allow specifying two out of three of interval, bitrate and packet size to the
-	client
+- Calculate arrival order for round trips during results generation using
+  timestamps
 - Refactor packet manipulation to improve maintainability and prevent multiple
 	validations
+- Add a flag to disable per-packet results
+- Make sure no garbage created during data collection
+- Allow specifying two out of three of interval, bitrate and packet size to the
+	client
 - Improve robustness and security of public servers:
 	- Add bitrate limiting
 	- Improve server close by repeating close packets up to some limit
