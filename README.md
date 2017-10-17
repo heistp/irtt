@@ -204,35 +204,41 @@ IRTT server starting...
 [ListenerStart] starting IPv4 listener on 0.0.0.0:2112
 ```
 
-While that's running, run a client, which will perform a default test with
-duration 1 second and interval 200ms:
+While that's running, run a client (if no options are supplied, it will send
+a request once per second, like ping, but here we use an interval of 200ms
+and a test duration of 1s):
 
 ```
-% irtt client localhost
+% irtt client -i 200ms -d 1s localhost
 [Connecting] connecting to localhost
 [Connected] connected to 127.0.0.1:2112
-[WaitForPackets] waiting 1.13ms for final packets
+seq=0 len=48 rtt=70.2µs rd=37.2µs sd=33µs
+seq=1 len=48 rtt=386µs rd=114µs sd=272µs
+seq=2 len=48 rtt=297µs rd=108µs sd=189µs
+seq=3 len=48 rtt=353µs rd=135µs sd=218µs
+seq=4 len=48 rtt=336µs rd=108µs sd=229µs
 
+--- localhost irtt statistics --- 
                         Min    Mean  Median     Max  Stddev
                         ---    ----  ------     ---  ------
-                RTT  62.6µs   305µs   368µs   376µs   136µs
-         send delay  32.9µs   174µs   211µs   231µs  81.7µs
-      receive delay  29.7µs   131µs   155µs   170µs  57.4µs
+                RTT  70.2µs   288µs   336µs   386µs   126µs
+         send delay    33µs   188µs   218µs   272µs  91.7µs
+      receive delay  37.2µs   100µs   108µs   135µs  36.9µs
                                                            
-      IPDV (jitter)   706ns  89.6µs  26.3µs   305µs   144µs
-          send IPDV  10.7µs  69.9µs  45.4µs   178µs  74.3µs
-       receive IPDV    10µs  43.8µs  19.1µs   127µs  55.8µs
+      IPDV (jitter)  16.7µs   119µs  72.6µs   316µs   134µs
+          send IPDV  10.5µs  90.6µs  56.3µs   239µs   104µs
+       receive IPDV  5.72µs    34µs    27µs  76.4µs    30µs
                                                            
-     send call time  14.6µs  56.8µs          75.3µs  24.8µs
-        timer error  87.5µs  1.37ms          5.04ms  2.45ms
-  server proc. time  4.55µs  16.5µs          25.1µs  7.66µs
+     send call time  10.9µs  68.1µs          90.4µs  32.3µs
+        timer error  1.08ms  1.11ms          1.15ms    30µs
+  server proc. time  5.17µs  15.4µs          18.8µs  5.76µs
 
-                duration: 802.1ms (wait 1.13ms)
+                duration: 802.9ms (wait 1.16ms)
    packets sent/received: 5/5 (0.00% loss)
      bytes sent/received: 240/240
        send/receive rate: 2.4 Kbps / 2.4 Kbps
            packet length: 48 bytes
-             timer stats: 0/5 (0.00%) missed, 0.69% error
+             timer stats: 0/5 (0.00%) missed, 0.55% error
 ```
 
 ## Running IRTT
@@ -699,10 +705,10 @@ the client, and since start of the process for the server
 
 2) Why is the send (or receive) delay negative?
 
-	 Fear not, you probably haven't traveled in time. The client and server
-	 clocks must be synchronized for one-way delay values to be meaningful.
-	 Well-configured NTP hosts may be able to synchronize within a few
-	 milliseconds. [PTP](https://en.wikipedia.org/wiki/Precision_Time_Protocol)
+	 The client and server clocks must be synchronized for one-way delay values to
+	 be meaningful.  Well-configured NTP hosts may be able to synchronize within a
+	 few milliseconds.
+	 [PTP](https://en.wikipedia.org/wiki/Precision_Time_Protocol)
 	 ([Linux](http://linuxptp.sourceforge.net) implementation here) should be
 	 capable of higher precision, but I've not tried it myself as I don't have any
 	 supported hardware.
@@ -764,8 +770,6 @@ the client, and since start of the process for the server
 
 Definitely (in order of priority)...
 
-- Review programmatic panics so someone couldn't use one to bring the server
-	down with a malformed packet
 - Implement server received packets feedback (to distinguish between upstream
 	and downstream packet loss)
 - Calculate arrival order for round trips during results generation using

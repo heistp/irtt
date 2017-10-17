@@ -112,23 +112,31 @@ const (
 	AtMidpoint StampAt = 0x04
 )
 
-var tus = [...]string{"none", "send", "receive", "both", "midpoint"}
+var sas = [...]string{"none", "send", "receive", "both", "midpoint"}
 
-func (tu StampAt) String() string {
-	if int(tu) < 0 || int(tu) > len(tus) {
-		return fmt.Sprintf("StampAt:%d", tu)
+func (sa StampAt) String() string {
+	if int(sa) < 0 || int(sa) > len(sas) {
+		return fmt.Sprintf("StampAt:%d", sa)
 	}
-	return tus[tu]
+	return sas[sa]
+}
+
+// StampAtFromInt returns a StampAt value from its int constant.
+func StampAtFromInt(v int) (StampAt, error) {
+	if v < int(AtNone) || v > int(AtMidpoint) {
+		return AtNone, Errorf(InvalidStampAtInt, "invalid StampAt int: %d", v)
+	}
+	return StampAt(v), nil
 }
 
 // MarshalJSON implements the json.Marshaler interface.
-func (tu StampAt) MarshalJSON() ([]byte, error) {
-	return json.Marshal(tu.String())
+func (sa StampAt) MarshalJSON() ([]byte, error) {
+	return json.Marshal(sa.String())
 }
 
 // StampAtFromString returns an Upon value from its string.
 func StampAtFromString(s string) (StampAt, error) {
-	for i, v := range tus {
+	for i, v := range sas {
 		if v == s {
 			return StampAt(i), nil
 		}
@@ -160,6 +168,14 @@ func (tc Clock) MarshalJSON() ([]byte, error) {
 	return json.Marshal(tc.String())
 }
 
+// ClockFromInt returns a Clock value from its int constant.
+func ClockFromInt(v int) (Clock, error) {
+	if v < int(Wall) || v > int(BothClocks) {
+		return Clock(0), Errorf(InvalidClockInt, "invalid Clock int: %d", v)
+	}
+	return Clock(v), nil
+}
+
 // ClockFromString returns a Clock from a string.
 func ClockFromString(s string) (Clock, error) {
 	for i, v := range tcs {
@@ -170,7 +186,8 @@ func ClockFromString(s string) (Clock, error) {
 	return Clock(0), Errorf(InvalidClockString, "invalid Clock string: %s", s)
 }
 
-// clockFromBools returns a Clock for wall and monotonic booleans.
+// clockFromBools returns a Clock for wall and monotonic booleans. Either w or m
+// must be true.
 func clockFromBools(w bool, m bool) Clock {
 	if w {
 		if m {
@@ -181,7 +198,7 @@ func clockFromBools(w bool, m bool) Clock {
 	if m {
 		return Monotonic
 	}
-	return Clock(0)
+	panic(fmt.Sprintf("invalid clock booleans %t, %t", w, m))
 }
 
 // AllowStamp selects the timestamps that are allowed by the server.
