@@ -203,40 +203,36 @@ IRTT server starting...
 [ListenerStart] starting IPv4 listener on 0.0.0.0:2112
 ```
 
-While that's running, run a client (if no options are supplied, it will send
-a request once per second, like ping, but here we use an interval of 200ms
-and a test duration of 1s):
+While that's running, run a client. If no options are supplied, it will send
+a request once per second, like ping, but here we use an interval of 10ms
+and a test duration of 1m, with a payload of 160 bytes, to roughly simulate
+a G.711 VoIP conversation:
 
 ```
-% irtt client -i 200ms -d 1s localhost
-[Connecting] connecting to localhost
-[Connected] connected to 127.0.0.1:2112
-seq=0 len=48 rtt=70.2µs rd=37.2µs sd=33µs
-seq=1 len=48 rtt=386µs rd=114µs sd=272µs
-seq=2 len=48 rtt=297µs rd=108µs sd=189µs
-seq=3 len=48 rtt=353µs rd=135µs sd=218µs
-seq=4 len=48 rtt=336µs rd=108µs sd=229µs
+% irtt client -i 20ms -l 160 -d 1m -q 192.168.100.10
+[Connecting] connecting to 192.168.100.10
+[Connected] connected to 192.168.100.10:2112
 
-                        Min    Mean  Median     Max  Stddev
-                        ---    ----  ------     ---  ------
-                RTT  70.2µs   288µs   336µs   386µs   126µs
-         send delay    33µs   188µs   218µs   272µs  91.7µs
-      receive delay  37.2µs   100µs   108µs   135µs  36.9µs
-                                                           
-      IPDV (jitter)  16.7µs   119µs  72.6µs   316µs   134µs
-          send IPDV  10.5µs  90.6µs  56.3µs   239µs   104µs
-       receive IPDV  5.72µs    34µs    27µs  76.4µs    30µs
-                                                           
-     send call time  10.9µs  68.1µs          90.4µs  32.3µs
-        timer error  1.08ms  1.11ms          1.15ms    30µs
-  server proc. time  5.17µs  15.4µs          18.8µs  5.76µs
+                        Min     Mean   Median      Max  Stddev
+                        ---     ----   ------      ---  ------
+                RTT  12.2ms  24.87ms  23.21ms  115.9ms   9.1ms
+         send delay  5.89ms  16.46ms  15.08ms  97.29ms  8.04ms
+      receive delay  5.64ms   8.41ms   7.55ms  39.26ms  2.95ms
+                                                              
+      IPDV (jitter)  11.6µs   6.69ms   5.03ms  83.23ms  6.57ms
+          send IPDV  3.74µs   6.24ms   4.61ms  84.81ms  6.22ms
+       receive IPDV  1.05µs   1.96ms   1.06ms  31.99ms  2.88ms
+                                                              
+     send call time  56.2µs   79.4µs           11.88ms   227µs
+        timer error     5ns   64.3µs           11.68ms   579µs
+  server proc. time  18.9µs     21µs             262µs  9.62µs
 
-                duration: 802.9ms (wait 1.16ms)
-   packets sent/received: 5/5 (0.00% loss)
-     bytes sent/received: 240/240
-       send/receive rate: 2.4 Kbps / 2.4 Kbps
-           packet length: 48 bytes
-             timer stats: 0/5 (0.00%) missed, 0.55% error
+                duration: 1m0s (wait 347.8ms)
+   packets sent/received: 2986/2966 (0.67% loss)
+     bytes sent/received: 477760/474560
+       send/receive rate: 63.7 Kbps / 63.3 Kbps
+           packet length: 160 bytes
+             timer stats: 14/3000 (0.47%) missed, 0.32% error
 ```
 
 ## Running IRTT
