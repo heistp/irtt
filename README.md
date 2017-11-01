@@ -769,6 +769,7 @@ Definitely (in order of priority)...
 	and downstream packet loss)
 - Calculate arrival order for round trips during results generation using
   timestamps
+- Write a SmokePing probe
 - Refactor packet manipulation to improve maintainability and prevent multiple
 	validations
 - Add a flag to disable per-packet results
