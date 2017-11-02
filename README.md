@@ -765,6 +765,7 @@ the client, and since start of the process for the server
 
 Definitely (in order of priority)...
 
+- Make packets be returned from same IP on server they were sent to
 - Implement server received packets feedback (to distinguish between upstream
 	and downstream packet loss)
 - Calculate arrival order for round trips during results generation using
