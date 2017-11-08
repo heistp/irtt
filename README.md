@@ -758,7 +758,9 @@ the client, and since start of the process for the server
       you specified to the client, there are two possible solutions:
       1) Ideally, the server should be started with explicit bind addresses
          using the `-b` parameter, so that replies always come back from the
-         IP address that requests were received on.
+         IP address that requests were received on. A warning is printed on
+         server startup if there are multiple global unicast IP addresses and
+         the bind addresses were not specified.
       2) If you do not have access to the server, you can work around it by
          using the tcpdump command above and finding out what IP the server is
          replying with. Specify that IP address to the client. Notify the server
