@@ -12,7 +12,8 @@ type EventCode uint64
 
 // Event codes.
 const (
-	ListenerStart EventCode = 1 << iota
+	MultipleAddresses EventCode = 1 << iota
+	ListenerStart
 	ListenerStop
 	ListenerError
 	DropBadMagic

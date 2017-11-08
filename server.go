@@ -68,6 +68,12 @@ func (s *Server) ListenAndServe() error {
 	// detect CPUs when Goroutines == 0
 	s.detectCPUs()
 
+	// warn when there are multiple global unicast addresses and bind addresses
+	// have not been specified
+	if err := s.warnOnMultipleAddresses(); err != nil {
+		return err
+	}
+
 	// set max duration
 	if s.MaxDuration > 0 {
 		s.hardMaxDuration = s.MaxDuration + durationGraceTime
@@ -120,6 +126,38 @@ func (s *Server) detectCPUs() {
 	}
 }
 
+func (s *Server) warnOnMultipleAddresses() error {
+	ifaces, err := net.Interfaces()
+	if err != nil {
+		return err
+	}
+	n := 0
+	for _, i := range ifaces {
+		addrs, err := i.Addrs()
+		if err != nil {
+			return err
+		}
+		for _, addr := range addrs {
+			switch v := addr.(type) {
+			case *net.IPNet:
+				if v.IP.IsGlobalUnicast() {
+					n++
+				}
+			case *net.IPAddr:
+				if v.IP.IsGlobalUnicast() {
+					n++
+				}
+			}
+		}
+	}
+	if n > 1 {
+		s.eventf(MultipleAddresses, "warning: multiple IP "+
+			"addresses, bind addresses should be explicitly "+
+			"specified with -b or clients may not be able to connect")
+	}
+	return nil
+}
+
 func (s *Server) makeListeners() ([]*listener, error) {
 	lconns, err := listenAll(s.IPVersion, s.Addrs, s.MaxLength, s.HMACKey)
 	if err != nil {
@@ -134,6 +172,12 @@ func (s *Server) makeListeners() ([]*listener, error) {
 		})
 	}
 	return ls, nil
+}
+
+func (s *Server) eventf(code EventCode, format string, args ...interface{}) {
+	if s.Handler != nil && s.EventMask&code != 0 {
+		s.Handler.OnEvent(Eventf(code, nil, nil, format, args...))
+	}
 }
 
 // listener is a server listener.
