@@ -797,6 +797,7 @@ the client, and since start of the process for the server
 
 Definitely (in order of priority)...
 
+- Improve client close by repeating close packets up to four times, like open
 - Implement server received packets feedback (to distinguish between upstream
 	and downstream packet loss)
 - Calculate arrival order for round trips during results generation using
@@ -810,9 +811,9 @@ Definitely (in order of priority)...
 	client
 - Improve robustness and security of public servers:
 	- Add bitrate limiting
-	- Improve server close by repeating close packets up to some limit
 	- Limit open requests to prevent the equivalent of a "syn flood"
 	- Add per-IP limiting
+  - Improve server close by repeating close packets up to four times
 - Add different server authentication modes:
 	- none (no conn token in header, for local use)
 	- token (what we have today, 64-bit token in header)
