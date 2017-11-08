@@ -1,9 +1,6 @@
 # Log files
 *.log
 
-# Old files
-old
-
 # Profiles
 client.pprof
 server.pprof
@@ -11,6 +8,9 @@ server.pprof
 # Executables
 /irtt
 /irtt.exe
+
+# Private directory
+private
 
 # JSON output files
 *.json
