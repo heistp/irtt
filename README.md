@@ -793,8 +793,6 @@ the client, and since start of the process for the server
 
 Definitely (in order of priority)...
 
-- Add a warning on the server if it has multiple IP addresses and -b is not
-  specified.
 - Fix that minifying removes version number
 - Implement server received packets feedback (to distinguish between upstream
 	and downstream packet loss)
