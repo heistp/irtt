@@ -129,14 +129,16 @@ are accurate, where they wouldn't be in any other case.
 
 #### Stateful protocol
 
-While there are numerous benefits to stateless protocols, including simplified
-server design, horizontal scalabity, and easily implemented zero-downtime
-restarts, I ultimately decided that a stateless protocol brings most of its
-advantages to the data center, and in this case, a stateful protocol provides
-important benefits to the user, including:
+There are numerous benefits to stateless protocols, particularly for developers
+and data centers, including simplified server design, horizontal scalabity, and
+easily implemented zero-downtime restarts. However, in this case, a stateful
+protocol provides important benefits to the user, including:
 
-- Smaller packet sizes (a design goal) as context does not need to be included in every request
-- More accurate measurement of upstream vs downstream packet loss (this gets worse in a stateless protocol as RTT approaches the test duration, complicating interplanetary tests!)
+- Smaller packet sizes (a design goal) as context does not need to be included
+  in every request
+- More accurate measurement of upstream vs downstream packet loss (this gets
+  worse in a stateless protocol as RTT approaches the test duration,
+  complicating interplanetary tests!)
 - More accurate rate and test duration limiting on the server
 
 #### In-memory results storage
