@@ -60,6 +60,7 @@ const (
 	OpenTimeout
 	InvalidServerRestriction
 	InvalidParamValue
+	ParamsChanged
 )
 
 // Error is an IRTT error.

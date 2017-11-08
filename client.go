@@ -56,7 +56,12 @@ func (c *Client) Run(ctx context.Context) (r *Result, err error) {
 	c.eventf(Connected, "connected to %s", c.remoteAddr())
 
 	// check parameter changes
-	if err = c.checkParameters(); err != nil {
+	var changed bool
+	if changed, err = c.checkParameters(); err != nil {
+		return
+	}
+	if changed && c.StrictParams {
+		err = Errorf(ParamsChanged, "server restricted test parameters")
 		return
 	}
 
@@ -178,47 +183,59 @@ func (c *Client) setSockOpts() error {
 
 // checkParameters checks any changes after the server returned restricted
 // parameters.
-func (c *Client) checkParameters() error {
+func (c *Client) checkParameters() (changed bool, err error) {
 	if c.Duration < c.Supplied.Duration {
+		changed = true
 		c.eventf(ServerRestriction, "server restricted duration from %s to %s",
 			c.Supplied.Duration, c.Duration)
 	}
 	if c.Duration > c.Supplied.Duration {
-		return Errorf(InvalidServerRestriction,
+		changed = true
+		err = Errorf(InvalidServerRestriction,
 			"server tried to change duration from %s to %s",
 			c.Supplied.Duration, c.Duration)
+		return
 	}
 	if c.Interval > c.Supplied.Interval {
+		changed = true
 		c.eventf(ServerRestriction, "server restricted interval from %s to %s",
 			c.Supplied.Interval, c.Interval)
 	}
 	if c.Interval < c.Supplied.Interval {
-		return Errorf(InvalidServerRestriction,
+		changed = true
+		err = Errorf(InvalidServerRestriction,
 			"server tried to change interval from %s to %s",
 			c.Supplied.Interval, c.Interval)
+		return
 	}
 	if c.Length < c.Supplied.Length {
+		changed = true
 		c.eventf(ServerRestriction, "server restricted length from %d to %d",
 			c.Supplied.Length, c.Length)
 	}
 	if c.Length > c.Supplied.Length {
-		return Errorf(InvalidServerRestriction,
+		changed = true
+		err = Errorf(InvalidServerRestriction,
 			"server tried to change length from %d to %d",
 			c.Supplied.Length, c.Length)
+		return
 	}
 	if c.StampAt != c.Supplied.StampAt {
+		changed = true
 		c.eventf(ServerRestriction, "server restricted timestamps from %s to %s",
 			c.Supplied.StampAt, c.StampAt)
 	}
 	if c.Clock != c.Supplied.Clock {
+		changed = true
 		c.eventf(ServerRestriction, "server restricted clocks from %s to %s",
 			c.Supplied.Clock, c.Clock)
 	}
 	if c.DSCP != c.Supplied.DSCP {
+		changed = true
 		c.eventf(ServerRestriction,
 			"server doesn't support DSCP, falling back to best effort")
 	}
-	return nil
+	return
 }
 
 // send sends all packets for the test to the server (called in goroutine from Run)

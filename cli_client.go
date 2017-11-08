@@ -90,6 +90,7 @@ func clientUsage() {
 	printf("-4             IPv4 only")
 	printf("-6             IPv6 only")
 	printf("-ttl ttl       time to live (default %d, meaning use OS default)", DefaultTTL)
+	printf("-strictparams  return an error if server restricts any parameters")
 	printf("-thread        lock sending and receiving goroutines to OS threads (may")
 	printf("               reduce mean latency, but may also add outliers)")
 	printf("")
@@ -138,6 +139,7 @@ func runClientCLI(args []string) {
 	var ipv4 = fs.Bool("4", false, "IPv4 only")
 	var ipv6 = fs.Bool("6", false, "IPv6 only")
 	var ttl = fs.Int("ttl", DefaultTTL, "IP time to live")
+	var strictParams = fs.Bool("strictparams", false, "strict parameters")
 	var lockOSThread = fs.Bool("thread", DefaultLockOSThread, "thread")
 	err := fs.Parse(args)
 
@@ -243,14 +245,15 @@ func runClientCLI(args []string) {
 	cfg.Length = *length
 	cfg.StampAt = at
 	cfg.Clock = clock
-	cfg.IPVersion = ipVer
 	cfg.DSCP = int(dscp)
+	cfg.StrictParams = *strictParams
+	cfg.IPVersion = ipVer
 	cfg.DF = df
 	cfg.TTL = int(*ttl)
 	cfg.Timer = timer
+	cfg.Waiter = waiter
 	cfg.Filler = filler
 	cfg.FillAll = *fillAll
-	cfg.Waiter = waiter
 	cfg.HMACKey = hmacKey
 	cfg.Handler = &clientHandler{*quiet, *reallyQuiet}
 	cfg.EventMask = AllEvents ^ WaitForPackets

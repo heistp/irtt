@@ -12,6 +12,7 @@ type Config struct {
 	LocalAddr     net.Addr
 	RemoteAddr    net.Addr
 	Params
+	StrictParams bool
 	IPVersion    IPVersion
 	DF           DF
 	TTL          int
@@ -38,6 +39,7 @@ func NewDefaultConfig() *Config {
 			Clock:    DefaultClock,
 			DSCP:     DefaultDSCP,
 		},
+		StrictParams: DefaultStrictParams,
 		IPVersion:    DefaultIPVersion,
 		DF:           DefaultDF,
 		TTL:          DefaultTTL,
@@ -70,6 +72,7 @@ func (c *Config) MarshalJSON() ([]byte, error) {
 		LocalAddress  string `json:"local_address"`
 		RemoteAddress string `json:"remote_address"`
 		Params        `json:"params"`
+		StrictParams  bool      `json:"strict_params"`
 		IPVersion     IPVersion `json:"ip_version"`
 		DF            DF        `json:"df"`
 		TTL           int       `json:"ttl"`
@@ -83,6 +86,7 @@ func (c *Config) MarshalJSON() ([]byte, error) {
 		LocalAddress:  c.LocalAddress,
 		RemoteAddress: c.RemoteAddress,
 		Params:        c.Params,
+		StrictParams:  c.StrictParams,
 		IPVersion:     c.IPVersion,
 		DF:            c.DF,
 		TTL:           c.TTL,
