@@ -19,8 +19,9 @@ const (
 	DefaultLength                  = 0
 	DefaultStampAt                 = AtBoth
 	DefaultClock                   = BothClocks
-	DefaultLocalAddress            = ":0"
 	DefaultDSCP                    = 0
+	DefaultStrictParams            = false
+	DefaultLocalAddress            = ":0"
 	DefaultDF                      = DFDefault
 	DefaultCompTimerMinErrorFactor = 0.0
 	DefaultCompTimerMaxErrorFactor = 2.0
