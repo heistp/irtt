@@ -795,7 +795,6 @@ the client, and since start of the process for the server
 
 Definitely (in order of priority)...
 
-- Fix that minifying removes version number
 - Implement server received packets feedback (to distinguish between upstream
 	and downstream packet loss)
 - Calculate arrival order for round trips during results generation using
