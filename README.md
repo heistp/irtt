@@ -770,8 +770,8 @@ the client, and since start of the process for the server
    Those values aren't stored for each round trip, and it's difficult to do a
 	 running calculation of the median, although
 	 [this method](https://rhettinger.wordpress.com/2010/02/06/lost-knowledge/) of
-	 using skip lists appears to have promise. I may consider it for the future,
-	 but so far it isn't a high priority.
+	 using skip lists appears to have promise. It's a possibility for the future,
+	 but so far it isn't a high priority. If it is for you, file an Issue.
 
 8) I see you use MD5 for the HMAC. Isn't that insecure?
 
@@ -826,8 +826,7 @@ Definitely (in order of priority)...
 	histogram(?)
 - Add ability for client to request random fill from server
 - Allow Client Dial to try multiple IPs when a hostname is given
-- Refactor events. I was trying to make something internationalizable and
-	filterable as opposed to just writing to a log, but I'm not satisfied yet.
+- Refactor events to allow for more than 64 total event types.
 
 Possibly...
 
