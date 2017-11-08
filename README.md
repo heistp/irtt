@@ -829,17 +829,16 @@ Definitely (in order of priority)...
 
 Possibly...
 
-- Prompt to write JSON file on cancellation
-- Don't output JSON on interrupt (maybe just to stdout)
+- Add machine parseable output during test
 - Allow non-isochronous send schedules
+- Prompt to write JSON file on cancellation
 - Use pflag options: https://github.com/spf13/pflag
 - Implement graceful server shutdown
 - Implement zero downtime restart
 - Add unit tests
-- Add supported for load balanced connections (packets for same connection that
+- Add support for load balanced connections (packets for same connection that
 	come from multiple addresses)
 - Use unsafe package to increase packet buffer modification and comparison performance
-- Add compression for second timestamp monotonic value as diff from first
 - Add encryption
 - Add estimate for HMAC calculation time and correct send timestamp by this time
 - Implement web interface for client and server
