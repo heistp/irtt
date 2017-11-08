@@ -734,7 +734,35 @@ the client, and since start of the process for the server
 	 appropriate wait time would be, so the wait falls back to a default fixed
 	 time (default is 4 seconds, same as ping).
 
-6) Why don't you include median values for send call time, timer error and
+6) Why can't the client connect to the server, and instead I get
+   `Error: no reply from server`?
+
+   There are a number of possible reasons for this:
+
+   1) You've specified an incorrect hostname or IP address for the server.
+   2) There is a firewall blocking packets from the client to the server.
+      Traffic must be allowed on the chosen UDP port (default 2112).
+   3) There is high packet loss. Up to four packets are sent when the client
+      tries to connect to the server. If all of these are lost, the client
+      won't connect to the server.
+   4) The server has an HMAC key set with `-hmac` and the client either has
+      not specified a key or it's incorrect. Make sure the client has the
+      correct HMAC key, specified also with the `-hmac` parameter.
+   5) The server has multiple IP addresses and you've specified a hostname or
+      IP to the client that is not the same IP that the server uses to reply.
+      This can be verified using `tcpdump -i eth0 udp port 2112`, replacing eth0
+      with the actual interface and 2112 with the actual port used. If you see
+      that the server is replying, but its source IP is different than the IP
+      you specified to the client, there are two possible solutions:
+      1) Ideally, the server should be started with explicit bind addresses
+         using the `-b` parameter, so that replies always come back from the
+         IP address that requests were received on.
+      2) If you do not have access to the server, you can work around it by
+         using the tcpdump command above and finding out what IP the server is
+         replying with. Specify that IP address to the client. Notify the server
+         admin to configure the server correctly with explicit bind addresses.
+
+7) Why don't you include median values for send call time, timer error and
    server processing time?
 
    Those values aren't stored for each round trip, and it's difficult to do a
@@ -743,19 +771,19 @@ the client, and since start of the process for the server
 	 using skip lists appears to have promise. I may consider it for the future,
 	 but so far it isn't a high priority.
 
-7) I see you use MD5 for the HMAC. Isn't that insecure?
+8) I see you use MD5 for the HMAC. Isn't that insecure?
 
    MD5 should not have practical vulnerabilities when used in a message authenticate
    code. See [this page](https://en.wikipedia.org/wiki/Hash-based_message_authentication_code#Security)
 	 for more info.
 
-8) Will you add unit tests?
+9) Will you add unit tests?
 
    Maybe some. I feel that the most important thing for a project of this size
 	 is that the design is clear enough that bugs are next to impossible. IRTT
 	 is not there yet though, particularly when it comes to packet manipulation.
 
-9) Are there any plans for translation to other languages?
+10) Are there any plans for translation to other languages?
 
    While some parts of the API were designed to keep i18n possible, there is no
    support for it built in to the Go standard libraries. It should be possible,
@@ -765,7 +793,9 @@ the client, and since start of the process for the server
 
 Definitely (in order of priority)...
 
-- Make packets be returned from same IP on server they were sent to
+- Add a warning on the server if it has multiple IP addresses and -b is not
+  specified.
+- Fix that minifying removes version number
 - Implement server received packets feedback (to distinguish between upstream
 	and downstream packet loss)
 - Calculate arrival order for round trips during results generation using
