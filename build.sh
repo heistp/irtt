@@ -12,9 +12,9 @@ env=""
 for a in $*; do
 	case "$a" in
 		"install") action="install"
-		ldflags="-s -w"
+		ldflags="$ldflags -s -w"
 		;;
-		"min") ldflags="-s -w"
+		"min") ldflags="$ldflags -s -w"
 		;;
 		"linkshared") linkshared="-linkshared"
 		;;
