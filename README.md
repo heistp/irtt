@@ -230,6 +230,7 @@ a G.711 VoIP conversation:
 
                 duration: 1m0s (wait 347.8ms)
    packets sent/received: 2986/2966 (0.67% loss)
+ server packets received: 2972/2986 (0.47%/0.20% upstream/downstream loss)
      bytes sent/received: 477760/474560
        send/receive rate: 63.7 Kbps / 63.3 Kbps
            packet length: 160 bytes
