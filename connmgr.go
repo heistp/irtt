@@ -19,15 +19,17 @@ const checkExpiredCount = 2
 const connmgrInitSize = 128
 
 type sconn struct {
-	ctoken       ctoken
-	raddr        net.UDPAddr
-	params       *Params
-	created      time.Time
-	firstUsed    time.Time
-	lastUsed     time.Time
-	packetBucket float64
-	packets      uint32
-	bytes        uint64
+	ctoken         ctoken
+	raddr          net.UDPAddr
+	params         *Params
+	created        time.Time
+	firstUsed      time.Time
+	lastUsed       time.Time
+	packetBucket   float64
+	lastSeqno      Seqno
+	receivedCount  ReceivedCount
+	receivedWindow ReceivedWindow
+	bytes          uint64
 }
 
 func (sc *sconn) expired() bool {
@@ -65,16 +67,17 @@ func (cm *connmgr) newConn(raddr *net.UDPAddr, p *Params) *sconn {
 	return sc
 }
 
-func (cm *connmgr) conn(ct ctoken, raddr *net.UDPAddr) (sc *sconn, addrOk bool, intervalOk bool) {
+func (cm *connmgr) conn(p *packet, raddr *net.UDPAddr) (sconn sconn, exists bool, addrOk bool, intervalOk bool) {
 	cm.mtx.Lock()
 	defer cm.mtx.Unlock()
-	sc = cm.conns[ct]
+	ct := p.ctoken()
+	sc := cm.conns[ct]
 	if sc == nil {
 		return
 	}
+	exists = true
 	if sc.expired() {
 		delete(cm.conns, ct)
-		sc = nil
 		return
 	}
 	if !udpAddrsEqual(raddr, &sc.raddr) {
@@ -100,7 +103,10 @@ func (cm *connmgr) conn(ct ctoken, raddr *net.UDPAddr) (sc *sconn, addrOk bool, 
 	} else {
 		intervalOk = true
 	}
+	sc.lastSeqno = p.seqno()
 	sc.lastUsed = now
+	sc.receivedCount++
+	sconn = *sc
 	return
 }
 

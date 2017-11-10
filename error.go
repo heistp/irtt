@@ -61,6 +61,8 @@ const (
 	InvalidServerRestriction
 	InvalidParamValue
 	ParamsChanged
+	InvalidReceivedStatsInt
+	InvalidReceivedStatsString
 )
 
 // Error is an IRTT error.

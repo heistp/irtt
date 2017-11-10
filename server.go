@@ -301,7 +301,7 @@ func (l *listener) readAndReply() (err error) {
 			p.setReply(true)
 			p.setConnToken(sc.ctoken)
 			p.setPayload(params.bytes())
-			if err = l.sendPacket(trecv, params, false); err != nil {
+			if err = l.sendPacket(trecv, sc, false); err != nil {
 				return
 			}
 			continue
@@ -340,8 +340,8 @@ func (l *listener) readAndReply() (err error) {
 		}
 
 		// check conn, token and address
-		sc, addrOk, intervalOk := l.cmgr.conn(p.ctoken(), l.raddr)
-		if sc == nil {
+		sc, exists, addrOk, intervalOk := l.cmgr.conn(p, l.raddr)
+		if !exists {
 			l.eventf(DropInvalidConnToken, "request for invalid conn token %016x",
 				p.ctoken())
 			continue
@@ -378,7 +378,7 @@ func (l *listener) readAndReply() (err error) {
 		}
 
 		// check DSCP value and set on socket, if necessary, then send response
-		if err = l.sendPacket(trecv, sc.params, true); err != nil {
+		if err = l.sendPacket(trecv, &sc, true); err != nil {
 			return
 		}
 	}
@@ -411,7 +411,7 @@ func (l *listener) addFields(fidxs []fidx) bool {
 }
 
 // sendPacket sends a packet, locking and setting socket options as necessary.
-func (l *listener) sendPacket(trecv time.Time, params *Params, testPacket bool) (err error) {
+func (l *listener) sendPacket(trecv time.Time, sc *sconn, testPacket bool) (err error) {
 	// lock, if necessary (avoids socket options conflict)
 	if l.Goroutines > 1 {
 		l.mtx.Lock()
@@ -420,16 +420,22 @@ func (l *listener) sendPacket(trecv time.Time, params *Params, testPacket bool) 
 
 	// set socket options
 	if l.dscpSupport {
-		l.conn.setDSCP(params.DSCP)
+		l.conn.setDSCP(sc.params.DSCP)
 	}
 
 	p := l.conn.pkt
 
-	// for test packets, add timestamps according to conn params
+	// for test packets, add stats and timestamps according to conn params
 	if testPacket {
 		p.setLen(0)
-		at := params.StampAt
-		cl := params.Clock
+		if sc.params.ReceivedStats&ReceivedStatsCount != 0 {
+			p.setReceivedCount(sc.receivedCount)
+		}
+		if sc.params.ReceivedStats&ReceivedStatsWindow != 0 {
+			p.setReceivedWindow(sc.receivedWindow)
+		}
+		at := sc.params.StampAt
+		cl := sc.params.Clock
 		if at != AtNone {
 			var rt Time
 			var st Time
@@ -449,7 +455,7 @@ func (l *listener) sendPacket(trecv time.Time, params *Params, testPacket bool) 
 		} else {
 			p.removeTimestamps()
 		}
-		p.setLen(params.Length)
+		p.setLen(sc.params.Length)
 	}
 
 	p.updateHMAC()

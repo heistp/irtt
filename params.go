@@ -13,6 +13,7 @@ const (
 	pDuration = iota + 1
 	pInterval
 	pLength
+	pReceivedStats
 	pStampAt
 	pClock
 	pDSCP
@@ -20,12 +21,13 @@ const (
 
 // Params are the test parameters sent to and received from the server.
 type Params struct {
-	Duration time.Duration `json:"duration"`
-	Interval time.Duration `json:"interval"`
-	Length   int           `json:"length"`
-	StampAt  StampAt       `json:"stamp_at"`
-	Clock    Clock         `json:"clock"`
-	DSCP     int           `json:"dscp"`
+	Duration      time.Duration `json:"duration"`
+	Interval      time.Duration `json:"interval"`
+	Length        int           `json:"length"`
+	ReceivedStats ReceivedStats `json:"received_stats"`
+	StampAt       StampAt       `json:"stamp_at"`
+	Clock         Clock         `json:"clock"`
+	DSCP          int           `json:"dscp"`
 }
 
 func parseParams(b []byte) (*Params, error) {
@@ -49,6 +51,8 @@ func (p *Params) bytes() []byte {
 	pos += binary.PutVarint(b[pos:], int64(p.Interval))
 	pos += binary.PutUvarint(b[pos:], pLength)
 	pos += binary.PutVarint(b[pos:], int64(p.Length))
+	pos += binary.PutUvarint(b[pos:], pReceivedStats)
+	pos += binary.PutVarint(b[pos:], int64(p.ReceivedStats))
 	pos += binary.PutUvarint(b[pos:], pStampAt)
 	pos += binary.PutVarint(b[pos:], int64(p.StampAt))
 	pos += binary.PutUvarint(b[pos:], pClock)
@@ -83,6 +87,11 @@ func (p *Params) readParam(b []byte) (int, error) {
 		}
 	case pLength:
 		p.Length = int(v)
+	case pReceivedStats:
+		p.ReceivedStats, err = ReceivedStatsFromInt(int(v))
+		if err != nil {
+			return 0, err
+		}
 	case pStampAt:
 		p.StampAt, err = StampAtFromInt(int(v))
 		if err != nil {

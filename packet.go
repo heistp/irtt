@@ -39,6 +39,12 @@ var endian = binary.LittleEndian
 // Seqno is a sequence number.
 type Seqno uint32
 
+// ReceivedCount is the received packet count.
+type ReceivedCount uint32
+
+// ReceivedWindow is the received packet window.
+type ReceivedWindow uint64
+
 // ctoken is a conn token
 type ctoken uint64
 
@@ -87,6 +93,8 @@ const (
 	fHMAC
 	fConnToken
 	fSeqno
+	fRCount
+	fRWindow
 	fRWall
 	fRMono
 	fMWall
@@ -100,7 +108,7 @@ const fcount = fSMono + 1
 const foptidx = fHMAC
 
 // field capacities (sync with field constants)
-var fcaps = []int{3, 1, md5.Size, 8, 4, 8, 8, 8, 8, 8, 8}
+var fcaps = []int{3, 1, md5.Size, 8, 4, 4, 8, 8, 8, 8, 8, 8, 8}
 
 // field index definitions
 var finit = []fidx{fMagic, fFlags}
@@ -307,6 +315,56 @@ func (p *packet) setSeqno(seqno Seqno) {
 	endian.PutUint32(p.setTo(fSeqno), uint32(seqno))
 }
 
+// Received packet stats
+
+func (p *packet) receivedCount() ReceivedCount {
+	return ReceivedCount(endian.Uint32(p.get(fRCount)))
+}
+
+func (p *packet) setReceivedCount(n ReceivedCount) {
+	endian.PutUint32(p.setTo(fRCount), uint32(n))
+}
+
+func (p *packet) receivedWindow() ReceivedWindow {
+	return ReceivedWindow(endian.Uint64(p.get(fRWindow)))
+}
+
+func (p *packet) setReceivedWindow(w ReceivedWindow) {
+	endian.PutUint64(p.setTo(fRWindow), uint64(w))
+}
+
+func (p *packet) hasReceivedCount() bool {
+	return p.isset(fRCount)
+}
+
+func (p *packet) hasReceivedWindow() bool {
+	return p.isset(fRWindow)
+}
+
+func (p *packet) zeroReceivedStats(rs ReceivedStats) {
+	if rs&ReceivedStatsCount != 0 {
+		p.zero(fRCount)
+	} else {
+		p.remove(fRCount)
+	}
+	if rs&ReceivedStatsWindow != 0 {
+		p.zero(fRWindow)
+	} else {
+		p.remove(fRWindow)
+	}
+}
+
+func (p *packet) addReceivedStatsFields(rs ReceivedStats) {
+	rfs := make([]fidx, 0, 2)
+	if rs&ReceivedStatsCount != 0 {
+		rfs = append(rfs, fRCount)
+	}
+	if rs&ReceivedStatsWindow != 0 {
+		rfs = append(rfs, fRWindow)
+	}
+	p.addFields(rfs, false)
+}
+
 // Timestamps
 
 func (p *packet) timestamp() (ts Timestamp) {
@@ -408,7 +466,7 @@ func (p *packet) stampZeroes(at StampAt, c Clock) {
 	zts(AtSend, fSWall, fSMono)
 }
 
-func (p *packet) addTimestampFields(at StampAt, c Clock, setLen bool) {
+func (p *packet) addTimestampFields(at StampAt, c Clock) {
 	tfs := make([]fidx, 0, 4)
 	atf := func(a StampAt, wf fidx, mf fidx) {
 		if at&a != 0 {
@@ -424,7 +482,7 @@ func (p *packet) addTimestampFields(at StampAt, c Clock, setLen bool) {
 	atf(AtReceive, fRWall, fRMono)
 	atf(AtMidpoint, fMWall, fMMono)
 	atf(AtSend, fSWall, fSMono)
-	p.addFields(tfs, setLen)
+	p.addFields(tfs, false)
 }
 
 func (p *packet) removeTimestamps() {

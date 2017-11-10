@@ -29,7 +29,11 @@ func clientUsage() {
 	printf("               increased as necessary for irtt headers, common values:")
 	printf("               1472 (max unfragmented size of IPv4 datagram for 1500 byte MTU)")
 	printf("               1452 (max unfragmented size of IPv6 datagram for 1500 byte MTU)")
-	printf("-ts mode       server timestamp mode, default %s:", DefaultStampAt.String())
+	printf("-rs stats      server stats on received packets (default %s)", DefaultReceivedStats.String())
+	printf("               count: total count of received packets")
+	printf("               window: receipt status of last 64 sequence numbers")
+	printf("               both: both count and window")
+	printf("-ts mode       server timestamp mode (default %s)", DefaultStampAt.String())
 	printf("               none: request no timestamps")
 	printf("               send: request timestamp at server send")
 	printf("               receive: request timestamp at server receive")
@@ -121,6 +125,7 @@ func runClientCLI(args []string) {
 	var durationStr = fs.String("d", DefaultDuration.String(), "length of time to run test")
 	var intervalStr = fs.String("i", DefaultInterval.String(), "send interval")
 	var length = fs.Int("l", DefaultLength, "packet length")
+	var rsStr = fs.String("rs", DefaultReceivedStats.String(), "received stats")
 	var tsatStr = fs.String("ts", DefaultStampAt.String(), "stamp at")
 	var clockStr = fs.String("clock", DefaultClock.String(), "clock")
 	var outputStr = fs.String("o", "", "output file")
@@ -175,6 +180,10 @@ func runClientCLI(args []string) {
 
 	// parse wait
 	waiter, err := NewWaiter(*waitStr)
+	exitOnError(err, exitCodeBadCommandLine)
+
+	// parse received stats
+	rs, err := ReceivedStatsFromString(*rsStr)
 	exitOnError(err, exitCodeBadCommandLine)
 
 	// parse timestamp string
@@ -243,6 +252,7 @@ func runClientCLI(args []string) {
 	cfg.Duration = duration
 	cfg.Interval = interval
 	cfg.Length = *length
+	cfg.ReceivedStats = rs
 	cfg.StampAt = at
 	cfg.Clock = clock
 	cfg.DSCP = int(dscp)
@@ -280,7 +290,7 @@ func runClientCLI(args []string) {
 }
 
 func printResult(r *Result) {
-	// set some stat variables just for later brevity
+	// set some stat variables for later brevity
 	rtts := r.RTTStats
 	rttvs := r.RoundTripIPDVStats
 	sds := r.SendDelayStats
@@ -331,6 +341,11 @@ func printResult(r *Result) {
 	printf("                duration: %s (wait %s)", rdur(r.Duration), rdur(r.Wait))
 	printf("   packets sent/received: %d/%d (%.2f%% loss)", r.PacketsSent,
 		r.PacketsReceived, r.PacketLossPercent)
+	if r.PacketsReceived > 0 && r.ServerPacketsReceived > 0 {
+		printf(" server packets received: %d/%d (%.2f%%/%.2f%% upstream/downstream loss)",
+			r.ServerPacketsReceived, r.PacketsSent, r.UpstreamLossPercent,
+			r.DownstreamLossPercent)
+	}
 	if r.Duplicates > 0 {
 		printf("          *** DUPLICATES: %d (%.2f%%)", r.Duplicates,
 			r.DuplicatePercent)
