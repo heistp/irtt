@@ -205,8 +205,8 @@ IRTT server starting...
 ```
 
 While that's running, run a client. If no options are supplied, it will send
-a request once per second, like ping, but here we use an interval of 10ms
-and a test duration of 1m, with a payload of 160 bytes, to roughly simulate
+a request once per second, like ping, but here we use an interval of 20ms
+and a test duration of 1 minute, with a payload of 160 bytes, to roughly simulate
 a G.711 VoIP conversation:
 
 ```
