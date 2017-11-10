@@ -8,9 +8,8 @@ fixed period, and produces both human and machine parseable output.
 IRTT is still under development, and as such has not yet met all of its
 [goals](#goals). In particular:
 
-- it can't distinguish between upstream and downstream packet loss
 - there's more work to do for public server security
-- the JSON output format, packet format and API are all not finalized
+- the JSON output format, protocol and API are all not finalized
 - it is only available in source form
 - it has only had very basic testing on a couple of platforms
 
@@ -293,6 +292,7 @@ the configuration used for the test
         "duration": 600000000,
         "interval": 200000000,
         "length": 48,
+        "received_stats": "both",
         "stamp_at": "both",
         "clock": "both",
         "dscp": 0
@@ -312,6 +312,7 @@ the configuration used for the test
             "duration": 600000000,
             "interval": 200000000,
             "length": 0,
+            "received_stats": "both",
             "stamp_at": "both",
             "clock": "both",
             "dscp": 0
@@ -334,6 +335,8 @@ the configuration used for the test
   - `duration` duration of the test, in nanoseconds
   - `interval` send interval, in nanoseconds
   - `length` packet length
+  - `received_stats` statistics for packets received by server (none, count,
+    window or both, -rs flag for irtt client)
   - `stamp_at` timestamp selection parameter (none, send, receive, both or
 		midpoint, -ts flag for irtt client)
   - `clock` clock selection parameter (wall or monotonic, -clock flag for irtt client)
@@ -413,6 +416,7 @@ statistics for the results
         "stddev": 64,
         "variance": 4140
     },
+    "server_packets_received": 2,
     "bytes_sent": 144,
     "bytes_received": 96,
     "duplicates": 0,
@@ -422,6 +426,8 @@ statistics for the results
     "packets_sent": 3,
     "packets_received": 2,
     "packet_loss_percent": 33.333333333333336,
+    "upstream_loss_percent": 33.333333333333336,
+    "downstream_loss_percent": 0,
     "duplicate_percent": 0,
     "late_packets_percent": 0,
     "ipdv_send": {
@@ -498,6 +504,10 @@ The regular attributes in `stats` are as follows:
    _(only available if server timestamps are enabled)_
 - `receive_delay` a duration stats object for the one-way receive delay
    _(only available if server timestamps are enabled)_
+- `server_packets_received` the number of packets received by the server,
+  including duplicates (always present, but only valid if the `ReceivedStats`
+  parameter includes `ReceivedStatsCount`, or the -rs parameter to the irtt
+  client is `count` or `both`)
 - `bytes_sent` the number of UDP payload bytes sent during the test
 - `bytes_received` the number of UDP payload bytes received during the test
 - `duplicates` the number of packets received with the same sequence number
@@ -508,9 +518,15 @@ The regular attributes in `stats` are as follows:
 - `duration` the actual duration of the test, in nanoseconds, from the time just
 	before the first packet was sent to the time after the last packet was
 	received and results are starting to be calculated
-- `packets_sent` the number of packets sent
-- `packets_received` the number of packets received
-- `packet_loss_percent` 100 * `packets_received` / `packets_sent`
+- `packets_sent` the number of packets sent to the server
+- `packets_received` the number of packets received from the server
+- `packet_loss_percent` 100 * (`packets_sent` - `packets_received`) / `packets_sent`
+- `upstream_loss_percent` 100 * (`packets_sent` - `server_packets_received` /
+  `packets_sent`) (always present, but only valid if `server_packets_received`
+  is valid)
+- `downstream_loss_percent` 100 * (`server_packets_received` - `packets_received` /
+  `server_packets_received`) (always present, but only valid if
+  `server_packets_received` is valid)
 - `duplicate_percent` 100 * `duplicates` / `packets_received`
 - `late_packets_percent` 100 * `late_packets` / `packets_received`
 - `ipdv_send` a duration stats object for the send
@@ -706,10 +722,12 @@ the client, and since start of the process for the server
 	 be meaningful.  Well-configured NTP hosts may be able to synchronize within a
 	 few milliseconds.
 	 [PTP](https://en.wikipedia.org/wiki/Precision_Time_Protocol)
-	 ([Linux](http://linuxptp.sourceforge.net) implementation here) should be
-	 capable of higher precision, but I've not tried it myself as I don't have any
-	 supported hardware.
-
+	 ([Linux](http://linuxptp.sourceforge.net) implementation here) is capable of
+   much higher precision. For example, using two
+   [PCEngines APU2](http://pcengines.ch/apu2.htm) boards (which support PTP
+   hardware timestamps) connected directly by Ethernet, the clocks
+   may be synchronized within a few microseconds.
+   
 	 Note that client and server synchronization is not needed for either RTT or
 	 IPDV (even send and receive IPDV) values to be correct. RTT is measured with
 	 client times only, and since IPDV is measuring differences between successive
@@ -797,18 +815,20 @@ the client, and since start of the process for the server
 
 Definitely (in order of priority)...
 
-- Improve client close by repeating close packets up to four times, like open
-- Implement server received packets feedback (to distinguish between upstream
-	and downstream packet loss)
-- Calculate arrival order for round trips during results generation using
-  timestamps
+- Add faq about why I use wildcard addresses
+- Implement per-packet receipt feedback
+- Improve client connection closure by:
+  - repeating close packets up to four times until acknowledgement, like open
+  - including received packet stats in the acknowledgement from the server
+- Make sure no garbage created during data collection
 - Write a SmokePing probe
 - Refactor packet manipulation to improve maintainability and prevent multiple
 	validations
 - Add a flag to disable per-packet results
-- Make sure no garbage created during data collection
 - Allow specifying two out of three of interval, bitrate and packet size to the
 	client
+- Calculate arrival order for round trips during results generation using
+  timestamps
 - Improve robustness and security of public servers:
 	- Add bitrate limiting
 	- Limit open requests to prevent the equivalent of a "syn flood"
@@ -833,6 +853,8 @@ Definitely (in order of priority)...
 Possibly...
 
 - Add machine parseable output during test
+- Refactor packet parsing by using a header struct instead of direct buffer access
+- Make feedback fields generic to ease addition of new returned stats
 - Allow non-isochronous send schedules
 - Prompt to write JSON file on cancellation
 - Use pflag options: https://github.com/spf13/pflag

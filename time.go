@@ -115,7 +115,7 @@ const (
 var sas = [...]string{"none", "send", "receive", "both", "midpoint"}
 
 func (sa StampAt) String() string {
-	if int(sa) < 0 || int(sa) > len(sas) {
+	if int(sa) < 0 || int(sa) >= len(sas) {
 		return fmt.Sprintf("StampAt:%d", sa)
 	}
 	return sas[sa]
@@ -134,7 +134,7 @@ func (sa StampAt) MarshalJSON() ([]byte, error) {
 	return json.Marshal(sa.String())
 }
 
-// StampAtFromString returns an Upon value from its string.
+// StampAtFromString returns a StampAt value from its string.
 func StampAtFromString(s string) (StampAt, error) {
 	for i, v := range sas {
 		if v == s {
@@ -236,7 +236,7 @@ func (a AllowStamp) Restrict(at StampAt) StampAt {
 }
 
 func (a AllowStamp) String() string {
-	if int(a) < 0 || int(a) > len(als) {
+	if int(a) < 0 || int(a) >= len(als) {
 		return fmt.Sprintf("AllowStamp:%d", a)
 	}
 	return als[a]

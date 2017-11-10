@@ -21,24 +21,25 @@ const maxStampsInitCap = 0
 // is not possible to lock Recorder externally for write, since all recording
 // should be done internally.
 type Recorder struct {
-	Start             time.Time     `json:"start_time"`
-	FirstSend         time.Time     `json:"-"`
-	LastSent          time.Time     `json:"-"`
-	FirstReceived     time.Time     `json:"-"`
-	LastReceived      time.Time     `json:"-"`
-	SendCallStats     DurationStats `json:"send_call"`
-	TimerErrorStats   DurationStats `json:"timer_error"`
-	RTTStats          DurationStats `json:"rtt"`
-	SendDelayStats    DurationStats `json:"send_delay"`
-	ReceiveDelayStats DurationStats `json:"receive_delay"`
-	BytesSent         uint64        `json:"bytes_sent"`
-	BytesReceived     uint64        `json:"bytes_received"`
-	Duplicates        uint          `json:"duplicates"`
-	LatePackets       uint          `json:"late_packets"`
-	Wait              time.Duration `json:"wait"`
-	Timestamps        []Timestamps  `json:"-"`
-	lastSeqno         Seqno
-	mtx               sync.RWMutex
+	Start                 time.Time     `json:"start_time"`
+	FirstSend             time.Time     `json:"-"`
+	LastSent              time.Time     `json:"-"`
+	FirstReceived         time.Time     `json:"-"`
+	LastReceived          time.Time     `json:"-"`
+	SendCallStats         DurationStats `json:"send_call"`
+	TimerErrorStats       DurationStats `json:"timer_error"`
+	RTTStats              DurationStats `json:"rtt"`
+	SendDelayStats        DurationStats `json:"send_delay"`
+	ReceiveDelayStats     DurationStats `json:"receive_delay"`
+	ServerPacketsReceived ReceivedCount `json:"server_packets_received"`
+	BytesSent             uint64        `json:"bytes_sent"`
+	BytesReceived         uint64        `json:"bytes_received"`
+	Duplicates            uint          `json:"duplicates"`
+	LatePackets           uint          `json:"late_packets"`
+	Wait                  time.Duration `json:"wait"`
+	Timestamps            []Timestamps  `json:"-"`
+	lastSeqno             Seqno
+	mtx                   sync.RWMutex
 }
 
 // RLock locks the Recorder for reading.
@@ -103,12 +104,12 @@ func (r *Recorder) recordTimerErr(terr time.Duration) {
 	r.TimerErrorStats.push(AbsDuration(terr))
 }
 
-func (r *Recorder) recordReceive(seqno Seqno, trecv time.Time, sts *Timestamp,
-	n uint64) (Timestamps, bool, bool) {
+func (r *Recorder) recordReceive(p *packet, trecv time.Time, sts *Timestamp) (Timestamps, bool, bool) {
 	r.mtx.Lock()
 	defer r.mtx.Unlock()
 
 	// check for invalid sequence number
+	seqno := p.seqno()
 	if int(seqno) >= len(r.Timestamps) {
 		return Timestamps{}, false, false
 	}
@@ -148,8 +149,13 @@ func (r *Recorder) recordReceive(seqno Seqno, trecv time.Time, sts *Timestamp,
 	}
 	r.LastReceived = trecv
 
+	// update server packets received
+	if p.hasReceivedCount() {
+		r.ServerPacketsReceived = p.receivedCount()
+	}
+
 	// update bytes received
-	r.BytesReceived += n
+	r.BytesReceived += uint64(p.length())
 
 	return *tt, false, true
 }

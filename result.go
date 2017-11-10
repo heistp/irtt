@@ -114,6 +114,16 @@ func newResult(rec *Recorder, cfg *Config, serr error, rerr error) *Result {
 		r.PacketLossPercent = float64(100)
 	}
 
+	// calculate upstream and downstream loss percent
+	if r.ServerPacketsReceived > 0 {
+		r.UpstreamLossPercent = 100 *
+			float64(r.SendCallStats.N-uint(r.ServerPacketsReceived)) /
+			float64(r.SendCallStats.N)
+		r.DownstreamLossPercent = 100 *
+			float64(uint(r.ServerPacketsReceived)-r.PacketsReceived) /
+			float64(uint(r.ServerPacketsReceived))
+	}
+
 	// calculate duplicate percent
 	if r.PacketsReceived > 0 {
 		r.DuplicatePercent = 100 * float64(r.Duplicates) / float64(r.PacketsReceived)
@@ -202,6 +212,8 @@ type Stats struct {
 	PacketsSent               uint          `json:"packets_sent"`
 	PacketsReceived           uint          `json:"packets_received"`
 	PacketLossPercent         float64       `json:"packet_loss_percent"`
+	UpstreamLossPercent       float64       `json:"upstream_loss_percent"`
+	DownstreamLossPercent     float64       `json:"downstream_loss_percent"`
 	DuplicatePercent          float64       `json:"duplicate_percent"`
 	LatePacketsPercent        float64       `json:"late_packets_percent"`
 	SendIPDVStats             DurationStats `json:"ipdv_send"`

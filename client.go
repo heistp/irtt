@@ -245,11 +245,10 @@ func (c *Client) send(ctx context.Context) error {
 	}
 
 	// include 0 timestamp in appropriate fields
-	// TODO this has to use the StampAt and Clock that was negotiated, not what
-	// was requested
 	seqno := Seqno(0)
 	p := c.conn.spkt
 	p.addFields(fechoRequest, true)
+	p.zeroReceivedStats(c.ReceivedStats)
 	p.stampZeroes(c.StampAt, c.Clock)
 	p.setSeqno(seqno)
 	c.Length = p.setLen(c.Length)
@@ -371,8 +370,11 @@ func (c *Client) receive() error {
 				c.conn.spkt.length(), p.length())
 		}
 
+		// add expected received stats fields
+		p.addReceivedStatsFields(c.ReceivedStats)
+
 		// add expected timestamp fields
-		p.addTimestampFields(c.StampAt, c.Clock, false)
+		p.addTimestampFields(c.StampAt, c.Clock)
 
 		// get timestamps and return an error if the timestamp setting is
 		// different (server doesn't support timestamps)
@@ -390,7 +392,7 @@ func (c *Client) receive() error {
 		sts := p.timestamp()
 
 		// record receive if all went well (may fail if seqno not found)
-		rt, dup, ok := c.rec.recordReceive(p.seqno(), trecv, &sts, uint64(p.length()))
+		rt, dup, ok := c.rec.recordReceive(p, trecv, &sts)
 		if !ok {
 			return Errorf(UnexpectedSequenceNumber, "unexpected reply sequence number %d", p.seqno())
 		}
