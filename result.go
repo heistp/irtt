@@ -26,21 +26,38 @@ func newResult(rec *Recorder, cfg *Config, serr error, rerr error) *Result {
 	r.Duration = time.Since(r.Start)
 
 	// create RoundTrips array
-	r.RoundTrips = make([]RoundTrip, len(rec.Timestamps))
+	r.RoundTrips = make([]RoundTrip, len(rec.RoundTripData))
 	for i := 0; i < len(r.RoundTrips); i++ {
 		rt := &r.RoundTrips[i]
 		rt.Seqno = Seqno(i)
-		rt.Timestamps = &r.Timestamps[i]
-		rt.Lost = !rt.ReplyReceived()
+		rt.RoundTripData = &r.RoundTripData[i]
+		// use received window to update lost status of previous round trips
+		if rt.ReplyReceived() {
+			rt.Lost = LostFalse
+			if cfg.Params.ReceivedStats&ReceivedStatsWindow != 0 {
+				rwin := rt.RoundTripData.receivedWindow >> 1
+				wend := i - 63
+				if wend < 0 {
+					wend = 0
+				}
+				for j := i - 1; j >= wend; j-- {
+					if rwin&0x1 != 0 && r.RoundTrips[j].Lost == LostTrue {
+						r.RoundTrips[j].Lost = LostDown
+					}
+					rwin >>= 1
+				}
+			}
+		}
+		// calculate IPDV
 		rt.IPDV = InvalidDuration
 		rt.SendIPDV = InvalidDuration
 		rt.ReceiveIPDV = InvalidDuration
 		if i > 0 {
 			rtp := &r.RoundTrips[i-1]
 			if rt.ReplyReceived() && rtp.ReplyReceived() {
-				rt.IPDV = rt.IPDVSince(rtp.Timestamps)
-				rt.SendIPDV = rt.SendIPDVSince(rtp.Timestamps)
-				rt.ReceiveIPDV = rt.ReceiveIPDVSince(rtp.Timestamps)
+				rt.IPDV = rt.IPDVSince(rtp.RoundTripData)
+				rt.SendIPDV = rt.SendIPDVSince(rtp.RoundTripData)
+				rt.ReceiveIPDV = rt.ReceiveIPDVSince(rtp.RoundTripData)
 			}
 		}
 	}
@@ -72,7 +89,7 @@ func newResult(rec *Recorder, cfg *Config, serr error, rerr error) *Result {
 	})
 
 	// calculate server processing time, if available
-	for _, rt := range rec.Timestamps {
+	for _, rt := range rec.RoundTripData {
 		spt := rt.ServerProcessingTime()
 		if spt != InvalidDuration {
 			r.ServerProcessingTimeStats.push(spt)
@@ -158,12 +175,12 @@ func (r *Result) visitStats(ds *DurationStats, push bool,
 
 // RoundTrip stores the Timestamps and statistics for a single round trip.
 type RoundTrip struct {
-	Seqno       Seqno `json:"seqno"`
-	Lost        bool  `json:"lost"`
-	*Timestamps `json:"timestamps"`
-	IPDV        time.Duration `json:"-"`
-	SendIPDV    time.Duration `json:"-"`
-	ReceiveIPDV time.Duration `json:"-"`
+	Seqno          Seqno `json:"seqno"`
+	Lost           Lost  `json:"lost"`
+	*RoundTripData `json:"timestamps"`
+	IPDV           time.Duration `json:"-"`
+	SendIPDV       time.Duration `json:"-"`
+	ReceiveIPDV    time.Duration `json:"-"`
 }
 
 // MarshalJSON implements the json.Marshaler interface.

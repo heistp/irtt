@@ -49,3 +49,28 @@ func ReceivedStatsFromString(s string) (ReceivedStats, error) {
 	return ReceivedStatsNone, Errorf(InvalidReceivedStatsString,
 		"invalid ReceivedStats string: %s", s)
 }
+
+// Lost indicates the lost status of a packet.
+type Lost int
+
+// Lost constants.
+const (
+	LostTrue Lost = iota
+	LostDown
+	LostUp
+	LostFalse
+)
+
+var lsts = [...]string{"true", "true_down", "true_up", "false"}
+
+func (l Lost) String() string {
+	if int(l) < 0 || int(l) >= len(lsts) {
+		return fmt.Sprintf("Lost:%d", l)
+	}
+	return lsts[l]
+}
+
+// MarshalJSON implements the json.Marshaler interface.
+func (l Lost) MarshalJSON() ([]byte, error) {
+	return json.Marshal(l.String())
+}

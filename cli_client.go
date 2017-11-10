@@ -405,10 +405,10 @@ type clientHandler struct {
 	reallyQuiet bool
 }
 
-func (c *clientHandler) OnSent(seqno Seqno, rt Timestamps, length int, rec *Recorder) {
+func (c *clientHandler) OnSent(seqno Seqno, rt RoundTripData, length int, rec *Recorder) {
 }
 
-func (c *clientHandler) OnReceived(seqno Seqno, rt Timestamps, length int,
+func (c *clientHandler) OnReceived(seqno Seqno, rt RoundTripData, length int,
 	dup bool, rec *Recorder) {
 	if !c.reallyQuiet {
 		if dup {

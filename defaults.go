@@ -17,7 +17,7 @@ const (
 	DefaultDuration                = time.Duration(1) * time.Hour
 	DefaultInterval                = time.Duration(1) * time.Second
 	DefaultLength                  = 0
-	DefaultReceivedStats           = ReceivedStatsCount
+	DefaultReceivedStats           = ReceivedStatsBoth
 	DefaultStampAt                 = AtBoth
 	DefaultClock                   = BothClocks
 	DefaultDSCP                    = 0

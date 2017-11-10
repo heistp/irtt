@@ -6,6 +6,7 @@ import (
 	"encoding/binary"
 	"hash"
 	"io"
+	"math"
 	"time"
 )
 
@@ -38,6 +39,9 @@ var endian = binary.LittleEndian
 
 // Seqno is a sequence number.
 type Seqno uint32
+
+// InvalidSeqno indicates a sequence number that is not valid.
+const InvalidSeqno = Seqno(math.MaxUint32)
 
 // ReceivedCount is the received packet count.
 type ReceivedCount uint32
