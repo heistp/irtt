@@ -2,6 +2,7 @@ package irtt
 
 import (
 	"context"
+	"math/rand"
 	"net"
 	"runtime"
 	"runtime/debug"
@@ -11,6 +12,9 @@ import (
 
 // ignore server restrictions (for testing hard limits)
 const ignoreServerRestrictions = true
+
+// settings for testing
+const clientDropsPercent = 0
 
 // Client is the Client. It must be created with NewClient. It may not be used
 // concurrently.
@@ -275,7 +279,14 @@ func (c *Client) send(ctx context.Context) error {
 	for {
 		// send to network and record times right before and after
 		tsend := c.rec.recordPreSend()
-		tsent, err := c.conn.send()
+		var err error
+		var tsent time.Time
+		if clientDropsPercent == 0 || rand.Float32() > clientDropsPercent {
+			tsent, err = c.conn.send()
+		} else {
+			time.Sleep(20 * time.Microsecond)
+			tsent, err = time.Now(), nil
+		}
 
 		// return on error
 		if err != nil {
@@ -441,8 +452,8 @@ type ClientHandler interface {
 	Handler
 
 	// OnSent is called when a packet is sent.
-	OnSent(seqno Seqno, rt Timestamps, length int, rec *Recorder)
+	OnSent(seqno Seqno, rt RoundTripData, length int, rec *Recorder)
 
 	// OnReceived is called when a packet is received.
-	OnReceived(seqno Seqno, rt Timestamps, length int, dup bool, rec *Recorder)
+	OnReceived(seqno Seqno, rt RoundTripData, length int, dup bool, rec *Recorder)
 }

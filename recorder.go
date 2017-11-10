@@ -21,23 +21,23 @@ const maxStampsInitCap = 0
 // is not possible to lock Recorder externally for write, since all recording
 // should be done internally.
 type Recorder struct {
-	Start                 time.Time     `json:"start_time"`
-	FirstSend             time.Time     `json:"-"`
-	LastSent              time.Time     `json:"-"`
-	FirstReceived         time.Time     `json:"-"`
-	LastReceived          time.Time     `json:"-"`
-	SendCallStats         DurationStats `json:"send_call"`
-	TimerErrorStats       DurationStats `json:"timer_error"`
-	RTTStats              DurationStats `json:"rtt"`
-	SendDelayStats        DurationStats `json:"send_delay"`
-	ReceiveDelayStats     DurationStats `json:"receive_delay"`
-	ServerPacketsReceived ReceivedCount `json:"server_packets_received"`
-	BytesSent             uint64        `json:"bytes_sent"`
-	BytesReceived         uint64        `json:"bytes_received"`
-	Duplicates            uint          `json:"duplicates"`
-	LatePackets           uint          `json:"late_packets"`
-	Wait                  time.Duration `json:"wait"`
-	Timestamps            []Timestamps  `json:"-"`
+	Start                 time.Time       `json:"start_time"`
+	FirstSend             time.Time       `json:"-"`
+	LastSent              time.Time       `json:"-"`
+	FirstReceived         time.Time       `json:"-"`
+	LastReceived          time.Time       `json:"-"`
+	SendCallStats         DurationStats   `json:"send_call"`
+	TimerErrorStats       DurationStats   `json:"timer_error"`
+	RTTStats              DurationStats   `json:"rtt"`
+	SendDelayStats        DurationStats   `json:"send_delay"`
+	ReceiveDelayStats     DurationStats   `json:"receive_delay"`
+	ServerPacketsReceived ReceivedCount   `json:"server_packets_received"`
+	BytesSent             uint64          `json:"bytes_sent"`
+	BytesReceived         uint64          `json:"bytes_received"`
+	Duplicates            uint            `json:"duplicates"`
+	LatePackets           uint            `json:"late_packets"`
+	Wait                  time.Duration   `json:"wait"`
+	RoundTripData         []RoundTripData `json:"-"`
 	lastSeqno             Seqno
 	mtx                   sync.RWMutex
 }
@@ -58,7 +58,7 @@ func newRecorder(dur time.Duration, interval time.Duration) *Recorder {
 		pcap = maxStampsInitCap
 	}
 	return &Recorder{
-		Timestamps: make([]Timestamps, 0, pcap),
+		RoundTripData: make([]RoundTripData, 0, pcap),
 	}
 }
 
@@ -68,19 +68,19 @@ func (r *Recorder) recordPreSend() time.Time {
 
 	// add round trip before timestamp, so any re-allocation happens before the
 	// time is set
-	r.Timestamps = append(r.Timestamps, Timestamps{})
+	r.RoundTripData = append(r.RoundTripData, RoundTripData{})
 	tsend := time.Now()
-	r.Timestamps[len(r.Timestamps)-1].Client.Send.set(tsend)
+	r.RoundTripData[len(r.RoundTripData)-1].Client.Send.set(tsend)
 	return tsend
 }
 
 func (r *Recorder) removeLastStamps() {
 	r.mtx.Lock()
 	defer r.mtx.Unlock()
-	r.Timestamps = r.Timestamps[:len(r.Timestamps)-1]
+	r.RoundTripData = r.RoundTripData[:len(r.RoundTripData)-1]
 }
 
-func (r *Recorder) recordPostSend(tsend time.Time, tsent time.Time, n uint64) Timestamps {
+func (r *Recorder) recordPostSend(tsend time.Time, tsent time.Time, n uint64) RoundTripData {
 	r.mtx.Lock()
 	defer r.mtx.Unlock()
 
@@ -95,7 +95,7 @@ func (r *Recorder) recordPostSend(tsend time.Time, tsent time.Time, n uint64) Ti
 		r.FirstSend = tsend
 	}
 	r.LastSent = tsent
-	return r.Timestamps[len(r.Timestamps)-1]
+	return r.RoundTripData[len(r.RoundTripData)-1]
 }
 
 func (r *Recorder) recordTimerErr(terr time.Duration) {
@@ -104,22 +104,22 @@ func (r *Recorder) recordTimerErr(terr time.Duration) {
 	r.TimerErrorStats.push(AbsDuration(terr))
 }
 
-func (r *Recorder) recordReceive(p *packet, trecv time.Time, sts *Timestamp) (Timestamps, bool, bool) {
+func (r *Recorder) recordReceive(p *packet, trecv time.Time, sts *Timestamp) (RoundTripData, bool, bool) {
 	r.mtx.Lock()
 	defer r.mtx.Unlock()
 
 	// check for invalid sequence number
 	seqno := p.seqno()
-	if int(seqno) >= len(r.Timestamps) {
-		return Timestamps{}, false, false
+	if int(seqno) >= len(r.RoundTripData) {
+		return RoundTripData{}, false, false
 	}
 
-	tt := &r.Timestamps[seqno]
+	rtd := &r.RoundTripData[seqno]
 
 	// check for duplicate (don't update stats for duplicates)
-	if !tt.Client.Receive.IsZero() {
+	if !rtd.Client.Receive.IsZero() {
 		r.Duplicates++
-		return *tt, true, true
+		return *rtd, true, true
 	}
 
 	// check for late packet
@@ -129,18 +129,18 @@ func (r *Recorder) recordReceive(p *packet, trecv time.Time, sts *Timestamp) (Ti
 	r.lastSeqno = seqno
 
 	// update client received times
-	tt.Client.Receive.set(trecv)
+	rtd.Client.Receive.set(trecv)
 
 	// update RTT and RTT stats
-	tt.Server = *sts
-	r.RTTStats.push(tt.RTT())
+	rtd.Server = *sts
+	r.RTTStats.push(rtd.RTT())
 
 	// update one-way delay stats
-	if !tt.Server.BestReceive().IsWallZero() {
-		r.SendDelayStats.push(tt.SendDelay())
+	if !rtd.Server.BestReceive().IsWallZero() {
+		r.SendDelayStats.push(rtd.SendDelay())
 	}
-	if !tt.Server.BestSend().IsWallZero() {
-		r.ReceiveDelayStats.push(tt.ReceiveDelay())
+	if !rtd.Server.BestSend().IsWallZero() {
+		r.ReceiveDelayStats.push(rtd.ReceiveDelay())
 	}
 
 	// set received times
@@ -154,27 +154,34 @@ func (r *Recorder) recordReceive(p *packet, trecv time.Time, sts *Timestamp) (Ti
 		r.ServerPacketsReceived = p.receivedCount()
 	}
 
+	// set received window
+	if p.hasReceivedWindow() {
+		rtd.receivedWindow = p.receivedWindow()
+	}
+
 	// update bytes received
 	r.BytesReceived += uint64(p.length())
 
-	return *tt, false, true
+	return *rtd, false, true
 }
 
-// Timestamps contains Timestamps for both the client and server.
-type Timestamps struct {
-	Client Timestamp `json:"client"`
-	Server Timestamp `json:"server"`
+// RoundTripData contains the information recorded for each round trip during
+// the test.
+type RoundTripData struct {
+	Client         Timestamp `json:"client"`
+	Server         Timestamp `json:"server"`
+	receivedWindow ReceivedWindow
 }
 
 // ReplyReceived returns true if a reply was received from the server.
-func (ts *Timestamps) ReplyReceived() bool {
+func (ts *RoundTripData) ReplyReceived() bool {
 	return !ts.Client.Receive.IsZero()
 }
 
 // RTT returns the round-trip time. The monotonic clock values are used
 // for accuracy, and the server processing time is subtracted out if
 // both send and receive timestamps are enabled.
-func (ts *Timestamps) RTT() (rtt time.Duration) {
+func (ts *RoundTripData) RTT() (rtt time.Duration) {
 	if !ts.ReplyReceived() {
 		return InvalidDuration
 	}
@@ -187,8 +194,8 @@ func (ts *Timestamps) RTT() (rtt time.Duration) {
 }
 
 // IPDVSince returns the instantaneous packet delay variation since the
-// specified Stamps.
-func (ts *Timestamps) IPDVSince(pts *Timestamps) time.Duration {
+// specified RoundTripData.
+func (ts *RoundTripData) IPDVSince(pts *RoundTripData) time.Duration {
 	if !ts.ReplyReceived() || !pts.ReplyReceived() {
 		return InvalidDuration
 	}
@@ -196,8 +203,8 @@ func (ts *Timestamps) IPDVSince(pts *Timestamps) time.Duration {
 }
 
 // SendIPDVSince returns the send instantaneous packet delay variation since the
-// specified Stamps.
-func (ts *Timestamps) SendIPDVSince(pts *Timestamps) (d time.Duration) {
+// specified RoundTripData.
+func (ts *RoundTripData) SendIPDVSince(pts *RoundTripData) (d time.Duration) {
 	d = InvalidDuration
 	if ts.IsTimestamped() && pts.IsTimestamped() {
 		if ts.IsMonoTimestamped() && pts.IsMonoTimestamped() {
@@ -210,8 +217,8 @@ func (ts *Timestamps) SendIPDVSince(pts *Timestamps) (d time.Duration) {
 }
 
 // ReceiveIPDVSince returns the receive instantaneous packet delay variation
-// since the specified Stamps.
-func (ts *Timestamps) ReceiveIPDVSince(pts *Timestamps) (d time.Duration) {
+// since the specified RoundTripData.
+func (ts *RoundTripData) ReceiveIPDVSince(pts *RoundTripData) (d time.Duration) {
 	d = InvalidDuration
 	if ts.IsTimestamped() && pts.IsTimestamped() {
 		if ts.IsMonoTimestamped() && pts.IsMonoTimestamped() {
@@ -225,7 +232,7 @@ func (ts *Timestamps) ReceiveIPDVSince(pts *Timestamps) (d time.Duration) {
 
 // SendDelay returns the estimated one-way send delay, valid only if wall clock timestamps
 // are available and the server's system time has been externally synchronized.
-func (ts *Timestamps) SendDelay() time.Duration {
+func (ts *RoundTripData) SendDelay() time.Duration {
 	if !ts.IsWallTimestamped() {
 		return InvalidDuration
 	}
@@ -235,7 +242,7 @@ func (ts *Timestamps) SendDelay() time.Duration {
 // ReceiveDelay returns the estimated one-way receive delay, valid only if wall
 // clock timestamps are available and the server's system time has been
 // externally synchronized.
-func (ts *Timestamps) ReceiveDelay() time.Duration {
+func (ts *RoundTripData) ReceiveDelay() time.Duration {
 	if !ts.IsWallTimestamped() {
 		return InvalidDuration
 	}
@@ -244,14 +251,14 @@ func (ts *Timestamps) ReceiveDelay() time.Duration {
 
 // SendMonoDiff returns the difference in send values from the monotonic clock.
 // This is useful for measuring send IPDV (jitter), but not for absolute send delay.
-func (ts *Timestamps) SendMonoDiff() time.Duration {
+func (ts *RoundTripData) SendMonoDiff() time.Duration {
 	return ts.Server.BestReceive().Mono - ts.Client.Send.Mono
 }
 
 // ReceiveMonoDiff returns the difference in receive values from the monotonic
 // clock. This is useful for measuring receive IPDV (jitter), but not for
 // absolute receive delay.
-func (ts *Timestamps) ReceiveMonoDiff() time.Duration {
+func (ts *RoundTripData) ReceiveMonoDiff() time.Duration {
 	return ts.Client.Receive.Mono - ts.Server.BestSend().Mono
 }
 
@@ -259,7 +266,7 @@ func (ts *Timestamps) ReceiveMonoDiff() time.Duration {
 // clock. This is useful for measuring receive IPDV (jitter), but not for
 // absolute send delay. Because the wall clock is used, it is subject to wall
 // clock variability.
-func (ts *Timestamps) SendWallDiff() time.Duration {
+func (ts *RoundTripData) SendWallDiff() time.Duration {
 	return time.Duration(ts.Server.BestReceive().Wall - ts.Client.Send.Wall)
 }
 
@@ -267,46 +274,46 @@ func (ts *Timestamps) SendWallDiff() time.Duration {
 // clock. This is useful for measuring receive IPDV (jitter), but not for
 // absolute receive delay. Because the wall clock is used, it is subject to wall
 // clock variability.
-func (ts *Timestamps) ReceiveWallDiff() time.Duration {
+func (ts *RoundTripData) ReceiveWallDiff() time.Duration {
 	return time.Duration(ts.Client.Receive.Wall - ts.Server.BestSend().Wall)
 }
 
 // IsTimestamped returns true if the server returned any timestamp.
-func (ts *Timestamps) IsTimestamped() bool {
+func (ts *RoundTripData) IsTimestamped() bool {
 	return ts.IsReceiveTimestamped() || ts.IsSendTimestamped()
 }
 
 // IsMonoTimestamped returns true if the server returned any timestamp with a
 // valid monotonic clock value.
-func (ts *Timestamps) IsMonoTimestamped() bool {
+func (ts *RoundTripData) IsMonoTimestamped() bool {
 	return !ts.Server.Receive.IsMonoZero() || !ts.Server.Send.IsMonoZero()
 }
 
 // IsWallTimestamped returns true if the server returned any timestamp with a
 // valid wall clock value.
-func (ts *Timestamps) IsWallTimestamped() bool {
+func (ts *RoundTripData) IsWallTimestamped() bool {
 	return !ts.Server.Receive.IsWallZero() || !ts.Server.Send.IsWallZero()
 }
 
 // IsReceiveTimestamped returns true if the server returned a receive timestamp.
-func (ts *Timestamps) IsReceiveTimestamped() bool {
+func (ts *RoundTripData) IsReceiveTimestamped() bool {
 	return !ts.Server.Receive.IsZero()
 }
 
 // IsSendTimestamped returns true if the server returned a send timestamp.
-func (ts *Timestamps) IsSendTimestamped() bool {
+func (ts *RoundTripData) IsSendTimestamped() bool {
 	return !ts.Server.Send.IsZero()
 }
 
 // IsBothTimestamped returns true if the server returned both a send and receive
 // timestamp.
-func (ts *Timestamps) IsBothTimestamped() bool {
+func (ts *RoundTripData) IsBothTimestamped() bool {
 	return ts.IsReceiveTimestamped() && ts.IsSendTimestamped()
 }
 
 // ServerProcessingTime returns the amount of time between when the server
 // received a request and when it sent its reply.
-func (ts *Timestamps) ServerProcessingTime() (d time.Duration) {
+func (ts *RoundTripData) ServerProcessingTime() (d time.Duration) {
 	d = InvalidDuration
 	if ts.Server.IsMidpoint() {
 		return

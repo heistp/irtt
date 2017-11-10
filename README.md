@@ -657,10 +657,14 @@ elapsed since January 1, 1970 UTC
 the client, and since start of the process for the server
 
 - `seqno` the sequence number
-- `lost` whether the packet was lost or not
+- `lost` the lost status of the packet, which can be one of `false`, `true`,
+  `true_down` or `true_up`. The `true_down` and `true_up` values are only
+  available if the `ReceivedStats` parameter includes `ReceivedStatsWindow`
+  (irtt client -rs parameter). Even then, if it could not be determined whether
+  the packet was lost upstream or downstream, the value `true` is used.
 - `timestamps` the client and server timestamps
   - `client` the client send and receive wall and monotonic timestamps
-    _(`receive` values not present if `lost` is true)_
+    _(`receive` values not present if `lost` is not false)_
   - `server` the server send and receive wall and monotonic timestamps _(both
 		`send` and `receive` values not present if `lost` is true), and
 		additionally:_
@@ -817,7 +821,10 @@ the client, and since start of the process for the server
 Definitely (in order of priority)...
 
 - Add faq about why I use wildcard addresses
-- Implement per-packet receipt feedback
+- Add a better error message for oversized results buffers than panic: runtime
+  error: makeslice: cap out of range
+- Figure out how to reliably set `lost` to `lost_up`, even in the face of out of
+  order packets (right now, only either `lost` or `lost_down` are returned)
 - Improve client connection closure by:
   - repeating close packets up to four times until acknowledgement, like open
   - including received packet stats in the acknowledgement from the server

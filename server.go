@@ -9,8 +9,8 @@ import (
 )
 
 // settings for testing
-const dupsPercent = 0
-const dropsPercent = 0
+const serverDupsPercent = 0
+const serverDropsPercent = 0
 
 // the grace period after the max duration is up when the conn is closed.
 const durationGraceTime = 10 * time.Second
@@ -329,11 +329,6 @@ func (l *listener) readAndReply() (err error) {
 			continue
 		}
 
-		// simulate dropped packets, if necessary
-		if dropsPercent > 0 && rand.Float32() < dropsPercent {
-			continue
-		}
-
 		// handle echo request
 		if !l.addFields(fechoRequest) {
 			continue
@@ -460,9 +455,14 @@ func (l *listener) sendPacket(trecv time.Time, sc *sconn, testPacket bool) (err 
 
 	p.updateHMAC()
 
+	// simulate dropped packets, if necessary
+	if serverDropsPercent > 0 && rand.Float32() < serverDropsPercent {
+		return
+	}
+
 	// simulate duplicates, if necessary
-	if dupsPercent > 0 {
-		for rand.Float32() < dupsPercent {
+	if serverDupsPercent > 0 {
+		for rand.Float32() < serverDupsPercent {
 			err = l.conn.sendTo(l.raddr)
 			if err != nil {
 				return

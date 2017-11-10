@@ -61,6 +61,7 @@ func (cm *connmgr) newConn(raddr *net.UDPAddr, p *Params) *sconn {
 		raddr:        *raddr,
 		params:       p,
 		created:      time.Now(),
+		lastSeqno:    InvalidSeqno,
 		packetBucket: float64(cm.packetBurst),
 	}
 	cm.conns[ct] = sc
@@ -103,9 +104,16 @@ func (cm *connmgr) conn(p *packet, raddr *net.UDPAddr) (sconn sconn, exists bool
 	} else {
 		intervalOk = true
 	}
-	sc.lastSeqno = p.seqno()
-	sc.lastUsed = now
+	// slide received seqno window
+	seqno := p.seqno()
+	sinceLastSeqno := seqno - sc.lastSeqno
+	sc.receivedWindow <<= sinceLastSeqno
+	sc.receivedWindow |= 0x1
+	// update received count
 	sc.receivedCount++
+	// update seqno and last used times
+	sc.lastSeqno = seqno
+	sc.lastUsed = now
 	sconn = *sc
 	return
 }
