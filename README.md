@@ -180,14 +180,25 @@ executable size than with C, for example, and somewhat slower execution speed
 
 Currently, IRTT is only available in source form. To build it, you must:
 
-- [Install Go](https://golang.org/dl/)
-- Install IRTT by running `go install github.com/peteheist/irtt/cmd/irtt`
+- [Install Go](https://golang.org/dl/) (Note: If you're installing Go for the
+  first time, you must add `$HOME/go/bin` to your `PATH`. Personally, I
+  like to set `GOPATH` to $HOME, rather than leaving the default of `$HOME/go`,
+  so that compiled binaries go in `$HOME/bin`, which I have added to the
+  `PATH` anyway. There is no need to set `$GOROOT`.)
+- Install irtt by running `go get -u github.com/peteheist/irtt/cmd/irtt`. This
+  should place the `irtt` executable in `$HOME/go/bin` or `$GOPATH/bin` if you have
+  `$GOPATH` defined.
+- If you want to build the source for development, the `stringer` utility must
+  be installed by doing `go get -u golang.org/x/tools/cmd/stringer`. Then you
+  can build by changing to the github.com/peteheist/irtt` directory and running
+  `./build.sh`.
 
-If you're not familiar with the `go` tool, the build.sh script may be used as an
-example of how to cross-compile to different platforms or minimize the binary
-size. For example, `build.sh min linux-amd64` would compile a minimized binary
-for Linux on AMD64. See build.sh for more info and a "source-documented" list of
-platforms that the script supports.
+The `build.sh` script may be used to cross-compile to a few different platforms
+or minimize the binary. For example, `build.sh min linux-amd64` would compile a
+minimized binary for Linux on AMD64. See `build.sh` for more info and a
+"source-documented" list of platforms that the script supports. `build.sh
+install` runs Go's install command, which puts the resulting executable in
+`$GOPATH/bin`.
 
 For more on cross-compilation, see [this
 page](http://golang.org/doc/install/source#environment) for a full list of valid GOOS
@@ -820,6 +831,7 @@ the client, and since start of the process for the server
 
 Definitely (in order of priority)...
 
+- Remove dependency on stringer
 - Add faq about why I use wildcard addresses
 - Add a better error message for oversized results buffers than panic: runtime
   error: makeslice: cap out of range
