@@ -834,8 +834,12 @@ the client, and since start of the process for the server
 
 Definitely (in order of priority)...
 
-- Remove dependency on stringer
+- Fix duplicates and corruption on server with `-goroutines` > 1
+- Shorten text "0.00%/0.00% upstream/downstream loss"
+- Use Go "scheduler tracing" to track down server proc time maximums
+- Add seqno to the Max column in the text output
 - Add faq about why I use wildcard addresses
+- Add doc about running irtt at startup
 - Add a better error message for oversized results buffers than panic: runtime
   error: makeslice: cap out of range
 - Figure out how to reliably set `lost` to `lost_up`, even in the face of out of
@@ -844,6 +848,7 @@ Definitely (in order of priority)...
   - repeating close packets up to four times until acknowledgement, like open
   - including received packet stats in the acknowledgement from the server
 - Make sure no garbage created during data collection
+- See if I can use real-time thread scheduling in Linux
 - Write a SmokePing probe
 - Refactor packet manipulation to improve maintainability and prevent multiple
 	validations
