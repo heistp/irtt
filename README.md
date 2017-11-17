@@ -781,9 +781,12 @@ the client, and since start of the process for the server
    1) You've specified an incorrect hostname or IP address for the server.
    2) There is a firewall blocking packets from the client to the server.
       Traffic must be allowed on the chosen UDP port (default 2112).
-   3) There is high packet loss. Up to four packets are sent when the client
-      tries to connect to the server. If all of these are lost, the client
-      won't connect to the server.
+   3) There is high packet loss. By default, up to four packets are sent when
+      the client tries to connect to the server, using timeouts of 1, 2 and 4
+      seconds. If all of these are lost, the client won't connect to the
+      server. In environments with known high packet loss, the `-timeouts`
+      parameter may be used to send more packets with the chosen timeouts
+      before abandoning the connection.
    4) The server has an HMAC key set with `-hmac` and the client either has
       not specified a key or it's incorrect. Make sure the client has the
       correct HMAC key, specified also with the `-hmac` parameter.
@@ -834,7 +837,6 @@ the client, and since start of the process for the server
 
 Definitely (in order of priority)...
 
-- Add -n parameter for doing handshake without a test
 - Fix duplicates and corruption on server with `-goroutines` > 1
 - Figure out how to reliably set `lost` to `lost_up`, even in the face of out of
   order packets (right now, only either `lost` or `lost_down` are returned)

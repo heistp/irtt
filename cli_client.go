@@ -29,6 +29,8 @@ func clientUsage() {
 	printf("               increased as necessary for irtt headers, common values:")
 	printf("               1472 (max unfragmented size of IPv4 datagram for 1500 byte MTU)")
 	printf("               1452 (max unfragmented size of IPv6 datagram for 1500 byte MTU)")
+	printf("-n             no test, connect to the server and validate test parameters")
+	printf("               but don't run the test")
 	printf("-rs stats      server stats on received packets (default %s)", DefaultReceivedStats.String())
 	printf("               count: total count of received packets")
 	printf("               window: receipt status of last 64 sequence numbers")
@@ -130,6 +132,7 @@ func runClientCLI(args []string) {
 	var durationStr = fs.String("d", DefaultDuration.String(), "length of time to run test")
 	var intervalStr = fs.String("i", DefaultInterval.String(), "send interval")
 	var length = fs.Int("l", DefaultLength, "packet length")
+	var noTest = fs.Bool("n", false, "no test")
 	var rsStr = fs.String("rs", DefaultReceivedStats.String(), "received stats")
 	var tsatStr = fs.String("ts", DefaultStampAt.String(), "stamp at")
 	var clockStr = fs.String("clock", DefaultClock.String(), "clock")
@@ -263,6 +266,7 @@ func runClientCLI(args []string) {
 	cfg.LocalAddress = *laddrStr
 	cfg.RemoteAddress = raddrStr
 	cfg.OpenTimeouts = timeouts
+	cfg.NoTest = *noTest
 	cfg.Duration = duration
 	cfg.Interval = interval
 	cfg.Length = *length
@@ -288,6 +292,11 @@ func runClientCLI(args []string) {
 	r, err := c.Run(ctx)
 	if err != nil {
 		exitOnError(err, exitCodeRuntimeError)
+	}
+
+	// exit if NoTest set
+	if cfg.NoTest {
+		return
 	}
 
 	// print results

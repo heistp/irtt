@@ -4,7 +4,7 @@ package irtt
 
 import "fmt"
 
-const _EventCode_name = "MultipleAddressesListenerStartListenerStopListenerErrorDropBadMagicDropNoHMACDropBadHMACDropUnexpectedHMACDropNonexclusiveMidpointStampDropInconsistentClocksDropPacketErrorDropExpectedReplyDropUnexpectedReplyDropUnexpectedOpenFlagDropSmallPacketDropOpenCloseBothSetDropInvalidFlagBitsSetDropInvalidConnTokenDropAddressMismatchDropUnparseableParamsDropShortIntervalSockoptDSCPFailSockoptDSCPAbortSockoptDFFailSockoptDFAbortConnectingConnectedWaitForPacketsNewConnCloseConnNoDSCPSupportServerRestrictionDurationLimitExceeded"
+const _EventCode_name = "MultipleAddressesListenerStartListenerStopListenerErrorDropBadMagicDropNoHMACDropBadHMACDropUnexpectedHMACDropNonexclusiveMidpointStampDropInconsistentClocksDropPacketErrorDropExpectedReplyDropUnexpectedReplyDropUnexpectedOpenFlagDropSmallPacketDropInvalidFlagBitsSetDropInvalidConnTokenDropAddressMismatchDropUnparseableParamsDropShortIntervalSockoptDSCPFailSockoptDSCPAbortSockoptDFFailSockoptDFAbortConnectingConnectedWaitForPacketsNewConnOpenCloseCloseConnNoDSCPSupportServerRestrictionDurationLimitExceededNoTest"
 
 var _EventCode_map = map[EventCode]string{
 	1:          _EventCode_name[0:17],
@@ -22,24 +22,25 @@ var _EventCode_map = map[EventCode]string{
 	4096:       _EventCode_name[189:208],
 	8192:       _EventCode_name[208:230],
 	16384:      _EventCode_name[230:245],
-	32768:      _EventCode_name[245:265],
-	65536:      _EventCode_name[265:287],
-	131072:     _EventCode_name[287:307],
-	262144:     _EventCode_name[307:326],
-	524288:     _EventCode_name[326:347],
-	1048576:    _EventCode_name[347:364],
-	2097152:    _EventCode_name[364:379],
-	4194304:    _EventCode_name[379:395],
-	8388608:    _EventCode_name[395:408],
-	16777216:   _EventCode_name[408:422],
-	33554432:   _EventCode_name[422:432],
-	67108864:   _EventCode_name[432:441],
-	134217728:  _EventCode_name[441:455],
-	268435456:  _EventCode_name[455:462],
-	536870912:  _EventCode_name[462:471],
-	1073741824: _EventCode_name[471:484],
-	2147483648: _EventCode_name[484:501],
-	4294967296: _EventCode_name[501:522],
+	32768:      _EventCode_name[245:267],
+	65536:      _EventCode_name[267:287],
+	131072:     _EventCode_name[287:306],
+	262144:     _EventCode_name[306:327],
+	524288:     _EventCode_name[327:344],
+	1048576:    _EventCode_name[344:359],
+	2097152:    _EventCode_name[359:375],
+	4194304:    _EventCode_name[375:388],
+	8388608:    _EventCode_name[388:402],
+	16777216:   _EventCode_name[402:412],
+	33554432:   _EventCode_name[412:421],
+	67108864:   _EventCode_name[421:435],
+	134217728:  _EventCode_name[435:442],
+	268435456:  _EventCode_name[442:451],
+	536870912:  _EventCode_name[451:460],
+	1073741824: _EventCode_name[460:473],
+	2147483648: _EventCode_name[473:490],
+	4294967296: _EventCode_name[490:511],
+	8589934592: _EventCode_name[511:517],
 }
 
 func (i EventCode) String() string {

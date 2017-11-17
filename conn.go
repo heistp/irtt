@@ -2,7 +2,6 @@ package irtt
 
 import (
 	"context"
-	"fmt"
 	"net"
 	"time"
 
@@ -143,24 +142,25 @@ func dial(ctx context.Context, cfg *Config) (*cconn, error) {
 	c.rpkt = newPacket(0, cap, cfg.HMACKey)
 
 	// open connection to server
-	if err = c.open(ctx, cfg.OpenTimeouts, &cfg.Params); err != nil {
-		return nil, err
+	if err = c.open(ctx, cfg); err != nil {
+		return c, err
 	}
 
 	return c, nil
 }
 
-func (c *cconn) open(ctx context.Context, timeouts Durations, params *Params) (err error) {
+func (c *cconn) open(ctx context.Context, cfg *Config) (err error) {
 	// validate open timeouts
-	for _, to := range timeouts {
+	for _, to := range cfg.OpenTimeouts {
 		if to < minOpenTimeout {
 			err = Errorf(OpenTimeoutTooShort,
-				"open timeout %s must be greater than %s", to, minOpenTimeout)
+				"open timeout %s must be >= %s", to, minOpenTimeout)
 			return
 		}
 	}
 
 	errC := make(chan error)
+	params := &cfg.Params
 
 	// start receiving open replies and drop anything else
 	go func() {
@@ -180,7 +180,7 @@ func (c *cconn) open(ctx context.Context, timeouts Durations, params *Params) (e
 			if rerr = c.rpkt.addFields(fopenReply, false); rerr != nil {
 				return
 			}
-			if c.rpkt.ctoken() == 0 {
+			if c.rpkt.flags()&flClose == 0 && c.rpkt.ctoken() == 0 {
 				rerr = Errorf(ConnTokenZero, "received invalid zero conn token")
 				return
 			}
@@ -191,13 +191,17 @@ func (c *cconn) open(ctx context.Context, timeouts Durations, params *Params) (e
 			}
 			*params = *sp
 			c.ctoken = c.rpkt.ctoken()
+			if c.rpkt.flags()&flClose != 0 {
+				rerr = Errorf(ServerClosed, "server closed connection during open")
+				c.close()
+			}
 			return
 		}
 	}()
 
 	// start sending open requests
 	defer func() {
-		c.spkt.clearFlagBits(flOpen)
+		c.spkt.clearFlagBits(flOpen | flClose)
 		c.spkt.setPayload([]byte{})
 		c.spkt.setConnToken(c.ctoken)
 		if err != nil {
@@ -205,10 +209,13 @@ func (c *cconn) open(ctx context.Context, timeouts Durations, params *Params) (e
 		}
 	}()
 	c.spkt.setFlagBits(flOpen)
+	if cfg.NoTest {
+		c.spkt.setFlagBits(flClose)
+	}
 	c.spkt.setPayload(params.bytes())
 	c.spkt.updateHMAC()
 	var received bool
-	for _, to := range timeouts {
+	for _, to := range cfg.OpenTimeouts {
 		_, err = c.send()
 		if err != nil {
 			return
@@ -280,15 +287,17 @@ func (c *cconn) close() (err error) {
 	defer func() {
 		err = c.nconn.close()
 	}()
-	// create send packet
-	if err = c.spkt.setFields(fcloseRequest, true); err != nil {
-		fmt.Println(err)
-		return
+
+	// send one close packet if necessary
+	if c.ctoken != 0 {
+		if err = c.spkt.setFields(fcloseRequest, true); err != nil {
+			return
+		}
+		c.spkt.setFlagBits(flClose)
+		c.spkt.setConnToken(c.ctoken)
+		c.spkt.updateHMAC()
+		_, err = c.send()
 	}
-	c.spkt.setFlagBits(flClose)
-	c.spkt.setConnToken(c.ctoken)
-	c.spkt.updateHMAC()
-	_, err = c.send()
 	return
 }
 

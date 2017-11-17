@@ -49,9 +49,17 @@ func (c *Client) Run(ctx context.Context) (r *Result, err error) {
 	// notify about connecting
 	c.eventf(Connecting, "connecting to %s", c.RemoteAddress)
 
+	// check for closed error helper
+	isClosedError := func(e error) (closedError bool) {
+		if ee, ok := e.(*Error); ok {
+			closedError = (ee.Code == ServerClosed)
+		}
+		return
+	}
+
 	// dial server
 	c.conn, err = dial(ctx, c.Config)
-	if err != nil {
+	if err != nil && (!c.Config.NoTest || !isClosedError(err)) {
 		return
 	}
 	defer c.close()
@@ -66,6 +74,13 @@ func (c *Client) Run(ctx context.Context) (r *Result, err error) {
 	}
 	if changed && c.StrictParams {
 		err = Errorf(ParamsChanged, "server restricted test parameters")
+		return
+	}
+
+	// return if NoTest is set
+	if c.Config.NoTest {
+		err = nil
+		c.eventf(NoTest, "skipping test at user request")
 		return
 	}
 
