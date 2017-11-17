@@ -6,10 +6,10 @@ import (
 
 // Common defaults.
 const (
-	DefaultIPVersion    = DualStack
-	DefaultPort         = "2112"
-	DefaultTTL          = 0
-	DefaultLockOSThread = false
+	DefaultIPVersion  = DualStack
+	DefaultPort       = "2112"
+	DefaultTTL        = 0
+	DefaultThreadLock = false
 )
 
 // Client defaults.

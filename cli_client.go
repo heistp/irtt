@@ -151,7 +151,7 @@ func runClientCLI(args []string) {
 	var timeoutsStr = fs.String("timeouts", DefaultOpenTimeouts.String(), "open timeouts")
 	var ttl = fs.Int("ttl", DefaultTTL, "IP time to live")
 	var strictParams = fs.Bool("strictparams", false, "strict parameters")
-	var lockOSThread = fs.Bool("thread", DefaultLockOSThread, "thread")
+	var threadLock = fs.Bool("thread", DefaultThreadLock, "thread")
 	err := fs.Parse(args)
 
 	// start profiling, if enabled in build
@@ -281,7 +281,7 @@ func runClientCLI(args []string) {
 	cfg.HMACKey = hmacKey
 	cfg.Handler = &clientHandler{*quiet, *reallyQuiet}
 	cfg.EventMask = AllEvents ^ WaitForPackets
-	cfg.LockOSThread = *lockOSThread
+	cfg.ThreadLock = *threadLock
 
 	// run test
 	c := NewClient(cfg)

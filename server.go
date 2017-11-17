@@ -30,7 +30,7 @@ type Server struct {
 	IPVersion       IPVersion
 	Handler         Handler
 	EventMask       EventCode
-	LockOSThread    bool
+	ThreadLock      bool
 	hardMaxDuration time.Duration
 	start           time.Time
 	shutdown        bool
@@ -41,19 +41,19 @@ type Server struct {
 // NewServer creates a new server.
 func NewServer() *Server {
 	return &Server{
-		Addrs:        []string{DefaultBindAddr},
-		MaxDuration:  DefaultMaxDuration,
-		MinInterval:  DefaultMinInterval,
-		MaxLength:    DefaultMaxLength,
-		PacketBurst:  DefaultPacketBurst,
-		Filler:       DefaultServerFiller,
-		AllowStamp:   DefaultAllowStamp,
-		TTL:          DefaultTTL,
-		Goroutines:   DefaultGoroutines,
-		IPVersion:    DefaultIPVersion,
-		EventMask:    AllEvents,
-		LockOSThread: DefaultLockOSThread,
-		shutdownC:    make(chan struct{}),
+		Addrs:       []string{DefaultBindAddr},
+		MaxDuration: DefaultMaxDuration,
+		MinInterval: DefaultMinInterval,
+		MaxLength:   DefaultMaxLength,
+		PacketBurst: DefaultPacketBurst,
+		Filler:      DefaultServerFiller,
+		AllowStamp:  DefaultAllowStamp,
+		TTL:         DefaultTTL,
+		Goroutines:  DefaultGoroutines,
+		IPVersion:   DefaultIPVersion,
+		EventMask:   AllEvents,
+		ThreadLock:  DefaultThreadLock,
+		shutdownC:   make(chan struct{}),
 	}
 }
 
@@ -214,7 +214,7 @@ func (l *listener) listenAndServe(errC chan<- error) (err error) {
 	}()
 
 	// lock to thread
-	if l.LockOSThread {
+	if l.ThreadLock {
 		runtime.LockOSThread()
 	}
 
