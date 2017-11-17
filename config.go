@@ -75,7 +75,6 @@ func (c *Config) MarshalJSON() ([]byte, error) {
 		LocalAddress  string `json:"local_address"`
 		RemoteAddress string `json:"remote_address"`
 		OpenTimeouts  string `json:"open_timeouts"`
-		NoTest        bool   `json:"no_test"`
 		Params        `json:"params"`
 		StrictParams  bool      `json:"strict_params"`
 		IPVersion     IPVersion `json:"ip_version"`
@@ -91,7 +90,6 @@ func (c *Config) MarshalJSON() ([]byte, error) {
 		LocalAddress:  c.LocalAddress,
 		RemoteAddress: c.RemoteAddress,
 		OpenTimeouts:  c.OpenTimeouts.String(),
-		NoTest:        c.NoTest,
 		Params:        c.Params,
 		StrictParams:  c.StrictParams,
 		IPVersion:     c.IPVersion,

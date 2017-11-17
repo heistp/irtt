@@ -52,8 +52,9 @@ Latency is an under-appreciated metric in network and application performance.
 There is a certain hard to quantify but visceral *"latency stress"* that comes
 from waiting in expectation after a web page click, straining through a delayed
 and garbled VoIP conversation, or losing at your favorite online game (unless
-you like "lag" as an excuse). I think that relieving this stress for others
-may be what drives those who work on reducing latency.
+you like "lag" as an excuse). Those who work on reducing latency and improving
+network performance may be driven by the idea of helping relieve this stress
+for others.
 
 The [Bufferbloat](https://www.bufferbloat.net/projects/) and related projects
 aim to reduce "chaotic and laggy network performance", which is what in my
@@ -62,7 +63,7 @@ values their time and sanity.
 
 The original motivation for IRTT was to improve the latency and packet loss
 measurements for the excellent [Flent](https://flent.org) tool, which was
-developed by and for the Bufferbloat project. However, IRTT could be useful as a
+developed by and for the Bufferbloat project. However, IRTT may be useful as a
 general purpose tool as well. The goals of this project are to:
 
 - Accurately measure latency and other relevant metrics of network behavior
@@ -117,7 +118,7 @@ could be simulated, but accepting this limitation offers some benefits as well:
 - It's easy to calculate how much data will be sent in a given time
 - It simplifies timer error compensation
 
-Also, isochronous packets are commonly seen in VoIP, games and streaming media,
+Also, isochronous packets are commonly seen in VoIP, games and some streaming media,
 so it already simulates an array of common types of traffic.
 
 #### Fixed packet lengths for a given test
@@ -143,9 +144,9 @@ protocol provides important benefits to the user, including:
 #### In-memory results storage
 
 Results for each round-trip are stored in memory as the test is being run. Each
-result takes up to 64 bytes in memory (8 64-bit timestamps, explained later), so
-this limits the effective duration of the test, especially at very small send
-intervals. However, the advantages are:
+result takes 72 bytes in memory (8 64-bit timestamps and a 64-bit server
+received packet window), so this limits the effective duration of the test,
+especially at very small send intervals. However, the advantages are:
 
 - It's easier to perform statistical analysis (like calculation of the median)
 	on fixed arrays than on running data values
@@ -158,15 +159,19 @@ intervals. However, the advantages are:
 
 As a consequence of storing results in memory, packet sequence numbers are fixed
 at 32-bits. If all 2^32 sequence numbers were used, the results would require
-almost 275 Gb of RAM to record while the test is running, which is not likely
-to be a number reached any time soon. That is why 64-bit sequence numbers are
-unnecessary at this time.
+over 300 Gb of virtual memory to record while the test is running, which is not
+likely to be a practical number for most hardware at this time. That is why
+64-bit sequence numbers are currently unnecessary.
 
 #### Use of Go
 
-IRTT is written in Go. While that carries with it the disadvantage of a larger
-executable size than with C, for example, and somewhat slower execution speed
-(although [not that much slower](https://benchmarksgame.alioth.debian.org/u64q/compare.php?lang=go&lang2=gcc), depending on the workload), Go still has benefits that are useful for this application:
+IRTT is written in Go. That carries with it a few disadvantages:
+
+- Larger executable size than with C
+- Non-negligible scheduling delays and system call overhead
+- Somewhat slower execution speed then C (although [not that much slower](https://benchmarksgame.alioth.debian.org/u64q/compare.php?lang=go&lang2=gcc))
+
+But Go also has benefits that are useful for this application:
 
 - Go's target is network and server applications, with a focus on simplicity,
 	reliability and efficiency, which is appropriate for this project
@@ -244,7 +249,7 @@ a G.711 VoIP conversation:
 
                 duration: 1m0s (wait 347.8ms)
    packets sent/received: 2986/2966 (0.67% loss)
- server packets received: 2972/2986 (0.47%/0.20% upstream/downstream loss)
+ server packets received: 2972/2986 (0.47%/0.20% loss up/down)
      bytes sent/received: 477760/474560
        send/receive rate: 63.7 Kbps / 63.3 Kbps
            packet length: 160 bytes
@@ -303,6 +308,7 @@ the configuration used for the test
 "config": {
     "local_address": "127.0.0.1:51203",
     "remote_address": "127.0.0.1:2112",
+    "open_timeouts": "1s,2s,4s,8s",
     "params": {
         "duration": 600000000,
         "interval": 200000000,
@@ -312,6 +318,7 @@ the configuration used for the test
         "clock": "both",
         "dscp": 0
     },
+    "strict_params": false,
     "ip_version": "IPv4",
     "df": 0,
     "ttl": 0,
@@ -319,10 +326,11 @@ the configuration used for the test
     "waiter": "3x4s",
     "filler": "none",
     "fill_all": false,
-    "lock_os_thread": false,
+    "thread_lock": false,
     "supplied": {
         "local_address": ":0",
         "remote_address": "localhost",
+        "open_timeouts": "1s,2s,4s,8s",
         "params": {
             "duration": 600000000,
             "interval": 200000000,
@@ -332,6 +340,7 @@ the configuration used for the test
             "clock": "both",
             "dscp": 0
         },
+        "strict_params": false,
         "ip_version": "IPv4+6",
         "df": 0,
         "ttl": 0,
@@ -339,13 +348,14 @@ the configuration used for the test
         "waiter": "3x4s",
         "filler": "none",
         "fill_all": false,
-        "lock_os_thread": false
+        "thread_lock": false
     }
 },
 ```
 
 - `local_address` the local address (IP:port) for the client
 - `remote_address` the remote address (IP:port) for the server
+- `open_timeouts` a list of timeout durations used after an open packet is sent
 - `params` are the parameters that were negotiated with the server, including:
   - `duration` duration of the test, in nanoseconds
   - `interval` send interval, in nanoseconds
@@ -357,6 +367,7 @@ the configuration used for the test
   - `clock` clock selection parameter (wall or monotonic, -clock flag for irtt client)
   - `dscp` the [DSCP](https://en.wikipedia.org/wiki/Differentiated_services)
 		value
+- `strict_params` if true, test is aborted if server restricts parameters
 - `ip_version` the IP version used (IPv4 or IPv6)
 - `df` the do-not-fragment setting (0 == OS default, 1 == false, 2 == true)
 - `ttl` the IP [time-to-live](https://en.wikipedia.org/wiki/Time_to_live) value
@@ -366,7 +377,7 @@ the configuration used for the test
 - `filler` the packet filler used: none, rand or pattern (irtt client -fill
 	parameter)
 - `fill_all` whether to fill all packets (irtt client -fillall parameter)
-- `lock_os_thread` whether to lock packet handling goroutines to OS threads
+- `thread_lock` whether to lock packet handling goroutines to OS threads
 - `supplied` a nested `config` object with the configuration as
   originally supplied to the API or `irtt` command. The supplied configuration can
 	differ from the final configuration in the following ways:
@@ -718,12 +729,11 @@ the client, and since start of the process for the server
 
 1) Why not just use ping?
 
-	 Ping may be the preferred tool when measuring minimum latency, or for other
-	 reasons. IRTT's reported latency is likely to be somewhat higher and more
-	 variable than the results reported by ping, due to task scheduling
-	 variability and more to do in the stack and program. That said, there are
-	 advantages that IRTT has over ping when minimum RTT is not what you're
-	 measuring:
+   Ping may be the preferred tool when measuring minimum latency, or for other
+   reasons. IRTT's reported latency is likely to be somewhat higher and more
+   variable than the results reported by ping, due to Go's scheduling
+   variability and system call overhead. That said, there are advantages that
+   IRTT has over ping when minimum RTT is not what you're measuring:
 
 	 - Some device vendors prioritize ICMP, so ping may not be an accurate measure
 		 of user-perceived latency.
@@ -733,7 +743,7 @@ the client, and since start of the process for the server
 		 and use.
 	 - IRTT has a three-way handshake to prevent test traffic redirection from
 		 spoofed source IPs.
-	 - IRTT can fill the payload with random data.
+	 - IRTT can fill the payload (if included) with random data.
 
 2) Why is the send (or receive) delay negative?
 
@@ -842,18 +852,19 @@ Definitely (in order of priority)...
   order packets (right now, only either `lost` or `lost_down` are returned)
 - Add a better error message for oversized results buffers than panic: runtime
   error: makeslice: cap out of range
+- Write a SmokePing probe
 - Add seqno to the Max column in the text output
-- Add faq about why I use wildcard addresses
+- Make some doc improvements:
+  - Add faq about why I use wildcard addresses
+  - Add doc about running irtt at Linux startup
 - Track down server proc time maximums
   - Make sure no garbage created during data collection
   - Do more thorough tests of `chrt -r 99`
   - Use Go scheduler tracing, strace and sar
   - File issue with Go team over scheduler performance
-- Add doc about running irtt at startup
 - Improve client connection closure by:
   - repeating close packets up to four times until acknowledgement, like open
   - including received packet stats in the acknowledgement from the server
-- Write a SmokePing probe
 - Refactor packet manipulation to improve maintainability and prevent multiple
 	validations
 - Add a flag to disable per-packet results
