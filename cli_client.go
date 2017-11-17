@@ -342,7 +342,7 @@ func printResult(r *Result) {
 	printf("   packets sent/received: %d/%d (%.2f%% loss)", r.PacketsSent,
 		r.PacketsReceived, r.PacketLossPercent)
 	if r.PacketsReceived > 0 && r.ServerPacketsReceived > 0 {
-		printf(" server packets received: %d/%d (%.2f%%/%.2f%% upstream/downstream loss)",
+		printf(" server packets received: %d/%d (%.2f%%/%.2f%% loss up/down)",
 			r.ServerPacketsReceived, r.PacketsSent, r.UpstreamLossPercent,
 			r.DownstreamLossPercent)
 	}
