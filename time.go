@@ -24,9 +24,9 @@ func (ds Durations) String() string {
 	return strings.Join(dss, ",")
 }
 
-// DurationsFromString returns a Durations value from a comma separated list of
+// ParseDurations returns a Durations value from a comma separated list of
 // time.Duration string representations.
-func DurationsFromString(sdurs string) (durs Durations, err error) {
+func ParseDurations(sdurs string) (durs Durations, err error) {
 	ss := strings.Split(sdurs, ",")
 	durs = make([]time.Duration, len(ss))
 	for i, s := range ss {
@@ -161,8 +161,8 @@ func (sa StampAt) MarshalJSON() ([]byte, error) {
 	return json.Marshal(sa.String())
 }
 
-// StampAtFromString returns a StampAt value from its string.
-func StampAtFromString(s string) (StampAt, error) {
+// ParseStampAt returns a StampAt value from its string.
+func ParseStampAt(s string) (StampAt, error) {
 	for i, v := range sas {
 		if v == s {
 			return StampAt(i), nil
@@ -203,8 +203,8 @@ func ClockFromInt(v int) (Clock, error) {
 	return Clock(v), nil
 }
 
-// ClockFromString returns a Clock from a string.
-func ClockFromString(s string) (Clock, error) {
+// ParseClock returns a Clock from a string.
+func ParseClock(s string) (Clock, error) {
 	for i, v := range tcs {
 		if s == v {
 			return Clock(i + 1), nil
@@ -269,8 +269,8 @@ func (a AllowStamp) String() string {
 	return als[a]
 }
 
-// AllowStampFromString returns an AllowStamp from a string.
-func AllowStampFromString(s string) (AllowStamp, error) {
+// ParseAllowStamp returns an AllowStamp from a string.
+func ParseAllowStamp(s string) (AllowStamp, error) {
 	for i, v := range als {
 		if s == v {
 			return AllowStamp(i), nil

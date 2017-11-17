@@ -181,7 +181,7 @@ func runClientCLI(args []string) {
 	exitOnError(err, exitCodeBadCommandLine)
 
 	// parse DF
-	df, err := DFFromString(*dfStr)
+	df, err := ParseDF(*dfStr)
 	exitOnError(err, exitCodeBadCommandLine)
 
 	// parse wait
@@ -189,15 +189,15 @@ func runClientCLI(args []string) {
 	exitOnError(err, exitCodeBadCommandLine)
 
 	// parse received stats
-	rs, err := ReceivedStatsFromString(*rsStr)
+	rs, err := ParseReceivedStats(*rsStr)
 	exitOnError(err, exitCodeBadCommandLine)
 
 	// parse timestamp string
-	at, err := StampAtFromString(*tsatStr)
+	at, err := ParseStampAt(*tsatStr)
 	exitOnError(err, exitCodeBadCommandLine)
 
 	// parse clock
-	clock, err := ClockFromString(*clockStr)
+	clock, err := ParseClock(*clockStr)
 	exitOnError(err, exitCodeBadCommandLine)
 
 	// parse timer compensation
@@ -213,7 +213,7 @@ func runClientCLI(args []string) {
 	exitOnError(err, exitCodeBadCommandLine)
 
 	// parse open timeouts
-	timeouts, err := DurationsFromString(*timeoutsStr)
+	timeouts, err := ParseDurations(*timeoutsStr)
 	if err != nil {
 		exitOnError(fmt.Errorf("%s (use s for seconds)", err),
 			exitCodeBadCommandLine)

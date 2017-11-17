@@ -835,7 +835,6 @@ the client, and since start of the process for the server
 Definitely (in order of priority)...
 
 - Add -n parameter for doing handshake without a test
-- Rename *FromString to Parse*
 - Fix duplicates and corruption on server with `-goroutines` > 1
 - Figure out how to reliably set `lost` to `lost_up`, even in the face of out of
   order packets (right now, only either `lost` or `lost_down` are returned)

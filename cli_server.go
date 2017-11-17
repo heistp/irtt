@@ -80,7 +80,7 @@ func runServerCLI(args []string) {
 	ipVer := IPVersionFromBooleans(*ipv4, *ipv6, DualStack)
 
 	// parse allow stamp string
-	allowStamp, err := AllowStampFromString(*allowTimestampStr)
+	allowStamp, err := ParseAllowStamp(*allowTimestampStr)
 	exitOnError(err, exitCodeBadCommandLine)
 
 	// parse fill

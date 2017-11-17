@@ -23,8 +23,8 @@ func (d DF) String() string {
 	return dfs[int(d)]
 }
 
-// DFFromString returns a DF value from its string.
-func DFFromString(s string) (DF, error) {
+// ParseDF returns a DF value from its string.
+func ParseDF(s string) (DF, error) {
 	for i, x := range dfs {
 		if x == s {
 			return DF(i), nil

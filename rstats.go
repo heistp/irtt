@@ -39,8 +39,8 @@ func (rs ReceivedStats) MarshalJSON() ([]byte, error) {
 	return json.Marshal(rs.String())
 }
 
-// ReceivedStatsFromString returns a ReceivedStats value from its string.
-func ReceivedStatsFromString(s string) (ReceivedStats, error) {
+// ParseReceivedStats returns a ReceivedStats value from its string.
+func ParseReceivedStats(s string) (ReceivedStats, error) {
 	for i, v := range rss {
 		if v == s {
 			return ReceivedStats(i), nil
