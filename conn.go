@@ -10,6 +10,8 @@ import (
 	"golang.org/x/net/ipv6"
 )
 
+const minOpenTimeout = 200 * time.Millisecond
+
 // nconn (network conn) is the embedded struct in conn and lconn connections. It
 // adds IPVersion, socket options and some helpers to net.UDPConn.
 type nconn struct {
@@ -91,15 +93,6 @@ func (n *nconn) close() error {
 	return n.conn.Close()
 }
 
-// openTimeouts lists the timeouts used to wait for responses to the open packet.
-// Up to len(openTimeouts) packets are sent during open.
-var openTimeouts = []time.Duration{
-	1 * time.Second,
-	2 * time.Second,
-	4 * time.Second,
-	8 * time.Second,
-}
-
 // cconn is used for client connections
 type cconn struct {
 	*nconn
@@ -109,7 +102,7 @@ type cconn struct {
 }
 
 func dial(ctx context.Context, cfg *Config) (*cconn, error) {
-	// resolve (later support trying multiple addresses in succession)
+	// resolve (could support trying multiple addresses in succession)
 	laddr, err := net.ResolveUDPAddr(cfg.IPVersion.udpNetwork(),
 		cfg.LocalAddress)
 	if err != nil {
@@ -141,7 +134,7 @@ func dial(ctx context.Context, cfg *Config) (*cconn, error) {
 	c := &cconn{nconn: &nconn{}}
 	c.init(conn, cfg.IPVersion)
 
-	// create send and receive packets with MTU-sized buffers
+	// create send and receive packets
 	cap := cfg.Length
 	if cap < maxHeaderLen {
 		cap = maxHeaderLen
@@ -150,14 +143,23 @@ func dial(ctx context.Context, cfg *Config) (*cconn, error) {
 	c.rpkt = newPacket(0, cap, cfg.HMACKey)
 
 	// open connection to server
-	if err = c.open(ctx, &cfg.Params); err != nil {
+	if err = c.open(ctx, cfg.OpenTimeouts, &cfg.Params); err != nil {
 		return nil, err
 	}
 
 	return c, nil
 }
 
-func (c *cconn) open(ctx context.Context, params *Params) (err error) {
+func (c *cconn) open(ctx context.Context, timeouts Durations, params *Params) (err error) {
+	// validate open timeouts
+	for _, to := range timeouts {
+		if to < minOpenTimeout {
+			err = Errorf(OpenTimeoutTooShort,
+				"open timeout %s must be greater than %s", to, minOpenTimeout)
+			return
+		}
+	}
+
 	errC := make(chan error)
 
 	// start receiving open replies and drop anything else
@@ -206,7 +208,7 @@ func (c *cconn) open(ctx context.Context, params *Params) (err error) {
 	c.spkt.setPayload(params.bytes())
 	c.spkt.updateHMAC()
 	var received bool
-	for _, to := range openTimeouts {
+	for _, to := range timeouts {
 		_, err = c.send()
 		if err != nil {
 			return

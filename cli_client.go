@@ -93,8 +93,13 @@ func clientUsage() {
 	printf("               protection for server against unauthorized discovery and use")
 	printf("-4             IPv4 only")
 	printf("-6             IPv6 only")
+	printf("-timeouts durs timeouts used when connecting to server (default %s)", DefaultOpenTimeouts.String())
+	printf("               comma separated list of durations (see Duration units below)")
+	printf("               total wait time will be up to the sum of these Durations")
+	printf("               max packets sent is up to the number of Durations")
+	printf("               minimum open timeout is %s", minOpenTimeout)
 	printf("-ttl ttl       time to live (default %d, meaning use OS default)", DefaultTTL)
-	printf("-strictparams  return an error if server restricts any parameters")
+	printf("-strictparams  exit with nonzero status if server restricts any parameters")
 	printf("-thread        lock sending and receiving goroutines to OS threads (may")
 	printf("               reduce mean latency, but may also add outliers)")
 	printf("")
@@ -143,6 +148,7 @@ func runClientCLI(args []string) {
 	var hmacStr = fs.String("hmac", defaultHMACKey, "HMAC key")
 	var ipv4 = fs.Bool("4", false, "IPv4 only")
 	var ipv6 = fs.Bool("6", false, "IPv6 only")
+	var timeoutsStr = fs.String("timeouts", DefaultOpenTimeouts.String(), "open timeouts")
 	var ttl = fs.Int("ttl", DefaultTTL, "IP time to live")
 	var strictParams = fs.Bool("strictparams", false, "strict parameters")
 	var lockOSThread = fs.Bool("thread", DefaultLockOSThread, "thread")
@@ -206,6 +212,13 @@ func runClientCLI(args []string) {
 	filler, err := NewFiller(*fillStr)
 	exitOnError(err, exitCodeBadCommandLine)
 
+	// parse open timeouts
+	timeouts, err := DurationsFromString(*timeoutsStr)
+	if err != nil {
+		exitOnError(fmt.Errorf("%s (use s for seconds)", err),
+			exitCodeBadCommandLine)
+	}
+
 	// parse HMAC key
 	var hmacKey []byte
 	if *hmacStr != "" {
@@ -249,6 +262,7 @@ func runClientCLI(args []string) {
 	cfg := NewDefaultConfig()
 	cfg.LocalAddress = *laddrStr
 	cfg.RemoteAddress = raddrStr
+	cfg.OpenTimeouts = timeouts
 	cfg.Duration = duration
 	cfg.Interval = interval
 	cfg.Length = *length

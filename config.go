@@ -11,6 +11,7 @@ type Config struct {
 	RemoteAddress string
 	LocalAddr     net.Addr
 	RemoteAddr    net.Addr
+	OpenTimeouts  Durations
 	Params
 	StrictParams bool
 	IPVersion    IPVersion
@@ -31,6 +32,7 @@ type Config struct {
 func NewDefaultConfig() *Config {
 	return &Config{
 		LocalAddress: DefaultLocalAddress,
+		OpenTimeouts: DefaultOpenTimeouts,
 		Params: Params{
 			Duration: DefaultDuration,
 			Interval: DefaultInterval,

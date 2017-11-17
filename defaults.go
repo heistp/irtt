@@ -32,6 +32,15 @@ const (
 	DefaultEventMask               = AllEvents
 )
 
+// DefaultOpenTimeouts are the default timeouts used when the client opens a
+// connection to the server.
+var DefaultOpenTimeouts = Durations([]time.Duration{
+	1 * time.Second,
+	2 * time.Second,
+	4 * time.Second,
+	8 * time.Second,
+})
+
 // DefaultCompTimerAverage is the default timer error averaging algorithm for
 // the CompTimer.
 var DefaultCompTimerAverage = NewDefaultExponentialAverager()
