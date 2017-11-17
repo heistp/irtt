@@ -296,10 +296,16 @@ func (l *listener) readAndReply() (err error) {
 				continue
 			}
 			l.restrictParams(params)
-			sc := l.cmgr.newConn(l.raddr, params)
-			l.eventf(NewConn, "new connection from %s, token %016x", l.raddr, sc.ctoken)
+			sc := l.cmgr.newConn(l.raddr, params, p.flags()&flClose != 0)
+			if p.flags()&flClose == 0 {
+				l.eventf(NewConn, "new connection from %s, token %016x",
+					l.raddr, sc.ctoken)
+				p.setConnToken(sc.ctoken)
+			} else {
+				l.eventf(OpenClose, "open-close from %s", l.raddr)
+				p.setConnToken(0)
+			}
 			p.setReply(true)
-			p.setConnToken(sc.ctoken)
 			p.setPayload(params.bytes())
 			if err = l.sendPacket(trecv, sc, false); err != nil {
 				return

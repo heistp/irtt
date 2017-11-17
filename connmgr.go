@@ -51,7 +51,7 @@ func newConnMgr(packetBurst int, minInterval time.Duration) *connmgr {
 	}
 }
 
-func (cm *connmgr) newConn(raddr *net.UDPAddr, p *Params) *sconn {
+func (cm *connmgr) newConn(raddr *net.UDPAddr, p *Params, temporary bool) *sconn {
 	cm.mtx.Lock()
 	defer cm.mtx.Unlock()
 	cm.removeSomeExpired()
@@ -64,7 +64,9 @@ func (cm *connmgr) newConn(raddr *net.UDPAddr, p *Params) *sconn {
 		lastSeqno:    InvalidSeqno,
 		packetBucket: float64(cm.packetBurst),
 	}
-	cm.conns[ct] = sc
+	if !temporary {
+		cm.conns[ct] = sc
+	}
 	return sc
 }
 

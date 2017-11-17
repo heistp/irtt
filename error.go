@@ -48,7 +48,6 @@ const (
 	DFNotSupported
 	IntervalNonPositive
 	DurationNonPositive
-	OpenCloseBothSet
 	ConnTokenZero
 	ConnClosed
 	InvalidFlagBitsSet

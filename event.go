@@ -27,7 +27,6 @@ const (
 	DropUnexpectedReply
 	DropUnexpectedOpenFlag
 	DropSmallPacket
-	DropOpenCloseBothSet
 	DropInvalidFlagBitsSet
 	DropInvalidConnToken
 	DropAddressMismatch
@@ -41,10 +40,12 @@ const (
 	Connected
 	WaitForPackets
 	NewConn
+	OpenClose
 	CloseConn
 	NoDSCPSupport
 	ServerRestriction
 	DurationLimitExceeded
+	NoTest
 )
 
 // AllEvents is a mask matching all events.
@@ -103,8 +104,6 @@ func dropCode(errcode ErrorCode) EventCode {
 		return DropExpectedReply
 	case UnexpectedReplyFlag:
 		return DropUnexpectedReply
-	case OpenCloseBothSet:
-		return DropOpenCloseBothSet
 	case InvalidFlagBitsSet:
 		return DropInvalidFlagBitsSet
 	default:

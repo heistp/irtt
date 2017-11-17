@@ -227,9 +227,6 @@ func (p *packet) validate() error {
 	}
 
 	// flags
-	if p.flags()&flOpen != 0 && p.flags()&flClose != 0 {
-		return Errorf(OpenCloseBothSet, "open and close flags are both set")
-	}
 	if p.flags() > flAll {
 		return Errorf(InvalidFlagBitsSet, "invalid flag bits set (%x)", p.flags())
 	}
@@ -239,7 +236,7 @@ func (p *packet) validate() error {
 		return Errorf(NonexclusiveMidpointTStamp, "non-exclusive midpoint timestamp")
 	}
 
-	// clock mode should be consistent for both stamps, as of now
+	// clock mode should be consistent for both stamps
 	if p.hasReceiveStamp() && p.hasSendStamp() {
 		rclock := clockFromBools(p.isset(fRWall), p.isset(fRMono))
 		sclock := clockFromBools(p.isset(fSWall), p.isset(fSMono))
