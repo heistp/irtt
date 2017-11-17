@@ -834,10 +834,9 @@ the client, and since start of the process for the server
 
 Definitely (in order of priority)...
 
-- Make handshake waits flexible
-- Add handshake command to test server reachability
+- Add -hwait parameter to make handshake waits flexible
+- Add -n parameter for doing handshake without a test
 - Fix duplicates and corruption on server with `-goroutines` > 1
-- Shorten text "0.00%/0.00% upstream/downstream loss"
 - Track down server proc time maximums with Go scheduler tracing, strace, sar
 - Add seqno to the Max column in the text output
 - Add faq about why I use wildcard addresses
