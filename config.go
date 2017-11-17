@@ -24,7 +24,7 @@ type Config struct {
 	HMACKey      []byte
 	Handler      ClientHandler
 	EventMask    EventCode
-	LockOSThread bool
+	ThreadLock   bool
 	Supplied     *Config
 }
 
@@ -48,7 +48,7 @@ func NewDefaultConfig() *Config {
 		Timer:        DefaultTimer,
 		Waiter:       DefaultWait,
 		EventMask:    DefaultEventMask,
-		LockOSThread: DefaultLockOSThread,
+		ThreadLock:   DefaultThreadLock,
 	}
 }
 
@@ -83,7 +83,7 @@ func (c *Config) MarshalJSON() ([]byte, error) {
 		Waiter        string    `json:"waiter"`
 		Filler        string    `json:"filler"`
 		FillAll       bool      `json:"fill_all"`
-		LockOSThread  bool      `json:"lock_os_thread"`
+		ThreadLock    bool      `json:"thread_lock"`
 		Supplied      *Config   `json:"supplied,omitempty"`
 	}{
 		LocalAddress:  c.LocalAddress,
@@ -98,7 +98,7 @@ func (c *Config) MarshalJSON() ([]byte, error) {
 		Waiter:        c.Waiter.String(),
 		Filler:        fstr,
 		FillAll:       c.FillAll,
-		LockOSThread:  c.LockOSThread,
+		ThreadLock:    c.ThreadLock,
 		Supplied:      c.Supplied,
 	}
 	return json.Marshal(j)

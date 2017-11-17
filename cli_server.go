@@ -68,7 +68,7 @@ func runServerCLI(args []string) {
 	var ipv4 = fs.Bool("4", false, "IPv4 only")
 	var ipv6 = fs.Bool("6", false, "IPv6 only")
 	var ttl = fs.Int("ttl", DefaultTTL, "IP time to live")
-	var lockOSThread = fs.Bool("thread", DefaultLockOSThread, "thread")
+	var lockOSThread = fs.Bool("thread", DefaultThreadLock, "thread")
 	fs.Parse(args)
 
 	// start profiling, if enabled in build
@@ -108,7 +108,7 @@ func runServerCLI(args []string) {
 	s.Goroutines = *goroutines
 	s.Handler = &serverHandler{}
 	s.IPVersion = ipVer
-	s.LockOSThread = *lockOSThread
+	s.ThreadLock = *lockOSThread
 
 	// install signal handler to stop server
 	sigs := make(chan os.Signal, 1)

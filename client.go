@@ -244,7 +244,7 @@ func (c *Client) checkParameters() (changed bool, err error) {
 
 // send sends all packets for the test to the server (called in goroutine from Run)
 func (c *Client) send(ctx context.Context) error {
-	if c.LockOSThread {
+	if c.ThreadLock {
 		runtime.LockOSThread()
 	}
 
@@ -351,7 +351,7 @@ func (c *Client) send(ctx context.Context) error {
 
 // receive receives packets from the server (called in goroutine from Run)
 func (c *Client) receive() error {
-	if c.LockOSThread {
+	if c.ThreadLock {
 		runtime.LockOSThread()
 	}
 
