@@ -301,7 +301,7 @@ func (c *cconn) close() (err error) {
 	return
 }
 
-// lconn is used in the lconn
+// lconn is used for server listeners
 type lconn struct {
 	*nconn
 	pkt *packet
