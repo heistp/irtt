@@ -63,6 +63,7 @@ const (
 	ParamsChanged
 	InvalidReceivedStatsInt
 	InvalidReceivedStatsString
+	OpenTimeoutTooShort
 )
 
 // Error is an IRTT error.

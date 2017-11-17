@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"math"
+	"strings"
 	"time"
 )
 
@@ -11,6 +12,32 @@ var monotonicStart = time.Now()
 
 // InvalidDuration indicates a duration that is not valid.
 const InvalidDuration = time.Duration(math.MaxInt64)
+
+// Durations contains a slice of time.Duration.
+type Durations []time.Duration
+
+func (ds Durations) String() string {
+	dss := make([]string, len(ds))
+	for i, d := range ds {
+		dss[i] = d.String()
+	}
+	return strings.Join(dss, ",")
+}
+
+// DurationsFromString returns a Durations value from a comma separated list of
+// time.Duration string representations.
+func DurationsFromString(sdurs string) (durs Durations, err error) {
+	ss := strings.Split(sdurs, ",")
+	durs = make([]time.Duration, len(ss))
+	for i, s := range ss {
+		var err error
+		durs[i], err = time.ParseDuration(s)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return durs, nil
+}
 
 // Time contains both wall clock (subject to system time adjustments) and
 // monotonic clock (relative to a fixed start time, and not subject to system

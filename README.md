@@ -834,22 +834,24 @@ the client, and since start of the process for the server
 
 Definitely (in order of priority)...
 
-- Add -hwait parameter to make handshake waits flexible
 - Add -n parameter for doing handshake without a test
+- Rename *FromString to Parse*
 - Fix duplicates and corruption on server with `-goroutines` > 1
-- Track down server proc time maximums with Go scheduler tracing, strace, sar
-- Add seqno to the Max column in the text output
-- Add faq about why I use wildcard addresses
-- Add doc about running irtt at startup
-- Add a better error message for oversized results buffers than panic: runtime
-  error: makeslice: cap out of range
 - Figure out how to reliably set `lost` to `lost_up`, even in the face of out of
   order packets (right now, only either `lost` or `lost_down` are returned)
+- Add a better error message for oversized results buffers than panic: runtime
+  error: makeslice: cap out of range
+- Add seqno to the Max column in the text output
+- Add faq about why I use wildcard addresses
+- Track down server proc time maximums
+  - Make sure no garbage created during data collection
+  - Do more thorough tests of `chrt -r 99`
+  - Use Go scheduler tracing, strace and sar
+  - File issue with Go team over scheduler performance
+- Add doc about running irtt at startup
 - Improve client connection closure by:
   - repeating close packets up to four times until acknowledgement, like open
   - including received packet stats in the acknowledgement from the server
-- Make sure no garbage created during data collection
-- See if I can use real-time thread scheduling in Linux
 - Write a SmokePing probe
 - Refactor packet manipulation to improve maintainability and prevent multiple
 	validations
