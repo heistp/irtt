@@ -515,7 +515,10 @@ func (p *packet) updateHMAC() {
 
 // Payload
 
-func (p *packet) readPayload(r io.Reader) error {
-	_, err := io.ReadFull(r, p.payload())
+func (p *packet) readPayload(r io.Reader) (err error) {
+	payload := p.payload()
+	if len(payload) > 0 {
+		_, err = io.ReadFull(r, p.payload())
+	}
 	return err
 }
