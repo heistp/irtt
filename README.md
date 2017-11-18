@@ -9,7 +9,7 @@ IRTT is still under development, and as such has not yet met all of its
 [goals](#goals). In particular:
 
 - there's more work to do for public server security
-- the JSON output format, protocol and API are all not finalized
+- the protocol and API are all not finalized
 - it is only available in source form
 - it has only had very basic testing on a couple of platforms
 
@@ -847,21 +847,25 @@ the client, and since start of the process for the server
 
 Definitely (in order of priority)...
 
+- Only return received window for new packets (or duplicates of packets with
+  the latest seqno), and use bit 0 as a flag to indicate if received window is
+  valid or not
 - Fix duplicates and corruption on server with `-goroutines` > 1
-- Figure out how to reliably set `lost` to `lost_up`, even in the face of out of
-  order packets (right now, only either `lost` or `lost_down` are returned)
+  - Prototype the consequences of doing a channel op for each server reply
+  - Decide between one goroutine per server conn and mutex locking
 - Add a better error message for oversized results buffers than panic: runtime
   error: makeslice: cap out of range
-- Write a SmokePing probe
-- Add seqno to the Max column in the text output
 - Make some doc improvements:
   - Add faq about why I use wildcard addresses
+  - Add faq about using little endian byte order
   - Add doc about running irtt at Linux startup
+- Write a SmokePing probe
+- Add seqno to the Max column in the text output
 - Track down server proc time maximums
-  - Make sure no garbage created during data collection
-  - Do more thorough tests of `chrt -r 99`
   - Use Go scheduler tracing, strace and sar
+  - Do more thorough tests of `chrt -r 99`
   - File issue with Go team over scheduler performance
+  - Make sure no garbage created during data collection
 - Improve client connection closure by:
   - repeating close packets up to four times until acknowledgement, like open
   - including received packet stats in the acknowledgement from the server
@@ -895,18 +899,16 @@ Definitely (in order of priority)...
 
 Possibly...
 
-- Add machine parseable output during test
+- Support a range of server ports to improve concurrency
 - Refactor packet parsing by using a header struct instead of direct buffer access
-- Make feedback fields generic to ease addition of new returned stats
 - Allow non-isochronous send schedules
 - Prompt to write JSON file on cancellation
 - Use pflag options: https://github.com/spf13/pflag
 - Implement graceful server shutdown
 - Implement zero downtime restart
 - Add unit tests
-- Add support for load balanced connections (packets for same connection that
-	come from multiple addresses)
-- Use unsafe package to increase packet buffer modification and comparison performance
+- Add support for load balanced conns (multiple source addresses for same conn)
+- Use unsafe package to speed up packet buffer manipulation
 - Add encryption
 - Add estimate for HMAC calculation time and correct send timestamp by this time
 - Implement web interface for client and server
@@ -918,7 +920,7 @@ Open questions...
 - Should I request a reserved IANA port?
 - Does exposing both monotonic and wall clock values open the server to any
 	timing attacks?
-- What do I do for IPDV and out of order packets?
+- What do I do for IPDV when there are out of order packets?
 
 ## Thanks
 

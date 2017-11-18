@@ -70,7 +70,8 @@ func (cm *connmgr) newConn(raddr *net.UDPAddr, p *Params, temporary bool) *sconn
 	return sc
 }
 
-func (cm *connmgr) conn(p *packet, raddr *net.UDPAddr) (sconn sconn, exists bool, addrOk bool, intervalOk bool) {
+func (cm *connmgr) conn(p *packet, raddr *net.UDPAddr) (sconn sconn,
+	exists bool, addrOk bool, intervalOk bool) {
 	cm.mtx.Lock()
 	defer cm.mtx.Unlock()
 	ct := p.ctoken()
