@@ -925,7 +925,7 @@ Possibly...
 
 - Support a range of server ports to improve concurrency
 - Refactor packet parsing by using a header struct instead of direct buffer access
-- Allow non-isochronous send schedules
+- Allow non-isochronous send schedules and variable packet lengths
 - Prompt to write JSON file on cancellation
 - Use pflag options: https://github.com/spf13/pflag
 - Implement graceful server shutdown
