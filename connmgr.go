@@ -29,6 +29,7 @@ type sconn struct {
 	lastSeqno      Seqno
 	receivedCount  ReceivedCount
 	receivedWindow ReceivedWindow
+	rwinValid      bool
 	bytes          uint64
 }
 
@@ -110,8 +111,16 @@ func (cm *connmgr) conn(p *packet, raddr *net.UDPAddr) (sconn sconn,
 	// slide received seqno window
 	seqno := p.seqno()
 	sinceLastSeqno := seqno - sc.lastSeqno
-	sc.receivedWindow <<= sinceLastSeqno
-	sc.receivedWindow |= 0x1
+	if sinceLastSeqno > 0 {
+		sc.receivedWindow <<= sinceLastSeqno
+	}
+	if sinceLastSeqno >= 0 { // new, duplicate or first packet
+		sc.receivedWindow |= 0x1
+		sc.rwinValid = true
+	} else { // late packet
+		sc.receivedWindow |= (0x1 << -sinceLastSeqno)
+		sc.rwinValid = false
+	}
 	// update received count
 	sc.receivedCount++
 	// update seqno and last used times

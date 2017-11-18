@@ -362,6 +362,8 @@ func (l *listener) readAndReply() (err error) {
 
 		// set reply flag
 		p.setReply(true)
+
+		// check if max test duration exceeded (but still return packet)
 		if l.hardMaxDuration > 0 && time.Since(sc.firstUsed) > l.hardMaxDuration {
 			l.eventf(DurationLimitExceeded,
 				"closed connection due to duration limit exceeded for %s (%016x)",
@@ -433,7 +435,11 @@ func (l *listener) sendPacket(trecv time.Time, sc *sconn, testPacket bool) (err 
 			p.setReceivedCount(sc.receivedCount)
 		}
 		if sc.params.ReceivedStats&ReceivedStatsWindow != 0 {
-			p.setReceivedWindow(sc.receivedWindow)
+			if sc.rwinValid {
+				p.setReceivedWindow(sc.receivedWindow)
+			} else {
+				p.setReceivedWindow(0)
+			}
 		}
 		at := sc.params.StampAt
 		cl := sc.params.Clock
