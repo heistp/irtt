@@ -174,12 +174,12 @@ differentiation is not available (only for any intervening packets) if
 greater than 64 packets are lost in succession.
 
 Additionally, no received window is currently returned for upstream late
-packets. However, the current received window **is** updated if the late packet
-is within the previous 64 packets, and this updated window **may** be returned
-with a subsequent packet. An additional server optimization could be added later
-to maintain a larger internal received window to increase accuracy in the face
-of upstream out-of-order packets, but so far this optimization has not shown to
-be necessary. High numbers of late (out-of-order) packets typically indicate an
+(out-of-order) packets. However, the current received window **is** updated if
+the late packet is within the previous 64 packets, and this updated window
+**may** be returned with a subsequent packet. An additional server optimization
+could be added later to maintain a larger internal received window to increase
+accuracy in the face of upstream late packets, but so far this optimization has
+not shown to be necessary. High numbers of late packets typically indicate an
 undesirable network condition that should be corrected before other tests are
 conducted.
 
