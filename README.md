@@ -163,6 +163,33 @@ over 300 Gb of virtual memory to record while the test is running, which is not
 likely to be a practical number for most hardware at this time. That is why
 64-bit sequence numbers are currently unnecessary.
 
+#### 64-bit received window
+
+In order to determine per-packet differentiation between upstream and downstream
+loss, a 64-bit "received window" may be returned with each packet that contains
+the receipt status of the previous 64 packets. This can be enabled with either
+`-rs window/both` with the irtt client or `ReceivedStatsWindow/ReceivedStatsBoth`
+with the API.  The limited size of the 64-bit window means that per-packet
+differentiation is not available (only for any intervening packets) if
+greater than 64 packets are lost in succession.
+
+Additionally, no received window is currently returned for upstream late
+packets. However, the current received window **is** updated if the late packet
+is within the previous 64 packets, and this updated window **may** be returned
+with a subsequent packet. An additional server optimization could be added later
+to maintain a larger internal received window to increase accuracy in the face
+of upstream out-of-order packets, but so far this optimization has not shown to
+be necessary. High numbers of late (out-of-order) packets typically indicate an
+undesirable network condition that should be corrected before other tests are
+conducted.
+
+Accepting the 64-bit received window limitation means that per-packet loss
+results in most cases can be obtained with only 8 additional bytes in each
+packet. In case of very high packet loss, the **total** number of packets
+received by the server but not returned to the client (which can be obtained
+using `-rs count/both` or `ReceivedStatsCount/ReceivedStatsBoth`) will still be
+correct.
+
 #### Use of Go
 
 IRTT is written in Go. That carries with it a few disadvantages:
@@ -847,9 +874,7 @@ the client, and since start of the process for the server
 
 Definitely (in order of priority)...
 
-- Only return received window for new packets (or duplicates of packets with
-  the latest seqno), and use bit 0 as a flag to indicate if received window is
-  valid or not
+- Remove cmd/mockup
 - Fix duplicates and corruption on server with `-goroutines` > 1
   - Prototype the consequences of doing a channel op for each server reply
   - Decide between one goroutine per server conn and mutex locking
@@ -913,6 +938,7 @@ Possibly...
 - Add estimate for HMAC calculation time and correct send timestamp by this time
 - Implement web interface for client and server
 - Add NAT hole punching
+- Use a larger, internal received window on the server to increase up/down loss accuracy
 - Implement median for timer error, send call time and server processing time
 
 Open questions...

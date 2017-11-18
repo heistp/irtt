@@ -34,15 +34,26 @@ func newResult(rec *Recorder, cfg *Config, serr error, rerr error) *Result {
 		// use received window to update lost status of previous round trips
 		if rt.ReplyReceived() {
 			rt.Lost = LostFalse
-			if cfg.Params.ReceivedStats&ReceivedStatsWindow != 0 {
-				rwin := rt.RoundTripData.receivedWindow >> 1
+			rwin := rt.RoundTripData.receivedWindow
+			if cfg.Params.ReceivedStats&ReceivedStatsWindow != 0 && (rwin&0x1 != 0) {
+				rwin >>= 1
 				wend := i - 63
 				if wend < 0 {
 					wend = 0
 				}
 				for j := i - 1; j >= wend; j-- {
-					if rwin&0x1 != 0 && r.RoundTrips[j].Lost == LostTrue {
-						r.RoundTrips[j].Lost = LostDown
+					rcvd := (rwin&0x1 != 0)
+					prt := &r.RoundTrips[j]
+					if rcvd {
+						if prt.Lost != LostFalse {
+							prt.Lost = LostDown
+						}
+					} else {
+						if prt.Lost == LostTrue || prt.Lost == LostUp {
+							prt.Lost = LostUp
+						} else {
+							panic("impossible transition from not lost to lost")
+						}
 					}
 					rwin >>= 1
 				}
