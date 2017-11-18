@@ -874,7 +874,6 @@ the client, and since start of the process for the server
 
 Definitely (in order of priority)...
 
-- Remove cmd/mockup
 - Fix duplicates and corruption on server with `-goroutines` > 1
   - Prototype the consequences of doing a channel op for each server reply
   - Decide between one goroutine per server conn and mutex locking
