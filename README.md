@@ -872,64 +872,72 @@ the client, and since start of the process for the server
 
 ## TODO and Roadmap
 
-Definitely (in order of priority)...
+### TODO
 
-- Fix duplicates and corruption on server with `-goroutines` > 1
-  - Prototype the consequences of doing a channel op for each server reply
-  - Decide between one goroutine per server conn and mutex locking
-- Add a better error message for oversized results buffers than panic: runtime
-  error: makeslice: cap out of range
+_Concrete tasks..._
+
+- Add a less threatening error message for oversized results buffers than
+  `panic: runtime error: makeslice: cap out of range`
+- Show IPDV in text output during test
 - Make some doc improvements:
   - Add faq about why I use wildcard addresses
   - Add faq about using little endian byte order
   - Add doc about running irtt at Linux startup
-- Write a SmokePing probe
-- Add seqno to the Max column in the text output
-- Track down server proc time maximums
-  - Use Go scheduler tracing, strace and sar
-  - Do more thorough tests of `chrt -r 99`
-  - File issue with Go team over scheduler performance
-  - Make sure no garbage created during data collection
+- Add seqno to the Max and maybe Min columns in the text output
+- Fix corruption on server with `-goroutines` > 1 due to single buffer per listener
+  - Prototype the consequences of a channel vs mutex op for each server reply
+  - Based on prototype results, implement one of two solutions:
+    - The Go way: use N reader goroutines that send packets (obtained from a
+      pool, at least) via a chan(*packet) to one goroutine per server conn
+    - The probably-more-performant way: use one goroutine per listener, have
+      separate packet buffers for each listener (probably by having a
+      duplicate() method on listener), and lock server conns with a mutex
+- Refactor packet manipulation to improve readability and prevent multiple validations
 - Improve client connection closure by:
-  - repeating close packets up to four times until acknowledgement, like open
-  - including received packet stats in the acknowledgement from the server
-- Refactor packet manipulation to improve maintainability and prevent multiple
-	validations
-- Add a flag to disable per-packet results
-- Allow specifying two out of three of interval, bitrate and packet size to the
-	client
-- Calculate arrival order for round trips during results generation using
-  timestamps
+  - Repeating close packets up to four times until acknowledgement, like open
+  - Including received packet stats in the acknowledgement from the server
 - Improve robustness and security of public servers:
 	- Add bitrate limiting
 	- Limit open requests to prevent the equivalent of a "syn flood"
 	- Add per-IP limiting
   - Improve server close by repeating close packets up to four times
+- Make sure no garbage created in either client or server during test
+- Add ability for client to request random fill from server
+- Refactor events to allow for more than 64 total event types
+- Write a SmokePing probe (for FreeNet)
+
+### Roadmap
+
+_Planned for the future..._
+
+- Add a Scheduler interface to allow non-isochronous send schedules and variable
+  packet lengths
+  - Find some way to determine packet interval and length distributions for
+    captured traffic
+  - Determine if asymmetric send schedules (between client and server) required
+- Improve induced latency and jitter:
+  - Use Go profiling, scheduler tracing, strace and sar
+  - Experiment with disabling server garbage collection
+  - Do more thorough tests of `chrt -r 99`
+  - Find or file issue with Go team over scheduler performance
+  - Prototype doing all thread scheduling for Linux in C
 - Add different server authentication modes:
-	- none (no conn token in header, for local use)
+	- none (no conn token in header, for minimum packet sizes during local use)
 	- token (what we have today, 64-bit token in header)
 	- nacl-hmac (hmac key negotiated with public/private key encryption)
-- Write an irtt.Timer implementation that uses Linux timerfd
+- Implement graceful server shutdown
+- Implement zero-downtime restarts
+
+### Inbox
+
+_Collection area for undefined or uncertain stuff..._
+
+- Prototype TCP throughput test and compare straight Go vs iperf/netperf
 - Add a subcommand to the CLI to convert JSON to CSV
-- Show IPDV in continuous (-v) output
-- Add a way to keep out "internal" info from JSON, like IP, hostname, and a
-	subcommand to strip these details after the JSON is created
-- Make it possible to add custom per-round-trip statistics programmatically
-- Add more relevant statistics, including more info on outliers and a textual
-	histogram(?)
-- Add ability for client to request random fill from server
-- Allow Client Dial to try multiple IPs when a hostname is given
-- Refactor events to allow for more than 64 total event types.
-
-Possibly...
-
-- Support a range of server ports to improve concurrency
-- Refactor packet parsing by using a header struct instead of direct buffer access
-- Allow non-isochronous send schedules and variable packet lengths
+- Support a range of server ports to improve concurrency and maybe defeat
+  latency "slotting" on multi-queue interfaces
 - Prompt to write JSON file on cancellation
 - Use pflag options: https://github.com/spf13/pflag
-- Implement graceful server shutdown
-- Implement zero downtime restart
 - Add unit tests
 - Add support for load balanced conns (multiple source addresses for same conn)
 - Use unsafe package to speed up packet buffer manipulation
@@ -937,15 +945,20 @@ Possibly...
 - Add estimate for HMAC calculation time and correct send timestamp by this time
 - Implement web interface for client and server
 - Add NAT hole punching
+- Add a flag to disable per-packet results
 - Use a larger, internal received window on the server to increase up/down loss accuracy
-- Implement median for timer error, send call time and server processing time
-
-Open questions...
-
-- Should I request a reserved IANA port?
+- Implement median calculation for timer error, send call time and server processing time
+- Allow specifying two out of three of interval, bitrate and packet size
+- Calculate per-packet arrival order during results generation using timestamps
+- Add a way to keep out "internal" info from JSON, like IP and hostname, and a
+	subcommand to strip these out after the JSON is created
+- Make it possible to add custom per-round-trip statistics programmatically
+- Add more info on outliers and possibly a textual histogram
+- Allow Client Dial to try multiple IPs when a hostname is given
+- What do I do for IPDV when there are out of order packets?
 - Does exposing both monotonic and wall clock values open the server to any
 	timing attacks?
-- What do I do for IPDV when there are out of order packets?
+- Should I request a reserved IANA port?
 
 ## Thanks
 
