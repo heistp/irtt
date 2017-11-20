@@ -429,14 +429,13 @@ type clientHandler struct {
 	reallyQuiet bool
 }
 
-func (c *clientHandler) OnSent(seqno Seqno, rt RoundTripData, length int, rec *Recorder) {
+func (c *clientHandler) OnSent(seqno Seqno, rt RoundTripData, rec *Recorder) {
 }
 
-func (c *clientHandler) OnReceived(seqno Seqno, rt RoundTripData, length int,
-	dup bool, rec *Recorder) {
+func (c *clientHandler) OnReceived(seqno Seqno, rt RoundTripData, dup bool, rec *Recorder) {
 	if !c.reallyQuiet {
 		if dup {
-			printf("DUP! len=%d seq=%d", length, seqno)
+			printf("DUP! seq=%d", seqno)
 			return
 		}
 
@@ -451,7 +450,7 @@ func (c *clientHandler) OnReceived(seqno Seqno, rt RoundTripData, length int,
 			if rt.SendDelay() != InvalidDuration {
 				sd = fmt.Sprintf(" sd=%s", rdur(rt.SendDelay()))
 			}
-			printf("seq=%d len=%d rtt=%s%s%s", seqno, length, rdur(rt.RTT()), rd, sd)
+			printf("seq=%d rtt=%s%s%s", seqno, rdur(rt.RTT()), rd, sd)
 		}
 	}
 }

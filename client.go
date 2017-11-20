@@ -316,7 +316,7 @@ func (c *Client) send(ctx context.Context) error {
 
 		// call handler
 		if c.Handler != nil {
-			c.Handler.OnSent(seqno, rt, p.length(), c.rec)
+			c.Handler.OnSent(seqno, rt, c.rec)
 		}
 
 		// prepare next packet (before sleep, so the next send time is as
@@ -427,7 +427,7 @@ func (c *Client) receive() error {
 
 		// call handler's OnReceived
 		if c.Handler != nil {
-			c.Handler.OnReceived(p.seqno(), rt, p.length(), dup, c.rec)
+			c.Handler.OnReceived(p.seqno(), rt, dup, c.rec)
 		}
 	}
 }
@@ -469,8 +469,8 @@ type ClientHandler interface {
 	Handler
 
 	// OnSent is called when a packet is sent.
-	OnSent(seqno Seqno, rt RoundTripData, length int, rec *Recorder)
+	OnSent(seqno Seqno, rt RoundTripData, rec *Recorder)
 
 	// OnReceived is called when a packet is received.
-	OnReceived(seqno Seqno, rt RoundTripData, length int, dup bool, rec *Recorder)
+	OnReceived(seqno Seqno, rt RoundTripData, dup bool, rec *Recorder)
 }
