@@ -95,7 +95,9 @@ func (c *Client) Run(ctx context.Context) (r *Result, err error) {
 	}
 
 	// create recorder
-	c.rec = newRecorder(c.Duration, c.Interval)
+	if c.rec, err = newRecorder(c.Duration, c.Interval); err != nil {
+		return
+	}
 
 	// wait group for goroutine completion
 	wg := sync.WaitGroup{}

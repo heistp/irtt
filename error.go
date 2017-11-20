@@ -63,6 +63,7 @@ const (
 	InvalidReceivedStatsInt
 	InvalidReceivedStatsString
 	OpenTimeoutTooShort
+	AllocateResultsPanic
 )
 
 // Error is an IRTT error.

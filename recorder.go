@@ -7,12 +7,6 @@ import (
 	"time"
 )
 
-// maxStampsInitCap is the maximum initial capacity of the Timestamps slice.
-// The size of Stamps is 64 bytes, so this should be up to 4 megs in RAM.
-// This allows around 65 seconds of recording at interval 1ms.
-//const maxStampsInitCap = 64 * 1024
-const maxStampsInitCap = 0
-
 // Recorder is used to record data during the test. It is available to the
 // Handler during the test for display of basic statistics, and may be used
 // later to create a Result for further statistical analysis and storage.
@@ -52,14 +46,19 @@ func (r *Recorder) RUnlock() {
 	r.mtx.RUnlock()
 }
 
-func newRecorder(dur time.Duration, interval time.Duration) *Recorder {
+func newRecorder(dur time.Duration, interval time.Duration) (rec *Recorder, err error) {
 	pcap := pcount(dur, interval)
-	if maxStampsInitCap > 0 && pcap > maxStampsInitCap {
-		pcap = maxStampsInitCap
-	}
-	return &Recorder{
+	defer func() {
+		if r := recover(); r != nil {
+			err = Errorf(AllocateResultsPanic,
+				"failed to allocate results buffer for %d round trips (%s)",
+				pcap, r)
+		}
+	}()
+	rec = &Recorder{
 		RoundTripData: make([]RoundTripData, 0, pcap),
 	}
+	return
 }
 
 func (r *Recorder) recordPreSend() time.Time {
