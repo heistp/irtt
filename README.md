@@ -897,7 +897,6 @@ the client, and since start of the process for the server
 
 _Concrete tasks that just need doing..._
 
-- Update Quick Start doc to use 172 bytes for G.711
 - Show IPDV in text output during test
 - Make some doc improvements:
   - Add faq about why I use wildcard addresses
