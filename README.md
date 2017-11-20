@@ -856,19 +856,29 @@ the client, and since start of the process for the server
 
    MD5 should not have practical vulnerabilities when used in a message authenticate
    code. See [this page](https://en.wikipedia.org/wiki/Hash-based_message_authentication_code#Security)
-	 for more info.
+   for more info.
 
 9) Will you add unit tests?
 
    Maybe some. I feel that the most important thing for a project of this size
-	 is that the design is clear enough that bugs are next to impossible. IRTT
-	 is not there yet though, particularly when it comes to packet manipulation.
+   is that the design is clear enough that bugs are next to impossible. IRTT
+   is not there yet though, particularly when it comes to packet manipulation.
 
 10) Are there any plans for translation to other languages?
 
-   While some parts of the API were designed to keep i18n possible, there is no
-   support for it built in to the Go standard libraries. It should be possible,
-	 but could be a challenge, and is not something I'm likely to undertake myself.
+    While some parts of the API were designed to keep i18n possible, there is no
+    support for it built in to the Go standard libraries. It should be possible,
+    but could be a challenge, and is not something I'm likely to undertake myself.
+
+11) Why do I get `Error: failed to allocate results buffer for X round trips
+   (runtime error: makeslice: cap out of range)`?
+
+    Your test interval and duration probably require a results buffer that's
+    larger than Go can allocate on your platform. Lower either your test
+    interval or duration. See the following additional documentation for
+    reference: [In-memory results storage](#in-memory-results-storage),
+    `maxSliceCap` in [slice.go](https://golang.org/src/runtime/slice.go) and
+    `_MaxMem` in [malloc.go](https://golang.org/src/runtime/malloc.go).
 
 ## TODO and Roadmap
 
@@ -876,8 +886,6 @@ the client, and since start of the process for the server
 
 _Concrete tasks..._
 
-- Add a less threatening error message for oversized results buffers than
-  `panic: runtime error: makeslice: cap out of range`
 - Show IPDV in text output during test
 - Make some doc improvements:
   - Add faq about why I use wildcard addresses
@@ -932,6 +940,7 @@ _Planned for the future..._
 
 _Collection area for undefined or uncertain stuff..._
 
+- Map error codes to exit codes
 - Prototype TCP throughput test and compare straight Go vs iperf/netperf
 - Add a subcommand to the CLI to convert JSON to CSV
 - Support a range of server ports to improve concurrency and maybe defeat
