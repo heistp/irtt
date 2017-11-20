@@ -76,7 +76,7 @@ general purpose tool as well. The goals of this project are to:
 
 ### Features:
 
-* Measurement of:
+- Measurement of:
 	- [RTT (round-trip time)](https://en.wikipedia.org/wiki/Round-trip_delay_time)
 	- [OWD (one-way delay)](https://en.wikipedia.org/wiki/End-to-end_delay), given
 		external clock synchronization
@@ -86,23 +86,23 @@ general purpose tool as well. The goals of this project are to:
 		(measured by late packets metric) and duplicate packets
 	- [Bitrate](https://en.wikipedia.org/wiki/Bit_rate)
 	- Timer error, send call time and server processing time
-* Statistics: min, max, mean, median (for most quantities) and standard deviation
-* Nanosecond time precision (where available), and robustness in the face of
+- Statistics: min, max, mean, median (for most quantities) and standard deviation
+- Nanosecond time precision (where available), and robustness in the face of
 	clock drift and NTP corrections through the use of both the wall and monotonic
 	clocks
-* Binary protocol with negotiated format for test packet lengths down to 16 bytes (without timestamps)
-* HMAC support for private servers, preventing unauthorized discovery and use
-* Support for a wide range of Go supported [platforms](https://github.com/golang/go/wiki/MinimumRequirements)
-* Timer compensation to improve sleep send schedule accuracy
-* Support for IPv4 and IPv6
-* Public server protections, including:
-	* Three-way handshake with returned 64-bit connection token, preventing reply
+- Binary protocol with negotiated format for test packet lengths down to 16 bytes (without timestamps)
+- HMAC support for private servers, preventing unauthorized discovery and use
+- Support for a wide range of Go supported [platforms](https://github.com/golang/go/wiki/MinimumRequirements)
+- Timer compensation to improve sleep send schedule accuracy
+- Support for IPv4 and IPv6
+- Public server protections, including:
+	- Three-way handshake with returned 64-bit connection token, preventing reply
 		redirection to spoofed source addresses
-	* Limits on maximum test duration, minimum interval and maximum packet length,
+	- Limits on maximum test duration, minimum interval and maximum packet length,
 		both advertised in the negotiation and enforced with hard limits to protect
 		against rogue clients
-	* Packet payload filling to prevent relaying of arbitrary traffic
-* Output to JSON
+	- Packet payload filling to prevent relaying of arbitrary traffic
+- Output to JSON
 
 ### Limitations
 
@@ -902,6 +902,7 @@ _Concrete tasks that just need doing..._
   - Add faq about using little endian byte order
   - Add doc about running irtt at Linux startup
 - Add seqno to the Max and maybe Min columns in the text output
+- Improve appearance of text output during test
 - Fix corruption on server with `-goroutines` > 1 due to single buffer per listener
   - Prototype the consequences of a channel vs mutex op for each server reply
   - Based on prototype results, implement one of two solutions:
@@ -910,6 +911,7 @@ _Concrete tasks that just need doing..._
     - The probably-more-performant way: use one goroutine per listener, have
       separate packet buffers for each listener (probably by having a
       duplicate() method on listener), and lock server conns with a mutex
+- Add ability for client to request random fill from server
 - Refactor packet manipulation to improve readability and prevent multiple validations
 - Improve client connection closure by:
   - Repeating close packets up to four times until acknowledgement, like open
@@ -920,7 +922,6 @@ _Concrete tasks that just need doing..._
 	- Add per-IP limiting
   - Improve server close by repeating close packets up to four times
 - Make sure no garbage created in either client or server during test
-- Add ability for client to request random fill from server
 - Refactor events to allow for more than 64 total event types
 - Write a SmokePing probe (for FreeNet)
 
