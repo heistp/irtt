@@ -429,10 +429,11 @@ type clientHandler struct {
 	reallyQuiet bool
 }
 
-func (c *clientHandler) OnSent(seqno Seqno, rt RoundTripData, rec *Recorder) {
+func (c *clientHandler) OnSent(seqno Seqno, rtd *RoundTripData) {
 }
 
-func (c *clientHandler) OnReceived(seqno Seqno, rt RoundTripData, dup bool, rec *Recorder) {
+func (c *clientHandler) OnReceived(seqno Seqno, rtd *RoundTripData,
+	prtd *RoundTripData, late bool, dup bool) {
 	if !c.reallyQuiet {
 		if dup {
 			printf("DUP! seq=%d", seqno)
@@ -440,17 +441,24 @@ func (c *clientHandler) OnReceived(seqno Seqno, rt RoundTripData, dup bool, rec 
 		}
 
 		if !c.quiet {
-			rec.RLock()
-			defer rec.RUnlock()
+			ipdv := time.Duration(0)
+			if prtd != nil {
+				ipdv = AbsDuration(rtd.IPDVSince(prtd))
+			}
 			rd := ""
-			if rt.ReceiveDelay() != InvalidDuration {
-				rd = fmt.Sprintf(" rd=%s", rdur(rt.ReceiveDelay()))
+			if rtd.ReceiveDelay() != InvalidDuration {
+				rd = fmt.Sprintf(" rd=%s", rdur(rtd.ReceiveDelay()))
 			}
 			sd := ""
-			if rt.SendDelay() != InvalidDuration {
-				sd = fmt.Sprintf(" sd=%s", rdur(rt.SendDelay()))
+			if rtd.SendDelay() != InvalidDuration {
+				sd = fmt.Sprintf(" sd=%s", rdur(rtd.SendDelay()))
 			}
-			printf("seq=%d rtt=%s%s%s", seqno, rdur(rt.RTT()), rd, sd)
+			sl := ""
+			if late {
+				sl = " (LATE)"
+			}
+			printf("seq=%d rtt=%s%s%s ipdv=%s%s", seqno, rdur(rtd.RTT()),
+				rd, sd, rdur(ipdv), sl)
 		}
 	}
 }
