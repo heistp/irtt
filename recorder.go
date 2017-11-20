@@ -11,9 +11,10 @@ import (
 // Handler during the test for display of basic statistics, and may be used
 // later to create a Result for further statistical analysis and storage.
 // Recorder is accessed concurrently while the test is running, so its RLock and
-// RUnlock methods must be used during read access to prevent race conditions. It
-// is not possible to lock Recorder externally for write, since all recording
-// should be done internally.
+// RUnlock methods must be used during read access to prevent race conditions.
+// When RecorderHandler is called, it is already locked and must not be locked
+// again. It is not possible to lock Recorder externally for write, since
+// all recording should be done internally.
 type Recorder struct {
 	Start                 time.Time       `json:"start_time"`
 	FirstSend             time.Time       `json:"-"`
@@ -32,6 +33,7 @@ type Recorder struct {
 	LatePackets           uint            `json:"late_packets"`
 	Wait                  time.Duration   `json:"wait"`
 	RoundTripData         []RoundTripData `json:"-"`
+	RecorderHandler       RecorderHandler `json:"-"`
 	lastSeqno             Seqno
 	mtx                   sync.RWMutex
 }
@@ -46,17 +48,17 @@ func (r *Recorder) RUnlock() {
 	r.mtx.RUnlock()
 }
 
-func newRecorder(dur time.Duration, interval time.Duration) (rec *Recorder, err error) {
-	pcap := pcount(dur, interval)
+func newRecorder(rtrips uint, h RecorderHandler) (rec *Recorder, err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			err = Errorf(AllocateResultsPanic,
 				"failed to allocate results buffer for %d round trips (%s)",
-				pcap, r)
+				rtrips, r)
 		}
 	}()
 	rec = &Recorder{
-		RoundTripData: make([]RoundTripData, 0, pcap),
+		RoundTripData:   make([]RoundTripData, 0, rtrips),
+		RecorderHandler: h,
 	}
 	return
 }
@@ -79,7 +81,7 @@ func (r *Recorder) removeLastStamps() {
 	r.RoundTripData = r.RoundTripData[:len(r.RoundTripData)-1]
 }
 
-func (r *Recorder) recordPostSend(tsend time.Time, tsent time.Time, n uint64) RoundTripData {
+func (r *Recorder) recordPostSend(tsend time.Time, tsent time.Time, n uint64) {
 	r.mtx.Lock()
 	defer r.mtx.Unlock()
 
@@ -94,7 +96,12 @@ func (r *Recorder) recordPostSend(tsend time.Time, tsent time.Time, n uint64) Ro
 		r.FirstSend = tsend
 	}
 	r.LastSent = tsent
-	return r.RoundTripData[len(r.RoundTripData)-1]
+
+	// call handler
+	if r.RecorderHandler != nil {
+		seqno := Seqno(len(r.RoundTripData)) - 1
+		r.RecorderHandler.OnSent(seqno, &r.RoundTripData[seqno])
+	}
 }
 
 func (r *Recorder) recordTimerErr(terr time.Duration) {
@@ -103,26 +110,38 @@ func (r *Recorder) recordTimerErr(terr time.Duration) {
 	r.TimerErrorStats.push(AbsDuration(terr))
 }
 
-func (r *Recorder) recordReceive(p *packet, trecv time.Time, sts *Timestamp) (RoundTripData, bool, bool) {
+func (r *Recorder) recordReceive(p *packet, trecv time.Time, sts *Timestamp) bool {
 	r.mtx.Lock()
 	defer r.mtx.Unlock()
 
 	// check for invalid sequence number
 	seqno := p.seqno()
 	if int(seqno) >= len(r.RoundTripData) {
-		return RoundTripData{}, false, false
+		return false
 	}
 
+	// valid result
 	rtd := &r.RoundTripData[seqno]
+	var prtd *RoundTripData
+	if seqno > 0 {
+		prtd = &r.RoundTripData[seqno-1]
+	}
+
+	// check for lateness
+	late := seqno < r.lastSeqno
 
 	// check for duplicate (don't update stats for duplicates)
 	if !rtd.Client.Receive.IsZero() {
 		r.Duplicates++
-		return *rtd, true, true
+		// call recorder handler
+		if r.RecorderHandler != nil {
+			r.RecorderHandler.OnReceived(p.seqno(), rtd, prtd, late, true)
+		}
+		return true
 	}
 
-	// check for late packet
-	if seqno < r.lastSeqno {
+	// record late packet
+	if late {
 		r.LatePackets++
 	}
 	r.lastSeqno = seqno
@@ -161,7 +180,12 @@ func (r *Recorder) recordReceive(p *packet, trecv time.Time, sts *Timestamp) (Ro
 	// update bytes received
 	r.BytesReceived += uint64(p.length())
 
-	return *rtd, false, true
+	// call recorder handler
+	if r.RecorderHandler != nil {
+		r.RecorderHandler.OnReceived(p.seqno(), rtd, prtd, late, false)
+	}
+
+	return true
 }
 
 // RoundTripData contains the information recorded for each round trip during
@@ -434,4 +458,14 @@ func AbsDuration(d time.Duration) time.Duration {
 // duration and interval.
 func pcount(d time.Duration, i time.Duration) uint {
 	return 1 + uint(d/i)
+}
+
+// RecorderHandler is called when the Recorder records a sent or received
+// packet.
+type RecorderHandler interface {
+	// OnSent is called when a packet is sent.
+	OnSent(seqno Seqno, rtd *RoundTripData)
+
+	// OnReceived is called when a packet is received.
+	OnReceived(seqno Seqno, rtd *RoundTripData, pred *RoundTripData, late bool, dup bool)
 }

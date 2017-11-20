@@ -95,7 +95,7 @@ func (c *Client) Run(ctx context.Context) (r *Result, err error) {
 	}
 
 	// create recorder
-	if c.rec, err = newRecorder(c.Duration, c.Interval); err != nil {
+	if c.rec, err = newRecorder(pcount(c.Duration, c.Interval), c.Handler); err != nil {
 		return
 	}
 
@@ -312,12 +312,7 @@ func (c *Client) send(ctx context.Context) error {
 		}
 
 		// record send call
-		rt := c.rec.recordPostSend(tsend, tsent, uint64(p.length()))
-
-		// call handler
-		if c.Handler != nil {
-			c.Handler.OnSent(seqno, rt, c.rec)
-		}
+		c.rec.recordPostSend(tsend, tsent, uint64(p.length()))
 
 		// prepare next packet (before sleep, so the next send time is as
 		// precise as possible)
@@ -420,14 +415,9 @@ func (c *Client) receive() error {
 		sts := p.timestamp()
 
 		// record receive if all went well (may fail if seqno not found)
-		rt, dup, ok := c.rec.recordReceive(p, trecv, &sts)
+		ok := c.rec.recordReceive(p, trecv, &sts)
 		if !ok {
 			return Errorf(UnexpectedSequenceNumber, "unexpected reply sequence number %d", p.seqno())
-		}
-
-		// call handler's OnReceived
-		if c.Handler != nil {
-			c.Handler.OnReceived(p.seqno(), rt, dup, c.rec)
 		}
 	}
 }
@@ -468,9 +458,5 @@ func (c *Client) eventf(code EventCode, format string, args ...interface{}) {
 type ClientHandler interface {
 	Handler
 
-	// OnSent is called when a packet is sent.
-	OnSent(seqno Seqno, rt RoundTripData, rec *Recorder)
-
-	// OnReceived is called when a packet is received.
-	OnReceived(seqno Seqno, rt RoundTripData, dup bool, rec *Recorder)
+	RecorderHandler
 }
