@@ -251,37 +251,48 @@ IRTT server starting...
 ```
 
 While that's running, run a client. If no options are supplied, it will send
-a request once per second, like ping, but here we use an interval of 20ms
-and a test duration of 1 minute, with a payload of 160 bytes, to roughly simulate
-a G.711 VoIP conversation:
+a request once per second, like ping, but here we simulate a one minute
+G.711 VoIP conversation by using an interval of 20ms and randomly filled
+payload of 172 bytes (160 bytes voice data plus 12 byte RTP header):
 
 ```
-% irtt client -i 20ms -l 160 -d 1m -q 192.168.100.10
+% irtt client -i 20ms -l 172 -d 1m -fill rand -fillall -q 192.168.100.10
 [Connecting] connecting to 192.168.100.10
 [Connected] connected to 192.168.100.10:2112
 
-                        Min     Mean   Median      Max  Stddev
-                        ---     ----   ------      ---  ------
-                RTT  12.2ms  24.87ms  23.21ms  115.9ms   9.1ms
-         send delay  5.89ms  16.46ms  15.08ms  97.29ms  8.04ms
-      receive delay  5.64ms   8.41ms   7.55ms  39.26ms  2.95ms
-                                                              
-      IPDV (jitter)  11.6µs   6.69ms   5.03ms  83.23ms  6.57ms
-          send IPDV  3.74µs   6.24ms   4.61ms  84.81ms  6.22ms
-       receive IPDV  1.05µs   1.96ms   1.06ms  31.99ms  2.88ms
-                                                              
-     send call time  56.2µs   79.4µs           11.88ms   227µs
-        timer error     5ns   64.3µs           11.68ms   579µs
-  server proc. time  18.9µs     21µs             262µs  9.62µs
+                         Min     Mean   Median      Max  Stddev
+                         ---     ----   ------      ---  ------
+                RTT  11.93ms  20.88ms   19.2ms  80.49ms  7.02ms
+         send delay   4.99ms  12.21ms  10.83ms  50.45ms  5.73ms
+      receive delay   6.38ms   8.66ms   7.86ms  69.11ms  2.89ms
+                                                               
+      IPDV (jitter)    782ns   4.53ms   3.39ms  64.66ms   4.2ms
+          send IPDV    256ns   3.99ms   2.98ms  35.28ms  3.69ms
+       receive IPDV    896ns   1.78ms    966µs  62.28ms  2.86ms
+                                                               
+     send call time   56.5µs   82.8µs           18.99ms   348µs
+        timer error       0s   21.7µs           19.05ms   356µs
+  server proc. time   23.9µs   26.9µs             141µs  11.2µs
 
-                duration: 1m0s (wait 347.8ms)
-   packets sent/received: 2986/2966 (0.67% loss)
- server packets received: 2972/2986 (0.47%/0.20% loss up/down)
-     bytes sent/received: 477760/474560
-       send/receive rate: 63.7 Kbps / 63.3 Kbps
-           packet length: 160 bytes
-             timer stats: 14/3000 (0.47%) missed, 0.32% error
+                duration: 1m0s (wait 241.5ms)
+   packets sent/received: 2996/2979 (0.57% loss)
+ server packets received: 2980/2996 (0.53%/0.03% loss up/down)
+     bytes sent/received: 515312/512388
+       send/receive rate: 68.7 Kbps / 68.4 Kbps
+           packet length: 172 bytes
+             timer stats: 4/3000 (0.13%) missed, 0.11% error
 ```
+
+In the results above, the client is a
+[Raspberry Pi 2 Model B](https://www.raspberrypi.org/products/raspberry-pi-2-model-b/)
+and the server is a
+[Raspberry Pi 3 Model B](https://www.raspberrypi.org/products/raspberry-pi-3-model-b/).
+They are located at two different sites, around 50km from one another, each of which
+connects to the Internet via point-to-point WiFi. The client is 3km
+[NLOS](https://en.wikipedia.org/wiki/Non-line-of-sight_propagation) through trees
+located near the client's transmitter, which is likely the reason for the higher
+upstream packet loss, mean send delay and IPDV. That said, these conditions would
+likely provide for a decent VoIP conversation.
 
 ## Running IRTT
 
@@ -884,8 +895,9 @@ the client, and since start of the process for the server
 
 ### TODO
 
-_Concrete tasks..._
+_Concrete tasks that just need doing..._
 
+- Update Quick Start doc to use 172 bytes for G.711
 - Show IPDV in text output during test
 - Make some doc improvements:
   - Add faq about why I use wildcard addresses
