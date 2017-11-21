@@ -9,7 +9,7 @@ IRTT is still under development, and as such has not yet met all of its
 [goals](#goals). In particular:
 
 - there's more work to do for public server security
-- the protocol and API are all not finalized
+- the protocol and API are not finalized
 - it is only available in source form
 - it has only had very basic testing on a couple of platforms
 
@@ -909,6 +909,37 @@ the client, and since start of the process for the server
     `maxSliceCap` in [slice.go](https://golang.org/src/runtime/slice.go) and
     `_MaxMem` in [malloc.go](https://golang.org/src/runtime/malloc.go).
 
+12) Why when I start the server do I get the warning: `[MultipleAddresses]
+    warning: multiple IP addresses, bind addresses should be explicitly specified
+    with -b or clients may not be able to connect`?
+
+    When starting the server without the `Addrs` (`-b`) parameter, the server
+    listens on all available addresses, including those on local adapters and
+    those on adapters that are later added to the system. This is primarily
+    useful for testing, as it makes it easy to start the server and know that it
+    can be used on any IP address on the system. But the consequence of this is
+    that when the server sends reply packets to clients, the source IP address
+    used is chosen by the OS, and may not be the same as the address that the
+    corresponding request came on. If it happens to be different, the client
+    will reject the packet.
+
+    In contrast, when the bind addresses **are** specified (and there can be
+    multiple bind addresses), separate listeners are created for each bind
+    address, and server replies will always have the source IP address that the
+    listener is bound to. Thus, on public servers it's good practice, even if
+    there's only one IP address, to always explicitly specify the bind
+    addresses.
+
+    _So then why don't you just list all the adapters on the system and create
+    separate listeners for each one automatically?_
+
+    That could be done, but listening on all available addresses (current and
+    future) can still be useful for testing purposes, say if you have a laptop
+    connected to Ethernet and only sometimes connect to WiFi. When new
+    interfaces are enabled, irtt will automatically listen on them. Further, it
+    is **still** a good idea to explicitly specify bind addresses on public
+    servers, so there are no surprises what IP/s the server is listening on.
+
 ## TODO and Roadmap
 
 ### TODO
@@ -916,7 +947,6 @@ the client, and since start of the process for the server
 _Concrete tasks that just need doing..._
 
 - Make some doc improvements:
-  - Add faq about why I use wildcard addresses
   - Add faq about using little endian byte order
   - Add doc about running irtt at Linux startup
 - Add seqno to the Max and maybe Min columns in the text output
