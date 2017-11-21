@@ -1014,9 +1014,7 @@ the client, and since start of the process for the server
 
 _Concrete tasks that just need doing..._
 
-- Make version number associated with github commit
 - Add seqno to the Max and maybe Min columns in the text output
-- Improve appearance of text output during test
 - Fix corruption on server with `-goroutines` > 1 due to single buffer per listener
   - Prototype the consequences of a channel vs mutex op for each server reply
   - Based on prototype results, implement one of two solutions:
@@ -1051,7 +1049,6 @@ _Planned for the future..._
 - Improve induced latency and jitter:
   - Use Go profiling, scheduler tracing, strace and sar
   - See if netperf udp_rr averages multiple samples to 200ms
-  - Try `GOMAXPROCS=1`
   - Experiment with disabling server garbage collection
   - Do more thorough tests of `chrt -r 99`
   - Find or file issue with Go team over scheduler performance
