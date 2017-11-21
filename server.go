@@ -41,7 +41,7 @@ type Server struct {
 // NewServer creates a new server.
 func NewServer() *Server {
 	return &Server{
-		Addrs:       []string{DefaultBindAddr},
+		Addrs:       DefaultBindAddrs,
 		MaxDuration: DefaultMaxDuration,
 		MinInterval: DefaultMinInterval,
 		MaxLength:   DefaultMaxLength,
@@ -68,12 +68,6 @@ func (s *Server) ListenAndServe() error {
 	// detect CPUs when Goroutines == 0
 	s.detectCPUs()
 
-	// warn when there are multiple global unicast addresses and bind addresses
-	// have not been specified
-	if err := s.warnOnMultipleAddresses(); err != nil {
-		return err
-	}
-
 	// set max duration
 	if s.MaxDuration > 0 {
 		s.hardMaxDuration = s.MaxDuration + durationGraceTime
@@ -83,6 +77,17 @@ func (s *Server) ListenAndServe() error {
 	listeners, err := s.makeListeners()
 	if err != nil {
 		return err
+	}
+
+	// warn when there are multiple global unicast addresses and at least one
+	// wildcard address is specified
+	for _, l := range listeners {
+		if l.conn.localAddr().IP.IsUnspecified() {
+			if err := s.warnOnMultipleAddresses(); err != nil {
+				return err
+			}
+			break
+		}
 	}
 
 	// start listeners
@@ -151,9 +156,8 @@ func (s *Server) warnOnMultipleAddresses() error {
 		}
 	}
 	if n > 1 {
-		s.eventf(MultipleAddresses, "warning: multiple IP "+
-			"addresses, bind addresses should be explicitly "+
-			"specified with -b or clients may not be able to connect")
+		s.eventf(MultipleAddresses, "warning: multiple IP addresses, all bind IP addresses "+
+			"should be explicitly specified with -b or clients may not be able to connect")
 	}
 	return nil
 }

@@ -969,18 +969,19 @@ the client, and since start of the process for the server
     `_MaxMem` in [malloc.go](https://golang.org/src/runtime/malloc.go).
 
 12) Why when I start the server do I get the warning: `[MultipleAddresses]
-    warning: multiple IP addresses, bind addresses should be explicitly specified
-    with -b or clients may not be able to connect`?
+    warning: multiple IP addresses- all bind IP addresses should be explicitly
+    specified with -b or clients may not be able to connect`?
 
-    When starting the server without the `Addrs` (`-b`) parameter, the server
-    listens on all available addresses, including those on local adapters and
-    those on adapters that are later added to the system. This is primarily
-    useful for testing, as it makes it easy to start the server and know that it
-    can be used on any IP address on the system. But the consequence of this is
-    that when the server sends reply packets to clients, the source IP address
-    used is chosen by the OS, and may not be the same as the address that the
-    corresponding request came on. If it happens to be different, the client
-    will reject the packet.
+    The bind address may be ommitted when starting the server. In this case, the
+    "unspecified" IP address is used (represented by 0.0.0.0 for IPv4 or [::]
+    for IPv6). The server then listens on all available addresses, including
+    those on local adapters and those on adapters that are later added to the
+    system.  This is primarily useful for testing, as it makes it easy to start
+    the server and know that it can be used on any IP address on the system. But
+    the consequence of this is that when the server sends reply packets to
+    clients, the source IP address used is chosen by the OS, and may not be the
+    same as the address that the corresponding request came on. If it happens to
+    be different, the client will reject the packet.
 
     In contrast, when the bind addresses **are** specified (and there can be
     multiple bind addresses), separate listeners are created for each bind
@@ -989,8 +990,8 @@ the client, and since start of the process for the server
     there's only one IP address, to always explicitly specify the bind
     addresses.
 
-    _So then when no bind address is specified, why don't you just list all the
-    adapters on the system and create separate listeners for each one
+    _So then when the bind address is unspecified, why don't you just list all
+    the adapters on the system and create separate listeners for each one
     automatically?_
 
     That could be done, but listening on all available addresses (current and
