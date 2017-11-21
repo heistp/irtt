@@ -33,7 +33,8 @@ submitting a new bug or feature request.
 3. [Running IRTT](#running-irtt)
 	1. [Client Options](#client-options)
 	2. [Server Options](#server-options)
-	3. [Tests and Benchmarks](#tests-and-benchmarks)
+  3. [Running Server at Startup](#running-server-at-startup)
+	4. [Tests and Benchmarks](#tests-and-benchmarks)
 4. [Results](#results)
 	1. [Test Output](#test-output)
 	2. [JSON Format](#json-format)
@@ -316,6 +317,64 @@ likely provide for a decent VoIP conversation.
 ### Client Options
 
 ### Server Options
+
+### Running Server at Startup
+
+There are many ways to run a service at startup that depend on the OS used and
+other specific requirements. For Linux, the recommended way to start Go servers
+in general is to use `systemd`. It can provide a lot of flexibility for logging,
+service management or other custom configuration. Tutorials may be found on the
+Internet that describe how to do use systemd in greater detail, but a very
+simple method is as follows:
+
+1) Install the `irtt` executable into `/usr/local/bin`
+
+2) Create a user to run the irtt server with `sudo adduser irtt` and supply the
+   requested details.
+
+3) Create a file `/etc/systemd/system/irtt.service` with the following contents:
+
+```
+[Unit]
+Description=IRTT Server
+After=network.target
+
+[Service]
+Type=simple
+User=irtt
+WorkingDirectory=/usr/local/bin
+ExecStart=/usr/local/bin/irtt server
+Restart=on-abort
+
+[Install]
+WantedBy=multi-user.target
+```
+
+4) Reload systemd with `sudo systemctl daemon-reload`
+
+5) Start the service with `sudo systemctl start irtt.service`
+
+6) Check the service status with `sudo systemctl status irtt.service`
+
+7) Set the service to start at boot with `sudo systemctl enable irtt.service`
+
+8) View and follow the irtt server logs with `sudo journalctl -f -u irtt.service`
+
+See the irtt server's command line usage with `irtt server -h` to explore
+additional parameters you may want when starting your server, such as an hmac
+key or restrictions on test parameters. To secure a server for public use, you
+may want to take additional steps outside of the scope of this tutorial for
+securing Linux services in general, including but not limited to:
+
+- Changing or disabling the irtt user's shell or password
+- Restricting the irtt user's file permissions
+- Setting up an iptables firewall (only UDP port 2112 must be open)
+- Setting up a chroot jail
+
+It should be noted that there are no known security vulnerabilities in the Go
+language at this time, and the steps above may or may not serve to enhance
+security in any way. Go-based servers are generally regarded as safe because of
+Go's high-level language constructs for memory management.
 
 ### Tests and Benchmarks
 
@@ -956,8 +1015,6 @@ the client, and since start of the process for the server
 _Concrete tasks that just need doing..._
 
 - Make version number associated with github commit
-- Make some doc improvements:
-  - Add doc about running irtt at Linux startup
 - Add seqno to the Max and maybe Min columns in the text output
 - Improve appearance of text output during test
 - Fix corruption on server with `-goroutines` > 1 due to single buffer per listener
