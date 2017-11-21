@@ -169,34 +169,51 @@ In order to determine per-packet differentiation between upstream and downstream
 loss, a 64-bit "received window" may be returned with each packet that contains
 the receipt status of the previous 64 packets. This can be enabled with either
 `-rs window/both` with the irtt client or `ReceivedStatsWindow/ReceivedStatsBoth`
-with the API.  The limited size of the 64-bit window means that per-packet
-differentiation is not available (only for any intervening packets) if
-greater than 64 packets are lost in succession.
+with the API. Its limited width and simple bitmap format lead to some
+caveats:
 
-Additionally, no received window is currently returned for upstream late
-(out-of-order) packets. However, the current received window **is** updated if
-the late packet is within the previous 64 packets, and this updated window
-**may** be returned with a subsequent packet. An additional server optimization
-could be added later to maintain a larger internal received window to increase
-accuracy in the face of upstream late packets, but so far this optimization has
-not shown to be necessary. High numbers of late packets typically indicate an
-undesirable network condition that should be corrected before other tests are
-conducted.
+- Per-packet differentiation is not available (for any intervening packets) if
+  greater than 64 packets are lost in succession. These packets will be marked
+  with the generic `Lost` (`lost` in the JSON).
+- While any packet marked `LostDown` (`lost_down`) is guaranteed to be marked
+  properly, there is no confirmation of receipt of the receive window from the
+  client to the server, so packets may sometimes be erroneously marked `LostUp`
+  (`lost_up`), for example, if they arrive late to the server and slide out of
+  the received window before they can be confirmed to the client, or if the
+  received window is lost on its way to the client and not amended by a later
+  packet's received window.
 
-Accepting the 64-bit received window limitation means that per-packet loss
-results in most cases can be obtained with only 8 additional bytes in each
-packet. In case of very high packet loss, the **total** number of packets
-received by the server but not returned to the client (which can be obtained
-using `-rs count/both` or `ReceivedStatsCount/ReceivedStatsBoth`) will still be
-correct.
+There are many ways that this simple approach could be improved, such as by:
+
+- Allowing a wider window
+- Encoding receipt seqnos in a more intelligent way to allow a wider seqno range
+- Sending confirmation of window receipt from the client to the server and
+  re-sending unreceived windows
+
+However, the current strategy means that a good approximation of per-packet loss
+results can be obtained with only 8 additional bytes in each packet. It also
+requires very little computational time on the server, and almost all
+computation on the client occurs during results generation, after the test is
+over. It isn't as accurate with late (out-of-order) upstream packets or with
+long sequences of lost packets, but high loss or high numbers of late packets
+typically indicate more severe network conditions that should be corrected first
+anyway, perhaps before per-packet results matter. Note that in case of very high
+packet loss, the **total** number of packets received by the server but not
+returned to the client (which can be obtained using `-rs count/both` or
+`ReceivedStatsCount/ReceivedStatsBoth`) will still be correct, which will still
+provide an accurate loss percentage in each direction over the course of the
+test.
+
+If this limitation adversely affects your results, file an
+[Issue](https://github.com/peteheist/irtt/issues) so it can be discussed further.
 
 #### Use of Go
 
 IRTT is written in Go. That carries with it a few disadvantages:
 
-- Larger executable size than with C
 - Non-negligible scheduling delays and system call overhead
-- Somewhat slower execution speed then C (although [not that much slower](https://benchmarksgame.alioth.debian.org/u64q/compare.php?lang=go&lang2=gcc))
+- Larger executable size than with C
+- Somewhat slower execution speed than C (although [not that much slower](https://benchmarksgame.alioth.debian.org/u64q/compare.php?lang=go&lang2=gcc))
 
 But Go also has benefits that are useful for this application:
 
@@ -830,14 +847,14 @@ the client, and since start of the process for the server
    2) There is a firewall blocking packets from the client to the server.
       Traffic must be allowed on the chosen UDP port (default 2112).
    3) There is high packet loss. By default, up to four packets are sent when
-      the client tries to connect to the server, using timeouts of 1, 2 and 4
-      seconds. If all of these are lost, the client won't connect to the
-      server. In environments with known high packet loss, the `-timeouts`
-      parameter may be used to send more packets with the chosen timeouts
-      before abandoning the connection.
+      the client tries to connect to the server, using timeouts of 1, 2, 4 and 8
+      seconds. If all of these are lost, the client won't connect to the server.
+      In environments with known high packet loss, the `-timeouts` parameter may
+      be used to send more packets with the chosen timeouts before abandoning
+      the connection.
    4) The server has an HMAC key set with `-hmac` and the client either has
       not specified a key or it's incorrect. Make sure the client has the
-      correct HMAC key, specified also with the `-hmac` parameter.
+      correct HMAC key, also specified with the `-hmac` parameter.
    5) The server has multiple IP addresses and you've specified a hostname or
       IP to the client that is not the same IP that the server uses to reply.
       This can be verified using `tcpdump -i eth0 udp port 2112`, replacing eth0
@@ -852,7 +869,7 @@ the client, and since start of the process for the server
       2) If you do not have access to the server, you can work around it by
          using the tcpdump command above and finding out what IP the server is
          replying with. Specify that IP address to the client. Notify the server
-         admin to configure the server correctly with explicit bind addresses.
+         admin to configure the server with explicit bind addresses.
 
 7) Why don't you include median values for send call time, timer error and
    server processing time?
@@ -861,7 +878,8 @@ the client, and since start of the process for the server
 	 running calculation of the median, although
 	 [this method](https://rhettinger.wordpress.com/2010/02/06/lost-knowledge/) of
 	 using skip lists appears to have promise. It's a possibility for the future,
-	 but so far it isn't a high priority. If it is for you, file an Issue.
+	 but so far it isn't a high priority. If it is for you, file an
+   [Issue](https://github.com/peteheist/irtt/issues).
 
 8) I see you use MD5 for the HMAC. Isn't that insecure?
 
@@ -897,6 +915,7 @@ the client, and since start of the process for the server
 
 _Concrete tasks that just need doing..._
 
+- Fix ipdv output with packet loss
 - Make some doc improvements:
   - Add faq about why I use wildcard addresses
   - Add faq about using little endian byte order
@@ -936,6 +955,7 @@ _Planned for the future..._
   - Determine if asymmetric send schedules (between client and server) required
 - Improve induced latency and jitter:
   - Use Go profiling, scheduler tracing, strace and sar
+  - Try `GOMAXPROCS=1`
   - Experiment with disabling server garbage collection
   - Do more thorough tests of `chrt -r 99`
   - Find or file issue with Go team over scheduler performance
