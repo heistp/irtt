@@ -930,8 +930,9 @@ the client, and since start of the process for the server
     there's only one IP address, to always explicitly specify the bind
     addresses.
 
-    _So then why don't you just list all the adapters on the system and create
-    separate listeners for each one automatically?_
+    _So then when no bind address is specified, why don't you just list all the
+    adapters on the system and create separate listeners for each one
+    automatically?_
 
     That could be done, but listening on all available addresses (current and
     future) can still be useful for testing purposes, say if you have a laptop
@@ -940,14 +941,22 @@ the client, and since start of the process for the server
     is **still** a good idea to explicitly specify bind addresses on public
     servers, so there are no surprises what IP/s the server is listening on.
 
+13) Why is little endian byte order used in the packet format?
+
+    As for Google's [protobufs](https://github.com/google/protobuf), this was
+    chosen because the vast majority of modern processors use little-endian byte
+    order. In the future, packet manipulation may be optimized for little-endian
+    architecutures by doing conversions with Go's
+    [unsafe](https://golang.org/pkg/unsafe/) package.
+
 ## TODO and Roadmap
 
 ### TODO
 
 _Concrete tasks that just need doing..._
 
+- Make version number associated with github commit
 - Make some doc improvements:
-  - Add faq about using little endian byte order
   - Add doc about running irtt at Linux startup
 - Add seqno to the Max and maybe Min columns in the text output
 - Improve appearance of text output during test
@@ -984,6 +993,7 @@ _Planned for the future..._
   - Determine if asymmetric send schedules (between client and server) required
 - Improve induced latency and jitter:
   - Use Go profiling, scheduler tracing, strace and sar
+  - See if netperf udp_rr averages multiple samples to 200ms
   - Try `GOMAXPROCS=1`
   - Experiment with disabling server garbage collection
   - Do more thorough tests of `chrt -r 99`
