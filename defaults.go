@@ -23,6 +23,7 @@ const (
 	DefaultDSCP                    = 0
 	DefaultStrictParams            = false
 	DefaultLocalAddress            = ":0"
+	DefaultLocalPort               = "0"
 	DefaultDF                      = DFDefault
 	DefaultCompTimerMinErrorFactor = 0.0
 	DefaultCompTimerMaxErrorFactor = 2.0

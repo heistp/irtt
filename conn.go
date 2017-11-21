@@ -102,6 +102,7 @@ type cconn struct {
 
 func dial(ctx context.Context, cfg *Config) (*cconn, error) {
 	// resolve (could support trying multiple addresses in succession)
+	cfg.LocalAddress = addPort(cfg.LocalAddress, DefaultLocalPort)
 	laddr, err := net.ResolveUDPAddr(cfg.IPVersion.udpNetwork(),
 		cfg.LocalAddress)
 	if err != nil {
