@@ -61,7 +61,6 @@ var DefaultServerFiller = NewDefaultPatternFiller()
 
 // Server defaults.
 const (
-	DefaultBindAddr    = ":2112"
 	DefaultMaxDuration = time.Duration(0)
 	DefaultMinInterval = time.Duration(0)
 	DefaultMaxLength   = 0
@@ -69,3 +68,6 @@ const (
 	DefaultAllowStamp  = DualStamps
 	DefaultGoroutines  = 1
 )
+
+// DefaultBindAddrs are the default bind addresses.
+var DefaultBindAddrs = []string{":2112"}

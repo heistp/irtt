@@ -14,7 +14,7 @@ func serverUsage() {
 	printf("Options:")
 	printf("--------")
 	printf("")
-	printf("-b addresses   bind addresses (default %s), comma separated list of:", DefaultBindAddr)
+	printf("-b addresses   bind addresses (default %s), comma separated list of:", strings.Join(DefaultBindAddrs, ","))
 	printf("               :port (all IPv4/IPv6 addresses with port)")
 	printf("               host (IPv4 addr or hostname with default port %s)", DefaultPort)
 	printf("               host:port (IPv4 addr or hostname with port)")
@@ -56,7 +56,7 @@ func runServerCLI(args []string) {
 	fs.Usage = func() {
 		usageAndExit(serverUsage, exitCodeBadCommandLine)
 	}
-	var baddrsStr = fs.String("b", DefaultBindAddr, "bind addresses")
+	var baddrsStr = fs.String("b", strings.Join(DefaultBindAddrs, ","), "bind addresses")
 	var maxDuration = fs.Duration("d", DefaultMaxDuration, "max duration")
 	var minInterval = fs.Duration("i", DefaultMinInterval, "min interval")
 	var maxLength = fs.Int("l", DefaultMaxLength, "max length")
