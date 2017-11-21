@@ -441,9 +441,12 @@ func (c *clientHandler) OnReceived(seqno Seqno, rtd *RoundTripData,
 		}
 
 		if !c.quiet {
-			ipdv := time.Duration(0)
+			ipdv := "n/a"
 			if prtd != nil {
-				ipdv = AbsDuration(rtd.IPDVSince(prtd))
+				dv := rtd.IPDVSince(prtd)
+				if dv != InvalidDuration {
+					ipdv = rdur(AbsDuration(dv)).String()
+				}
 			}
 			rd := ""
 			if rtd.ReceiveDelay() != InvalidDuration {
@@ -458,7 +461,7 @@ func (c *clientHandler) OnReceived(seqno Seqno, rtd *RoundTripData,
 				sl = " (LATE)"
 			}
 			printf("seq=%d rtt=%s%s%s ipdv=%s%s", seqno, rdur(rtd.RTT()),
-				rd, sd, rdur(ipdv), sl)
+				rd, sd, ipdv, sl)
 		}
 	}
 }
