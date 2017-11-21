@@ -3,7 +3,8 @@
 action="build"
 pkgbase="github.com/peteheist/irtt"
 pkgs="$pkgbase/cmd/irtt"
-ldflags="-X github.com/peteheist/irtt.Version=0.1`date -u +.%Y%m%d.%H%M%S`"
+#ldflags="-X github.com/peteheist/irtt.Version=0.1`date -u +.%Y%m%d.%H%M%S`"
+ldflags="-X github.com/peteheist/irtt.Version=0.1-git-$(git describe --always --long --dirty) -X github.com/peteheist/irtt.BuildDate=$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
 linkshared=""
 tags=""
 race=""
@@ -49,5 +50,5 @@ done
 go generate
 
 for p in $pkgs; do
-	eval $env go $action -tags \'$tags\' $race -ldflags=\"$ldflags\" $linkshared $p
+	eval $env go $action -tags \'$tags\' $race -ldflags=\'$ldflags\' $linkshared $p
 done
