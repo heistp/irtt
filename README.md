@@ -1015,7 +1015,7 @@ the client, and since start of the process for the server
 
 _Concrete tasks that just need doing..._
 
-- Add seqno to the Max and maybe Min columns in the text output
+- Figure out if there's a way to set source address and dscp per-packet
 - Fix corruption on server with `-goroutines` > 1 due to single buffer per listener
   - Prototype the consequences of a channel vs mutex op for each server reply
   - Based on prototype results, implement one of two solutions:
@@ -1025,6 +1025,7 @@ _Concrete tasks that just need doing..._
       separate packet buffers for each listener (probably by having a
       duplicate() method on listener), and lock server conns with a mutex
 - Add ability for client to request random fill from server
+- Add seqno to the Max and maybe Min columns in the text output
 - Refactor packet manipulation to improve readability and prevent multiple validations
 - Improve client connection closure by:
   - Repeating close packets up to four times until acknowledgement, like open
