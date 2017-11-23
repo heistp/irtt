@@ -862,8 +862,9 @@ the client, and since start of the process for the server
 2) Why is the send (or receive) delay negative?
 
 	 The client and server clocks must be synchronized for one-way delay values to
-	 be meaningful.  Well-configured NTP hosts may be able to synchronize within a
-	 few milliseconds.
+	 be meaningful (although, the relative change of send and receive delay may be
+   useful to look at even without clock synchronization). Well-configured NTP
+   hosts may be able to synchronize within a few milliseconds.
 	 [PTP](https://en.wikipedia.org/wiki/Precision_Time_Protocol)
 	 ([Linux](http://linuxptp.sourceforge.net) implementation here) is capable of
    much higher precision. For example, using two
@@ -990,6 +991,14 @@ the client, and since start of the process for the server
     there's only one IP address, to always explicitly specify the bind
     addresses.
 
+    _Why don't you just send the packet with a source address the same as the
+    address the packet arrived on?_
+
+    In Go's standard net package there's no way to specify a source address when
+    sending, however I'm looking into using code from golang.org/x/net to
+    specify both source address (and also DSCP value) per-packet, which could
+    make this faq entry go away.
+
     _So then when the bind address is unspecified, why don't you just list all
     the adapters on the system and create separate listeners for each one
     automatically?_
@@ -1015,6 +1024,7 @@ the client, and since start of the process for the server
 
 _Concrete tasks that just need doing..._
 
+- Allow specifying an interface to `-b`
 - Figure out if there's a way to set source address and dscp per-packet
 - Fix corruption on server with `-goroutines` > 1 due to single buffer per listener
   - Prototype the consequences of a channel vs mutex op for each server reply
