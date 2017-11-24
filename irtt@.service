@@ -1,9 +1,11 @@
 [Unit]
-Description=irtt server
+Description=irtt server bound to interface %i
 After=network.target
+BindsTo=sys-subsystem-net-devices-%i.device
+After=sys-subsystem-net-devices-%i.device
 
 [Service]
-ExecStart=/usr/bin/irtt server
+ExecStart=/usr/bin/irtt server -b %%%i
 User=nobody
 Restart=on-failure
 
