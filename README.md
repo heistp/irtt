@@ -1012,6 +1012,7 @@ the client, and since start of the process for the server
 _Concrete tasks that just need doing..._
 
 - Make sure there's a version number when `build.sh` isn't used
+- Use pflag options or something GNU compatible: https://github.com/spf13/pflag
 - Figure out if there's a way to set source address and dscp per-packet
 - Fix corruption on server with `-goroutines` > 1 due to single buffer per listener
   - Prototype the consequences of a channel vs mutex op for each server reply
@@ -1069,7 +1070,6 @@ _Collection area for undefined or uncertain stuff..._
 - Support a range of server ports to improve concurrency and maybe defeat
   latency "slotting" on multi-queue interfaces
 - Prompt to write JSON file on cancellation
-- Use pflag options: https://github.com/spf13/pflag
 - Add unit tests
 - Add support for load balanced conns (multiple source addresses for same conn)
 - Use unsafe package to speed up packet buffer manipulation
