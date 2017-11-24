@@ -231,7 +231,7 @@ func runClientCLI(args []string) {
 	}
 
 	// check for remote address argument
-	if len(fs.Args()) < 1 {
+	if len(fs.Args()) != 1 {
 		usageAndExit(clientUsage, exitCodeBadCommandLine)
 	}
 	raddrStr := fs.Args()[0]
