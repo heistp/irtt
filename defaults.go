@@ -71,4 +71,4 @@ const (
 )
 
 // DefaultBindAddrs are the default bind addresses.
-var DefaultBindAddrs = []string{"%*"}
+var DefaultBindAddrs = []string{":2112"}
