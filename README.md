@@ -974,13 +974,13 @@ the client, and since start of the process for the server
     specified with -b or clients may not be able to connect`?
 
     When starting the server, an unspecified bind IP address may be used, such
-    as ":2112". The server then listens on all available addresses, including
-    those on local adapters and those that are later added to the system (useful
-    for testing on machines with dynamically enabled adapters). But the
-    consequence of this is that when the server sends reply packets to clients,
-    the source IP address used is chosen by the OS, and may not be the same as
-    the address that the corresponding request came on. If it happens to be
-    different, the client will reject the packet.
+    as ":2112" (the default). The server then listens on all available
+    addresses, including those on local adapters and those that are later added
+    to the system (useful for testing on machines with dynamically enabled
+    adapters). But the consequence of this is that when the server sends reply
+    packets to clients, the source IP address used is chosen by the OS, and may
+    not be the same as the address that the corresponding request came on. If it
+    happens to be different, the client will reject the packet.
 
     In contrast, when the bind addresses **are** specified (even with an
     interface wildcard such as `%*`, which is the default), separate listeners
@@ -1011,6 +1011,7 @@ the client, and since start of the process for the server
 
 _Concrete tasks that just need doing..._
 
+- Update Running Server at Startup doc with Toke's irtt.service file
 - Make sure there's a version number when `build.sh` isn't used
 - Use pflag options or something GNU compatible: https://github.com/spf13/pflag
 - Figure out if there's a way to set source address and dscp per-packet
