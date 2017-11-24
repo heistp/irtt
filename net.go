@@ -32,12 +32,17 @@ func IPVersionFromBooleans(ipv4 bool, ipv6 bool, dfl IPVersion) IPVersion {
 	return dfl
 }
 
-// IPVersionFromUDPAddr returns an IPVersion from a net.UDPAddr.
-func IPVersionFromUDPAddr(addr *net.UDPAddr) IPVersion {
-	if addr.IP.To4() != nil {
+// IPVersionFromIP returns an IPVersion from a net.IP.
+func IPVersionFromIP(ip net.IP) IPVersion {
+	if ip.To4() != nil {
 		return IPv4
 	}
 	return IPv6
+}
+
+// IPVersionFromUDPAddr returns an IPVersion from a net.UDPAddr.
+func IPVersionFromUDPAddr(addr *net.UDPAddr) IPVersion {
+	return IPVersionFromIP(addr.IP)
 }
 
 var udpNets = [...]string{"udp4", "udp6", "udp"}
@@ -80,12 +85,13 @@ func (v IPVersion) Separate() []IPVersion {
 	return []IPVersion{IPv4, IPv6}
 }
 
-// Int returns an int for the IPVersion: 4, 6 or 46.
-func (v IPVersion) Int() int {
-	if int(v-1) < 0 || int(v-1) > len(ipvi) {
-		return -1
+// ZeroIP returns the zero IP for the IPVersion (net.IPv4zero for IPv4 and
+// otherwise net.IPv6zero).
+func (v IPVersion) ZeroIP() net.IP {
+	if v == IPv4 {
+		return net.IPv4zero
 	}
-	return ipvi[v-1]
+	return net.IPv6zero
 }
 
 // MarshalJSON implements the json.Marshaler interface.

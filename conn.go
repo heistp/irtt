@@ -1,8 +1,11 @@
 package irtt
 
 import (
+	"bytes"
 	"context"
 	"net"
+	"sort"
+	"strings"
 	"time"
 
 	"golang.org/x/net/ipv4"
@@ -308,62 +311,6 @@ type lconn struct {
 	pkt *packet
 }
 
-// listen creates an lconn by listening on a UDP address. It takes an IPVersion
-// because the UDPAddr returned by ResolveUDPAddr has the network "udp", as
-// opposed to either "udp4" or "udp6", even when an explicit network was
-// requested.
-func listen(ipVer IPVersion, laddr *net.UDPAddr, maxLen int,
-	hmacKey []byte) (l *lconn, err error) {
-	var conn *net.UDPConn
-	conn, err = net.ListenUDP(ipVer.udpNetwork(), laddr)
-	if err != nil {
-		return
-	}
-	l = &lconn{nconn: &nconn{}}
-	l.init(conn, ipVer)
-	var cap int
-	if maxLen == 0 {
-		cap, _ = detectMTU(l.localAddr().IP)
-	} else if maxLen < maxHeaderLen {
-		// TODO this could actually be down to the minimum test packet size
-		cap = maxHeaderLen
-	} else {
-		cap = maxLen
-	}
-	l.pkt = newPacket(0, cap, hmacKey)
-	return
-}
-
-// listenAll creates lconns on multiple addresses, with separate lconns for IPv4
-// and IPv6, so that socket options can be set correctly, which is not possible
-// with a dual stack conn.
-func listenAll(ipVer IPVersion, addrs []string, maxPacketLen int,
-	hmacKey []byte) ([]*lconn, error) {
-	lconns := make([]*lconn, 0, 16)
-
-	for _, addr := range addrs {
-		addr := addPort(addr, DefaultPort)
-		for _, v := range ipVer.Separate() {
-			laddr, err := net.ResolveUDPAddr(v.udpNetwork(), addr)
-			if err != nil {
-				continue
-			}
-			l, err := listen(v, laddr, maxPacketLen, hmacKey)
-			if err != nil {
-				return nil, err
-			}
-			lconns = append(lconns, l)
-		}
-	}
-
-	if len(lconns) == 0 {
-		return nil, Errorf(NoSuitableAddressFound,
-			"no suitable %s address found", ipVer)
-	}
-
-	return lconns, nil
-}
-
 func (l *lconn) sendTo(addr *net.UDPAddr) (err error) {
 	var n int
 	n, err = l.conn.WriteToUDP(l.pkt.bytes(), addr)
@@ -392,6 +339,255 @@ func (l *lconn) receiveFrom() (tafter time.Time, raddr *net.UDPAddr, err error) 
 	if l.pkt.reply() {
 		err = Errorf(UnexpectedReplyFlag, "unexpected reply flag set")
 		return
+	}
+	return
+}
+
+// listen creates an lconn by listening on a UDP address. It takes an IPVersion
+// because the UDPAddr returned by ResolveUDPAddr has the network "udp", as
+// opposed to either "udp4" or "udp6", even when an explicit network was
+// requested.
+func listen(laddr *net.UDPAddr, maxLen int, hmacKey []byte) (l *lconn, err error) {
+	ipVer := IPVersionFromUDPAddr(laddr)
+	var conn *net.UDPConn
+	conn, err = net.ListenUDP(ipVer.udpNetwork(), laddr)
+	if err != nil {
+		return
+	}
+	l = &lconn{nconn: &nconn{}}
+	l.init(conn, ipVer)
+	var cap int
+	if maxLen == 0 {
+		cap, _ = detectMTU(l.localAddr().IP)
+	} else if maxLen < maxHeaderLen {
+		// TODO this could actually be down to the minimum test packet size
+		cap = maxHeaderLen
+	} else {
+		cap = maxLen
+	}
+	l.pkt = newPacket(0, cap, hmacKey)
+	return
+}
+
+// listenAll creates lconns on multiple addresses, with separate lconns for IPv4
+// and IPv6, so that socket options can be set correctly, which is not possible
+// with a dual stack conn.
+func listenAll(ipVer IPVersion, addrs []string, maxPacketLen int,
+	hmacKey []byte) (lconns []*lconn, err error) {
+	laddrs, err := resolveListenAddrs(addrs, ipVer)
+	if err != nil {
+		return
+	}
+	lconns = make([]*lconn, 0, 16)
+	for _, laddr := range laddrs {
+		var l *lconn
+		l, err = listen(laddr, maxPacketLen, hmacKey)
+		if err != nil {
+			return
+		}
+		lconns = append(lconns, l)
+	}
+	if len(lconns) == 0 {
+		err = Errorf(NoSuitableAddressFound, "no suitable %s address found", ipVer)
+		return
+	}
+	return
+}
+
+// parseIfaceListenAddr parses an interface listen address into an interface
+// name and service. ok is false if the string does not use the syntax
+// %iface:service, where :service is optional.
+func parseIfaceListenAddr(addr string) (iface, service string, ok bool) {
+	if !strings.HasPrefix(addr, "%") {
+		return
+	}
+	parts := strings.Split(addr[1:], ":")
+	switch len(parts) {
+	case 2:
+		service = parts[1]
+		if len(service) == 0 {
+			return
+		}
+		fallthrough
+	case 1:
+		iface = parts[0]
+		if len(iface) == 0 {
+			return
+		}
+		ok = true
+		return
+	}
+	return
+}
+
+// resolveIfaceListenAddr resolves an interface name and service (port name
+// or number) into a slice of UDP addresses.
+func resolveIfaceListenAddr(ifaceName string, service string,
+	ipVer IPVersion) (laddrs []*net.UDPAddr, err error) {
+	// get interfaces
+	var ifaces []net.Interface
+	ifaces, err = net.Interfaces()
+	if err != nil {
+		return
+	}
+
+	// resolve service to port
+	var port int
+	if service != "" {
+		port, err = net.LookupPort(ipVer.udpNetwork(), service)
+		if err != nil {
+			return
+		}
+	} else {
+		port = DefaultPortInt
+	}
+
+	// helper to get IP and zone from interface address
+	ifaceIP := func(a net.Addr) (ip net.IP, zone string, ok bool) {
+		switch v := a.(type) {
+		case *net.IPNet:
+			{
+				ip = v.IP
+				ok = true
+			}
+		case *net.IPAddr:
+			{
+				ip = v.IP
+				zone = v.Zone
+				ok = true
+			}
+		}
+		return
+	}
+
+	// helper to test if IP is one we can listen on
+	isUsableIP := func(ip net.IP) bool {
+		if IPVersionFromIP(ip)&ipVer == 0 {
+			return false
+		}
+		if !ip.IsLinkLocalUnicast() && !ip.IsGlobalUnicast() && !ip.IsLoopback() {
+			return false
+		}
+		return true
+	}
+
+	// get addresses
+	laddrs = make([]*net.UDPAddr, 0, 16)
+	ifaceFound := false
+	ifaceUp := false
+	for _, iface := range ifaces {
+		if !glob(ifaceName, iface.Name) {
+			continue
+		}
+		ifaceFound = true
+		if iface.Flags&net.FlagUp == 0 {
+			continue
+		}
+		ifaceUp = true
+		ifaceAddrs, err := iface.Addrs()
+		if err != nil {
+			return nil, err
+		}
+		for _, a := range ifaceAddrs {
+			ip, zone, ok := ifaceIP(a)
+			if ok && isUsableIP(ip) {
+				if ip.IsLinkLocalUnicast() && zone == "" {
+					zone = iface.Name
+				}
+				udpAddr := &net.UDPAddr{IP: ip, Port: port, Zone: zone}
+				laddrs = append(laddrs, udpAddr)
+			}
+		}
+	}
+
+	if !ifaceFound {
+		err = Errorf(NoMatchingInterfaces, "%s does not match any interfaces", ifaceName)
+	} else if !ifaceUp {
+		err = Errorf(NoMatchingInterfacesUp, "no interfaces matching %s are up", ifaceName)
+	}
+
+	return
+}
+
+// resolveListenAddr resolves a listen address string into a slice of UDP
+// addresses.
+func resolveListenAddr(addr string, ipVer IPVersion) (laddrs []*net.UDPAddr,
+	err error) {
+	laddrs = make([]*net.UDPAddr, 0, 2)
+	for _, v := range ipVer.Separate() {
+		addr = addPort(addr, DefaultPort)
+		laddr, err := net.ResolveUDPAddr(v.udpNetwork(), addr)
+		if err != nil {
+			continue
+		}
+		if laddr.IP == nil {
+			laddr.IP = v.ZeroIP()
+		}
+		laddrs = append(laddrs, laddr)
+	}
+	return
+}
+
+// resolveListenAddrs resolves a slice of listen address strings into a slice
+// of UDP addresses.
+func resolveListenAddrs(addrs []string, ipVer IPVersion) (laddrs []*net.UDPAddr,
+	err error) {
+	// resolve addresses
+	laddrs = make([]*net.UDPAddr, 0, 16)
+	for _, addr := range addrs {
+		var la []*net.UDPAddr
+		iface, service, ok := parseIfaceListenAddr(addr)
+		if ok {
+			la, err = resolveIfaceListenAddr(iface, service, ipVer)
+		} else {
+			la, err = resolveListenAddr(addr, ipVer)
+		}
+		if err != nil {
+			return
+		}
+		laddrs = append(laddrs, la...)
+	}
+	// sort addresses
+	sort.Slice(laddrs, func(i, j int) bool {
+		if bytes.Compare(laddrs[i].IP, laddrs[j].IP) < 0 {
+			return true
+		}
+		if laddrs[i].Port < laddrs[j].Port {
+			return true
+		}
+		return laddrs[i].Zone < laddrs[j].Zone
+	})
+	// remove duplicates
+	udpAddrsEqual := func(a *net.UDPAddr, b *net.UDPAddr) bool {
+		if !a.IP.Equal(b.IP) {
+			return false
+		}
+		if a.Port != b.Port {
+			return false
+		}
+		return a.Zone == b.Zone
+	}
+	for i := 1; i < len(laddrs); i++ {
+		if udpAddrsEqual(laddrs[i], laddrs[i-1]) {
+			laddrs = append(laddrs[:i], laddrs[i+1:]...)
+			i--
+		}
+	}
+	// check for combination of specified and unspecified IP addresses
+	m := make(map[int]int)
+	for _, la := range laddrs {
+		if la.IP.IsUnspecified() {
+			m[la.Port] = m[la.Port] | 1
+		} else {
+			m[la.Port] = m[la.Port] | 2
+		}
+	}
+	for k, v := range m {
+		if v > 2 {
+			err = Errorf(UnspecifiedWithSpecifiedAddresses,
+				"invalid combination of unspecified and specified IP addresses port %d", k)
+			break
+		}
 	}
 	return
 }

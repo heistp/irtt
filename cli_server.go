@@ -14,12 +14,15 @@ func serverUsage() {
 	printf("Options:")
 	printf("--------")
 	printf("")
-	printf("-b addresses   bind addresses (default %s), comma separated list of:", strings.Join(DefaultBindAddrs, ","))
-	printf("               :port (all IPv4/IPv6 addresses with port)")
+	printf("-b addresses   bind addresses (default \"%s\"), comma separated list of:", strings.Join(DefaultBindAddrs, ","))
+	printf("               :port (unspecified address with port, use with care)")
 	printf("               host (IPv4 addr or hostname with default port %s)", DefaultPort)
 	printf("               host:port (IPv4 addr or hostname with port)")
 	printf("               [ipv6-host%%zone] (IPv6 addr or hostname with default port %s)", DefaultPort)
 	printf("               [ipv6-host%%zone]:port (IPv6 addr or hostname with port)")
+	printf("               %%iface (all addresses on interface iface with default port %s)", DefaultPort)
+	printf("               %%iface:port (all addresses on interface iface with port)")
+	printf("               note: iface strings may contain * to match multiple interfaces")
 	printf("-d duration    max test duration, or 0 for no maximum")
 	printf("               (default %s, see Duration units below)", DefaultMaxDuration)
 	printf("-i interval    min send interval, or 0 for no minimum")
@@ -133,5 +136,5 @@ type serverHandler struct {
 }
 
 func (s *serverHandler) OnEvent(ev *Event) {
-	printf(ev.String())
+	println(ev.String())
 }

@@ -973,23 +973,21 @@ the client, and since start of the process for the server
     warning: multiple IP addresses- all bind IP addresses should be explicitly
     specified with -b or clients may not be able to connect`?
 
-    The bind address may be ommitted when starting the server. In this case, the
-    "unspecified" IP address is used (represented by 0.0.0.0 for IPv4 or [::]
-    for IPv6). The server then listens on all available addresses, including
-    those on local adapters and those on adapters that are later added to the
-    system.  This is primarily useful for testing, as it makes it easy to start
-    the server and know that it can be used on any IP address on the system. But
-    the consequence of this is that when the server sends reply packets to
-    clients, the source IP address used is chosen by the OS, and may not be the
-    same as the address that the corresponding request came on. If it happens to
-    be different, the client will reject the packet.
+    When starting the server, an unspecified bind IP address may be used, such
+    as ":2112". The server then listens on all available addresses, including
+    those on local adapters and those that are later added to the system (useful
+    for testing on machines with dynamically enabled adapters). But the
+    consequence of this is that when the server sends reply packets to clients,
+    the source IP address used is chosen by the OS, and may not be the same as
+    the address that the corresponding request came on. If it happens to be
+    different, the client will reject the packet.
 
-    In contrast, when the bind addresses **are** specified (and there can be
-    multiple bind addresses), separate listeners are created for each bind
-    address, and server replies will always have the source IP address that the
-    listener is bound to. Thus, on public servers it's good practice, even if
-    there's only one IP address, to always explicitly specify the bind
-    addresses.
+    In contrast, when the bind addresses **are** specified (even with an
+    interface wildcard such as `%*`, which is the default), separate listeners
+    are created for each bind address, and server replies will always have the
+    source IP address that the listener is bound to. On public servers it's good
+    practice, even if there's only one IP address, to always explicitly specify
+    the bind addresses, either by IP or by interface.
 
     _Why don't you just send the packet with a source address the same as the
     address the packet arrived on?_
@@ -998,17 +996,6 @@ the client, and since start of the process for the server
     sending, however I'm looking into using code from golang.org/x/net to
     specify both source address (and also DSCP value) per-packet, which could
     make this faq entry go away.
-
-    _So then when the bind address is unspecified, why don't you just list all
-    the adapters on the system and create separate listeners for each one
-    automatically?_
-
-    That could be done, but listening on all available addresses (current and
-    future) can still be useful for testing purposes, say if you have a laptop
-    connected to Ethernet and only sometimes connect to WiFi. When new
-    interfaces are enabled, irtt will automatically listen on them. Further, it
-    is **still** a good idea to explicitly specify bind addresses on public
-    servers, so there are no surprises what IP/s the server is listening on.
 
 13) Why is little endian byte order used in the packet format?
 
@@ -1024,7 +1011,7 @@ the client, and since start of the process for the server
 
 _Concrete tasks that just need doing..._
 
-- Allow specifying an interface to `-b`
+- Make sure there's a version number when `build.sh` isn't used
 - Figure out if there's a way to set source address and dscp per-packet
 - Fix corruption on server with `-goroutines` > 1 due to single buffer per listener
   - Prototype the consequences of a channel vs mutex op for each server reply
@@ -1100,6 +1087,7 @@ _Collection area for undefined or uncertain stuff..._
 - Make it possible to add custom per-round-trip statistics programmatically
 - Add more info on outliers and possibly a textual histogram
 - Allow Client Dial to try multiple IPs when a hostname is given
+- Allow Server listen to listen on multiple IPs for a hostname
 - What do I do for IPDV when there are out of order packets?
 - Does exposing both monotonic and wall clock values open the server to any
 	timing attacks?

@@ -18,6 +18,10 @@ func printf(format string, args ...interface{}) {
 	fmt.Fprintf(printTo, fmt.Sprintf("%s\n", format), args...)
 }
 
+func println(s string) {
+	fmt.Fprintln(printTo, s)
+}
+
 func setTabWriter(flags uint) {
 	printTo = tabwriter.NewWriter(printTo, 0, 0, 2, ' ', flags)
 }

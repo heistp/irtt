@@ -93,6 +93,10 @@ func (s *Server) ListenAndServe() error {
 	// start listeners
 	errC := make(chan error)
 	for _, l := range listeners {
+		// send ListenerStart event
+		l.eventf(ListenerStart, "starting %s listener on %s", l.conn.ipVer,
+			l.conn.localAddr())
+
 		go l.listenAndServe(errC)
 	}
 
@@ -156,7 +160,7 @@ func (s *Server) warnOnMultipleAddresses() error {
 		}
 	}
 	if n > 1 {
-		s.eventf(MultipleAddresses, "warning: multiple IP addresses, all bind IP addresses "+
+		s.eventf(MultipleAddresses, "warning: multiple IP addresses, all bind addresses "+
 			"should be explicitly specified with -b or clients may not be able to connect")
 	}
 	return nil
@@ -238,10 +242,6 @@ func (l *listener) listenAndServe(errC chan<- error) (err error) {
 	} else {
 		l.dscpSupport = true
 	}
-
-	// send ListenerStart event
-	l.eventf(ListenerStart, "starting %s listener on %s", l.conn.ipVer,
-		l.conn.localAddr())
 
 	// if single goroutine, run in current goroutine
 	if l.Goroutines == 1 {
