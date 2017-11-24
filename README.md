@@ -1012,6 +1012,7 @@ the client, and since start of the process for the server
 _Concrete tasks that just need doing..._
 
 - Update Running Server at Startup doc with Toke's irtt.service file
+- Check that listeners exit only due to permanent errors, and exit code is set
 - Make sure there's a version number when `build.sh` isn't used
 - Use pflag options or something GNU compatible: https://github.com/spf13/pflag
 - Figure out if there's a way to set source address and dscp per-packet
