@@ -67,7 +67,8 @@ func Eventf(code EventCode, laddr net.Addr, raddr net.Addr, format string,
 }
 
 func (e *Event) String() string {
-	return fmt.Sprintf(fmt.Sprintf("[%s] %s", e.EventCode.String(), e.format), e.Detail...)
+	msg := fmt.Sprintf(e.format, e.Detail...)
+	return fmt.Sprintf("[%s] %s", e.EventCode.String(), msg)
 }
 
 // Handler is called with events.

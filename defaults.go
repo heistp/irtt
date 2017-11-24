@@ -8,6 +8,7 @@ import (
 const (
 	DefaultIPVersion  = DualStack
 	DefaultPort       = "2112"
+	DefaultPortInt    = 2112
 	DefaultTTL        = 0
 	DefaultThreadLock = false
 )
@@ -70,4 +71,4 @@ const (
 )
 
 // DefaultBindAddrs are the default bind addresses.
-var DefaultBindAddrs = []string{":2112"}
+var DefaultBindAddrs = []string{"%*"}

@@ -64,6 +64,9 @@ const (
 	InvalidReceivedStatsString
 	OpenTimeoutTooShort
 	AllocateResultsPanic
+	NoMatchingInterfaces
+	NoMatchingInterfacesUp
+	UnspecifiedWithSpecifiedAddresses
 )
 
 // Error is an IRTT error.
