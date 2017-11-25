@@ -859,7 +859,7 @@ the client, and since start of the process for the server
 		 spoofed source IPs.
 	 - IRTT can fill the payload (if included) with random data.
 
-2) Why is the send (or receive) delay negative?
+2) Why is the send (or receive) delay negative or much larger than I expect?
 
 	 The client and server clocks must be synchronized for one-way delay values to
 	 be meaningful (although, the relative change of send and receive delay may be
@@ -915,21 +915,6 @@ the client, and since start of the process for the server
    4) The server has an HMAC key set with `-hmac` and the client either has
       not specified a key or it's incorrect. Make sure the client has the
       correct HMAC key, also specified with the `-hmac` parameter.
-   5) The server has multiple IP addresses and you've specified a hostname or
-      IP to the client that is not the same IP that the server uses to reply.
-      This can be verified using `tcpdump -i eth0 udp port 2112`, replacing eth0
-      with the actual interface and 2112 with the actual port used. If you see
-      that the server is replying, but its source IP is different than the IP
-      you specified to the client, there are two possible solutions:
-      1) Ideally, the server should be started with explicit bind addresses
-         using the `-b` parameter, so that replies always come back from the
-         IP address that requests were received on. A warning is printed on
-         server startup if there are multiple global unicast IP addresses and
-         the bind addresses were not specified.
-      2) If you do not have access to the server, you can work around it by
-         using the tcpdump command above and finding out what IP the server is
-         replying with. Specify that IP address to the client. Notify the server
-         admin to configure the server with explicit bind addresses.
 
 7) Why don't you include median values for send call time, timer error and
    server processing time?
@@ -969,33 +954,26 @@ the client, and since start of the process for the server
     `maxSliceCap` in [slice.go](https://golang.org/src/runtime/slice.go) and
     `_MaxMem` in [malloc.go](https://golang.org/src/runtime/malloc.go).
 
-12) Why when I start the server do I get the warning: `[MultipleAddresses]
-    warning: multiple IP addresses- all bind IP addresses should be explicitly
-    specified with -b or clients may not be able to connect`?
+12) Why when I start a server on Windows do I see these warnings:
+    - `[NoDSCPSupport] no DSCP support available (operation not supported)`
+    - `[NoReceiveDstAddrSupport] no support for determining packet destination
+      address (not supported by windows)`
+    - `[MultipleAddresses] warning: multiple IP addresses, all bind addresses
+      should be explicitly specified with -b or clients may not be able to
+      connect`
 
-    When starting the server, an unspecified bind IP address may be used, such
-    as ":2112" (the default). The server then listens on all available
-    addresses, including those on local adapters and those that are later added
-    to the system (useful for testing on machines with dynamically enabled
-    adapters). But the consequence of this is that when the server sends reply
-    packets to clients, the source IP address used is chosen by the OS, and may
-    not be the same as the address that the corresponding request came on. If it
-    happens to be different, the client will reject the packet.
+    These are due to limitations in Go's support for the Windows platform. The
+    consequences of these limitations are:
 
-    In contrast, when the bind addresses **are** specified (even with an
-    interface wildcard such as `%*`, which is the default), separate listeners
-    are created for each bind address, and server replies will always have the
-    source IP address that the listener is bound to. On public servers it's good
-    practice, even if there's only one IP address, to always explicitly specify
-    the bind addresses, either by IP or by interface.
-
-    _Why don't you just send the packet with a source address the same as the
-    address the packet arrived on?_
-
-    In Go's standard net package there's no way to specify a source address when
-    sending, however I'm looking into using code from golang.org/x/net to
-    specify both source address (and also DSCP value) per-packet, which could
-    make this faq entry go away.
+    - Packet DSCP (TOS) values can not be set.
+    - The server cannot determine the original destination address of incoming
+      packets, so it can't use the same address when sending replies. This means
+      that on machines with multiple network adapters, and when using
+      unspecified bind IP addresses, packets may not always return to clients
+      properly. Rather than using an unspecified IP address though, you may also
+      listen on all addresses on all adapters with `-b "%*"`. This however has
+      the limitation that it will not listen on new adapters and addresses
+      dynamically like using an unspecified IP does.
 
 13) Why is little endian byte order used in the packet format?
 
@@ -1003,7 +981,8 @@ the client, and since start of the process for the server
     chosen because the vast majority of modern processors use little-endian byte
     order. In the future, packet manipulation may be optimized for little-endian
     architecutures by doing conversions with Go's
-    [unsafe](https://golang.org/pkg/unsafe/) package.
+    [unsafe](https://golang.org/pkg/unsafe/) package, but so far this
+    optimization has not been shown to be necessary.
 
 ## TODO and Roadmap
 
@@ -1011,11 +990,12 @@ the client, and since start of the process for the server
 
 _Concrete tasks that just need doing..._
 
+- Figure out if there's a way to set dscp per-packet
+- Try SO_REUSEADDR
+- Make sure there's a version number when `build.sh` isn't used
 - Update Running Server at Startup doc with Toke's irtt.service file
 - Check that listeners exit only due to permanent errors, and exit code is set
-- Make sure there's a version number when `build.sh` isn't used
 - Use pflag options or something GNU compatible: https://github.com/spf13/pflag
-- Figure out if there's a way to set source address and dscp per-packet
 - Fix corruption on server with `-goroutines` > 1 due to single buffer per listener
   - Prototype the consequences of a channel vs mutex op for each server reply
   - Based on prototype results, implement one of two solutions:
@@ -1084,6 +1064,8 @@ _Collection area for undefined or uncertain stuff..._
 - Implement median calculation for timer error, send call time and server processing time
 - Allow specifying two out of three of interval, bitrate and packet size
 - Calculate per-packet arrival order during results generation using timestamps
+- Add OWD compensation at results generation stage for shifting mean value to 0
+  to improve readability for clocks that are badly out of sync
 - Add a way to keep out "internal" info from JSON, like IP and hostname, and a
 	subcommand to strip these out after the JSON is created
 - Make it possible to add custom per-round-trip statistics programmatically
