@@ -19,8 +19,8 @@ const minOpenTimeout = 200 * time.Millisecond
 type nconn struct {
 	conn    *net.UDPConn
 	ipVer   IPVersion
-	ip4conn *ipv4.Conn
-	ip6conn *ipv6.Conn
+	ip4conn *ipv4.PacketConn
+	ip6conn *ipv6.PacketConn
 	dscp    int
 	ttl     int
 	df      DF
@@ -33,9 +33,9 @@ func (n *nconn) init(conn *net.UDPConn, ipVer IPVersion) {
 
 	// create x/net conns for socket options
 	if n.ipVer&IPv4 != 0 {
-		n.ip4conn = ipv4.NewConn(n.conn)
+		n.ip4conn = ipv4.NewPacketConn(n.conn)
 	} else {
-		n.ip6conn = ipv6.NewConn(n.conn)
+		n.ip6conn = ipv6.NewPacketConn(n.conn)
 	}
 }
 
@@ -65,6 +65,15 @@ func (n *nconn) setTTL(ttl int) (err error) {
 	}
 	if err == nil {
 		n.ttl = ttl
+	}
+	return
+}
+
+func (n *nconn) setReceiveDstAddr(b bool) (err error) {
+	if n.ip4conn != nil {
+		err = n.ip4conn.SetControlMessage(ipv4.FlagDst, b)
+	} else {
+		err = n.ip6conn.SetControlMessage(ipv6.FlagDst, b)
 	}
 	return
 }
@@ -309,11 +318,21 @@ func (c *cconn) close() (err error) {
 type lconn struct {
 	*nconn
 	pkt *packet
+	cm4 ipv4.ControlMessage
+	cm6 ipv6.ControlMessage
 }
 
-func (l *lconn) sendTo(addr *net.UDPAddr) (err error) {
+func (l *lconn) sendTo(addr *net.UDPAddr, srcIP net.IP) (err error) {
 	var n int
-	n, err = l.conn.WriteToUDP(l.pkt.bytes(), addr)
+	if l.ip4conn != nil {
+		l.cm4.Src = srcIP
+		n, err = l.ip4conn.WriteTo(l.pkt.bytes(), &l.cm4, addr)
+	} else if l.ip6conn != nil {
+		l.cm6.Src = srcIP
+		n, err = l.ip6conn.WriteTo(l.pkt.bytes(), &l.cm6, addr)
+	} else {
+		n, err = l.conn.WriteToUDP(l.pkt.bytes(), addr)
+	}
 	if err != nil {
 		return
 	}
@@ -323,13 +342,32 @@ func (l *lconn) sendTo(addr *net.UDPAddr) (err error) {
 	return
 }
 
-func (l *lconn) receiveFrom() (tafter time.Time, raddr *net.UDPAddr, err error) {
+func (l *lconn) receiveFrom() (tafter time.Time, dstIP net.IP, raddr *net.UDPAddr, err error) {
 	var n int
-	n, raddr, err = l.conn.ReadFromUDP(l.pkt.readTo())
-	tafter = time.Now()
-	if err != nil {
-		return
+	if l.ip4conn != nil {
+		var cm *ipv4.ControlMessage
+		var src net.Addr
+		n, cm, src, err = l.ip4conn.ReadFrom(l.pkt.readTo())
+		if src != nil {
+			raddr = src.(*net.UDPAddr)
+		}
+		if cm != nil {
+			dstIP = cm.Dst
+		}
+	} else if l.ip6conn != nil {
+		var cm *ipv6.ControlMessage
+		var src net.Addr
+		n, cm, src, err = l.ip6conn.ReadFrom(l.pkt.readTo())
+		if src != nil {
+			raddr = src.(*net.UDPAddr)
+		}
+		if cm != nil {
+			dstIP = cm.Dst
+		}
+	} else {
+		n, raddr, err = l.conn.ReadFromUDP(l.pkt.readTo())
 	}
+	tafter = time.Now()
 	if err != nil {
 		return
 	}

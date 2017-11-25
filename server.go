@@ -79,17 +79,6 @@ func (s *Server) ListenAndServe() error {
 		return err
 	}
 
-	// warn when there are multiple global unicast addresses and at least one
-	// wildcard address is specified
-	for _, l := range listeners {
-		if l.conn.localAddr().IP.IsUnspecified() {
-			if err := s.warnOnMultipleAddresses(); err != nil {
-				return err
-			}
-			break
-		}
-	}
-
 	// start listeners
 	errC := make(chan error)
 	for _, l := range listeners {
@@ -243,6 +232,17 @@ func (l *listener) listenAndServe(errC chan<- error) (err error) {
 		l.dscpSupport = true
 	}
 
+	// enable receipt of destination IP
+	if rdsterr := l.conn.setReceiveDstAddr(true); rdsterr != nil {
+		l.eventf(NoReceiveDstAddrSupport,
+			"no support for determining packet destination address (%s)", rdsterr)
+		if l.conn.localAddr().IP.IsUnspecified() {
+			if err := l.warnOnMultipleAddresses(); err != nil {
+				return err
+			}
+		}
+	}
+
 	// if single goroutine, run in current goroutine
 	if l.Goroutines == 1 {
 		err = l.readAndReply()
@@ -281,7 +281,8 @@ func (l *listener) readAndReply() (err error) {
 	for {
 		// read a packet
 		var trecv time.Time
-		trecv, l.raddr, err = l.conn.receiveFrom()
+		var dstIP net.IP
+		trecv, dstIP, l.raddr, err = l.conn.receiveFrom()
 		if err != nil {
 			if e, ok := err.(*Error); ok {
 				l.eventf(dropCode(e.Code), err.Error())
@@ -311,7 +312,7 @@ func (l *listener) readAndReply() (err error) {
 			}
 			p.setReply(true)
 			p.setPayload(params.bytes())
-			if err = l.sendPacket(trecv, sc, false); err != nil {
+			if err = l.sendPacket(trecv, dstIP, sc, false); err != nil {
 				return
 			}
 			continue
@@ -384,8 +385,8 @@ func (l *listener) readAndReply() (err error) {
 			}
 		}
 
-		// check DSCP value and set on socket, if necessary, then send response
-		if err = l.sendPacket(trecv, &sc, true); err != nil {
+		// send response
+		if err = l.sendPacket(trecv, dstIP, &sc, true); err != nil {
 			return
 		}
 	}
@@ -418,7 +419,7 @@ func (l *listener) addFields(fidxs []fidx) bool {
 }
 
 // sendPacket sends a packet, locking and setting socket options as necessary.
-func (l *listener) sendPacket(trecv time.Time, sc *sconn, testPacket bool) (err error) {
+func (l *listener) sendPacket(trecv time.Time, srcIP net.IP, sc *sconn, testPacket bool) (err error) {
 	// lock, if necessary (avoids socket options conflict)
 	if l.Goroutines > 1 {
 		l.mtx.Lock()
@@ -479,14 +480,14 @@ func (l *listener) sendPacket(trecv time.Time, sc *sconn, testPacket bool) (err 
 	// simulate duplicates, if necessary
 	if serverDupsPercent > 0 {
 		for rand.Float32() < serverDupsPercent {
-			err = l.conn.sendTo(l.raddr)
+			err = l.conn.sendTo(l.raddr, srcIP)
 			if err != nil {
 				return
 			}
 		}
 	}
 
-	err = l.conn.sendTo(l.raddr)
+	err = l.conn.sendTo(l.raddr, srcIP)
 
 	return
 }

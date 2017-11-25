@@ -46,6 +46,7 @@ const (
 	ServerRestriction
 	DurationLimitExceeded
 	NoTest
+	NoReceiveDstAddrSupport
 )
 
 // AllEvents is a mask matching all events.
