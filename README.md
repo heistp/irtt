@@ -984,17 +984,23 @@ the client, and since start of the process for the server
     [unsafe](https://golang.org/pkg/unsafe/) package, but so far this
     optimization has not been shown to be necessary.
 
+14) Why when I run `irtt server` on 32-bit Windows then try to connect with a
+    client do I see the error: `Terminated due to receive error: sent 60 byte
+    request but received 44 byte reply`
+
+    Don't run irtt on 32-bit Windows. :) Alternatively, to work around this,
+    disable dual timestamps from the client by including `-ts midpoint`. This
+    appears to be a bug in either Go's 32-bit compiler or runtime for Windows.
+    I doubt anyone is in a hurry to fix it.
+
 ## TODO and Roadmap
 
 ### TODO
 
 _Concrete tasks that just need doing..._
 
-- Figure out if there's a way to set dscp per-packet
-- Try SO_REUSEADDR
 - Make sure there's a version number when `build.sh` isn't used
 - Update Running Server at Startup doc with Toke's irtt.service file
-- Check that listeners exit only due to permanent errors, and exit code is set
 - Use pflag options or something GNU compatible: https://github.com/spf13/pflag
 - Fix corruption on server with `-goroutines` > 1 due to single buffer per listener
   - Prototype the consequences of a channel vs mutex op for each server reply
@@ -1004,7 +1010,11 @@ _Concrete tasks that just need doing..._
     - The probably-more-performant way: use one goroutine per listener, have
       separate packet buffers for each listener (probably by having a
       duplicate() method on listener), and lock server conns with a mutex
+- Figure out if there's a way to set dscp per-packet
+- Try SO_REUSEADDR
+- Check that listeners exit only due to permanent errors, and exit code is set
 - Add ability for client to request random fill from server
+- Add protocol version number along with client check
 - Add seqno to the Max and maybe Min columns in the text output
 - Refactor packet manipulation to improve readability and prevent multiple validations
 - Improve client connection closure by:
