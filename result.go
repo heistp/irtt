@@ -143,9 +143,9 @@ func newResult(rec *Recorder, cfg *Config, serr error, rerr error) *Result {
 		r.UpstreamLossPercent = 100 *
 			float64(r.SendCallStats.N-uint(r.ServerPacketsReceived)) /
 			float64(r.SendCallStats.N)
-		r.DownstreamLossPercent = 100 *
-			float64(r.PacketsReceived-uint(r.ServerPacketsReceived)) /
-			float64(r.PacketsReceived)
+		r.DownstreamLossPercent = 100.0 *
+			float64(uint(r.ServerPacketsReceived)-r.PacketsReceived) /
+			float64(r.ServerPacketsReceived)
 	}
 
 	// calculate duplicate percent
