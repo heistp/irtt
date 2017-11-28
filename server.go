@@ -276,6 +276,7 @@ func (l *listener) listenAndServe(errC chan<- error) (err error) {
 }
 
 func (l *listener) readAndReply() (err error) {
+	// create packet
 	var cap int
 	if l.MaxLength == 0 {
 		cap, _ = detectMTU(l.conn.localAddr().IP)
