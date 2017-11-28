@@ -999,8 +999,6 @@ the client, and since start of the process for the server
 
 _Concrete tasks that just need doing..._
 
-- Make sure there's a version number when `build.sh` isn't used
-- Update Running Server at Startup doc with Toke's irtt.service file
 - Fix corruption on server with `-goroutines` > 1 due to single buffer per listener
   - Prototype the consequences of a channel vs mutex op for each server reply
   - Based on prototype results, implement one of two solutions:
@@ -1009,6 +1007,7 @@ _Concrete tasks that just need doing..._
     - The probably-more-performant way: use one goroutine per listener, have
       separate packet buffers for each listener (probably by having a
       duplicate() method on listener), and lock server conns with a mutex
+- Update Running Server at Startup doc with Toke's irtt.service file
 - Use pflag options or something GNU compatible: https://github.com/spf13/pflag
 - Check that listeners exit only due to permanent errors, and exit code is set
 - Add ability for client to request random fill from server

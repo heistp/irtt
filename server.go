@@ -156,7 +156,7 @@ func (s *Server) warnOnMultipleAddresses() error {
 }
 
 func (s *Server) makeListeners() ([]*listener, error) {
-	lconns, err := listenAll(s.IPVersion, s.Addrs, s.MaxLength, s.HMACKey)
+	lconns, err := listenAll(s.IPVersion, s.Addrs)
 	if err != nil {
 		return nil, err
 	}
@@ -276,13 +276,23 @@ func (l *listener) listenAndServe(errC chan<- error) (err error) {
 }
 
 func (l *listener) readAndReply() (err error) {
-	p := l.conn.pkt
+	var cap int
+	if l.MaxLength == 0 {
+		cap, _ = detectMTU(l.conn.localAddr().IP)
+	} else if l.MaxLength < maxHeaderLen {
+		// this could actually be down to the minimum test packet size, but is
+		// not worth that effort now
+		cap = maxHeaderLen
+	} else {
+		cap = l.MaxLength
+	}
+	p := newPacket(0, cap, l.HMACKey)
 
 	for {
 		// read a packet
 		var trecv time.Time
 		var dstIP net.IP
-		trecv, dstIP, l.raddr, err = l.conn.receiveFrom()
+		trecv, dstIP, l.raddr, err = l.conn.receiveFrom(p)
 		if err != nil {
 			if e, ok := err.(*Error); ok {
 				l.eventf(dropCode(e.Code), err.Error())
@@ -300,7 +310,7 @@ func (l *listener) readAndReply() (err error) {
 					"drop due to unparseable negotiation parameters: %s", err.Error())
 				continue
 			}
-			l.restrictParams(params)
+			l.restrictParams(p, params)
 			sc := l.cmgr.newConn(l.raddr, params, p.flags()&flClose != 0)
 			if p.flags()&flClose == 0 {
 				l.eventf(NewConn, "new connection from %s, token %016x",
@@ -312,7 +322,7 @@ func (l *listener) readAndReply() (err error) {
 			}
 			p.setReply(true)
 			p.setPayload(params.bytes())
-			if err = l.sendPacket(trecv, dstIP, sc, false); err != nil {
+			if err = l.sendPacket(p, trecv, dstIP, sc, false); err != nil {
 				return
 			}
 			continue
@@ -320,7 +330,7 @@ func (l *listener) readAndReply() (err error) {
 
 		// handle close
 		if p.flags()&flClose != 0 {
-			if !l.addFields(fcloseRequest) {
+			if !l.addFields(p, fcloseRequest) {
 				continue
 			}
 			sc := l.cmgr.remove(p.ctoken())
@@ -341,7 +351,7 @@ func (l *listener) readAndReply() (err error) {
 		}
 
 		// handle echo request
-		if !l.addFields(fechoRequest) {
+		if !l.addFields(p, fechoRequest) {
 			continue
 		}
 
@@ -386,40 +396,15 @@ func (l *listener) readAndReply() (err error) {
 		}
 
 		// send response
-		if err = l.sendPacket(trecv, dstIP, &sc, true); err != nil {
+		if err = l.sendPacket(p, trecv, dstIP, &sc, true); err != nil {
 			return
 		}
 	}
 }
 
-func (l *listener) restrictParams(p *Params) {
-	if l.MaxDuration > 0 && p.Duration > l.MaxDuration {
-		p.Duration = l.MaxDuration
-	}
-	if l.MinInterval > 0 && p.Interval < l.MinInterval {
-		p.Interval = l.MinInterval
-	}
-	if p.Length > l.conn.pkt.capacity() {
-		p.Length = l.conn.pkt.capacity()
-	}
-	p.StampAt = l.AllowStamp.Restrict(p.StampAt)
-	if !l.dscpSupport {
-		p.DSCP = 0
-	}
-}
-
-func (l *listener) addFields(fidxs []fidx) bool {
-	if err := l.conn.pkt.addFields(fidxs, false); err != nil {
-		if e, ok := err.(*Error); ok {
-			l.eventf(dropCode(e.Code), err.Error())
-		}
-		return false
-	}
-	return true
-}
-
 // sendPacket sends a packet, locking and setting socket options as necessary.
-func (l *listener) sendPacket(trecv time.Time, srcIP net.IP, sc *sconn, testPacket bool) (err error) {
+func (l *listener) sendPacket(p *packet, trecv time.Time, srcIP net.IP,
+	sc *sconn, testPacket bool) (err error) {
 	// lock, if necessary (avoids socket options conflict)
 	if l.Goroutines > 1 {
 		l.mtx.Lock()
@@ -430,8 +415,6 @@ func (l *listener) sendPacket(trecv time.Time, srcIP net.IP, sc *sconn, testPack
 	if l.dscpSupport {
 		l.conn.setDSCP(sc.params.DSCP)
 	}
-
-	p := l.conn.pkt
 
 	// for test packets, add stats and timestamps according to conn params
 	if testPacket {
@@ -480,16 +463,42 @@ func (l *listener) sendPacket(trecv time.Time, srcIP net.IP, sc *sconn, testPack
 	// simulate duplicates, if necessary
 	if serverDupsPercent > 0 {
 		for rand.Float32() < serverDupsPercent {
-			err = l.conn.sendTo(l.raddr, srcIP)
+			err = l.conn.sendTo(p, l.raddr, srcIP)
 			if err != nil {
 				return
 			}
 		}
 	}
 
-	err = l.conn.sendTo(l.raddr, srcIP)
+	err = l.conn.sendTo(p, l.raddr, srcIP)
 
 	return
+}
+
+func (l *listener) restrictParams(pkt *packet, p *Params) {
+	if l.MaxDuration > 0 && p.Duration > l.MaxDuration {
+		p.Duration = l.MaxDuration
+	}
+	if l.MinInterval > 0 && p.Interval < l.MinInterval {
+		p.Interval = l.MinInterval
+	}
+	if p.Length > pkt.capacity() {
+		p.Length = pkt.capacity()
+	}
+	p.StampAt = l.AllowStamp.Restrict(p.StampAt)
+	if !l.dscpSupport {
+		p.DSCP = 0
+	}
+}
+
+func (l *listener) addFields(pkt *packet, fidxs []fidx) bool {
+	if err := pkt.addFields(fidxs, false); err != nil {
+		if e, ok := err.(*Error); ok {
+			l.eventf(dropCode(e.Code), err.Error())
+		}
+		return false
+	}
+	return true
 }
 
 func (l *listener) eventf(code EventCode, format string, args ...interface{}) {

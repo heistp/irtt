@@ -48,13 +48,9 @@ func newResult(rec *Recorder, cfg *Config, serr error, rerr error) *Result {
 						if prt.Lost != LostFalse {
 							prt.Lost = LostDown
 						}
-					} else {
-						if prt.Lost == LostTrue || prt.Lost == LostUp {
-							prt.Lost = LostUp
-						} else {
-							panic("impossible transition from not lost to lost")
-						}
-					}
+					} else if prt.Lost == LostTrue || prt.Lost == LostUp {
+						prt.Lost = LostUp
+					} // else don't allow a transition from not lost to lost
 					rwin >>= 1
 				}
 			}
@@ -148,8 +144,8 @@ func newResult(rec *Recorder, cfg *Config, serr error, rerr error) *Result {
 			float64(r.SendCallStats.N-uint(r.ServerPacketsReceived)) /
 			float64(r.SendCallStats.N)
 		r.DownstreamLossPercent = 100 *
-			float64(uint(r.ServerPacketsReceived)-r.PacketsReceived) /
-			float64(uint(r.ServerPacketsReceived))
+			float64(r.PacketsReceived-uint(r.ServerPacketsReceived)) /
+			float64(r.PacketsReceived)
 	}
 
 	// calculate duplicate percent

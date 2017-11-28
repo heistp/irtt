@@ -317,37 +317,75 @@ func (c *cconn) close() (err error) {
 // lconn is used for server listeners
 type lconn struct {
 	*nconn
-	pkt *packet
+	//pkt *packet
 	cm4 ipv4.ControlMessage
 	cm6 ipv6.ControlMessage
 }
 
-func (l *lconn) sendTo(addr *net.UDPAddr, srcIP net.IP) (err error) {
-	var n int
-	if l.ip4conn != nil {
-		l.cm4.Src = srcIP
-		n, err = l.ip4conn.WriteTo(l.pkt.bytes(), &l.cm4, addr)
-	} else if l.ip6conn != nil {
-		l.cm6.Src = srcIP
-		n, err = l.ip6conn.WriteTo(l.pkt.bytes(), &l.cm6, addr)
-	} else {
-		n, err = l.conn.WriteToUDP(l.pkt.bytes(), addr)
-	}
+// listen creates an lconn by listening on a UDP address.
+func listen(laddr *net.UDPAddr) (l *lconn, err error) {
+	ipVer := IPVersionFromUDPAddr(laddr)
+	var conn *net.UDPConn
+	conn, err = net.ListenUDP(ipVer.udpNetwork(), laddr)
 	if err != nil {
 		return
 	}
-	if n < l.pkt.length() {
-		err = Errorf(ShortWrite, "only %d/%d bytes were sent", n, l.pkt.length())
+	l = &lconn{nconn: &nconn{}}
+	l.init(conn, ipVer)
+	return
+}
+
+// listenAll creates lconns on multiple addresses, with separate lconns for IPv4
+// and IPv6, so that socket options can be set correctly, which is not possible
+// with a dual stack conn.
+func listenAll(ipVer IPVersion, addrs []string) (lconns []*lconn, err error) {
+	laddrs, err := resolveListenAddrs(addrs, ipVer)
+	if err != nil {
+		return
+	}
+	lconns = make([]*lconn, 0, 16)
+	for _, laddr := range laddrs {
+		var l *lconn
+		l, err = listen(laddr)
+		if err != nil {
+			return
+		}
+		lconns = append(lconns, l)
+	}
+	if len(lconns) == 0 {
+		err = Errorf(NoSuitableAddressFound, "no suitable %s address found", ipVer)
+		return
 	}
 	return
 }
 
-func (l *lconn) receiveFrom() (tafter time.Time, dstIP net.IP, raddr *net.UDPAddr, err error) {
+func (l *lconn) sendTo(pkt *packet, addr *net.UDPAddr, srcIP net.IP) (err error) {
+	var n int
+	if l.ip4conn != nil {
+		l.cm4.Src = srcIP
+		n, err = l.ip4conn.WriteTo(pkt.bytes(), &l.cm4, addr)
+	} else if l.ip6conn != nil {
+		l.cm6.Src = srcIP
+		n, err = l.ip6conn.WriteTo(pkt.bytes(), &l.cm6, addr)
+	} else {
+		n, err = l.conn.WriteToUDP(pkt.bytes(), addr)
+	}
+	if err != nil {
+		return
+	}
+	if n < pkt.length() {
+		err = Errorf(ShortWrite, "only %d/%d bytes were sent", n, pkt.length())
+	}
+	return
+}
+
+func (l *lconn) receiveFrom(pkt *packet) (tafter time.Time, dstIP net.IP,
+	raddr *net.UDPAddr, err error) {
 	var n int
 	if l.ip4conn != nil {
 		var cm *ipv4.ControlMessage
 		var src net.Addr
-		n, cm, src, err = l.ip4conn.ReadFrom(l.pkt.readTo())
+		n, cm, src, err = l.ip4conn.ReadFrom(pkt.readTo())
 		if src != nil {
 			raddr = src.(*net.UDPAddr)
 		}
@@ -357,7 +395,7 @@ func (l *lconn) receiveFrom() (tafter time.Time, dstIP net.IP, raddr *net.UDPAdd
 	} else if l.ip6conn != nil {
 		var cm *ipv6.ControlMessage
 		var src net.Addr
-		n, cm, src, err = l.ip6conn.ReadFrom(l.pkt.readTo())
+		n, cm, src, err = l.ip6conn.ReadFrom(pkt.readTo())
 		if src != nil {
 			raddr = src.(*net.UDPAddr)
 		}
@@ -365,68 +403,17 @@ func (l *lconn) receiveFrom() (tafter time.Time, dstIP net.IP, raddr *net.UDPAdd
 			dstIP = cm.Dst
 		}
 	} else {
-		n, raddr, err = l.conn.ReadFromUDP(l.pkt.readTo())
+		n, raddr, err = l.conn.ReadFromUDP(pkt.readTo())
 	}
 	tafter = time.Now()
 	if err != nil {
 		return
 	}
-	if err = l.pkt.readReset(n); err != nil {
+	if err = pkt.readReset(n); err != nil {
 		return
 	}
-	if l.pkt.reply() {
+	if pkt.reply() {
 		err = Errorf(UnexpectedReplyFlag, "unexpected reply flag set")
-		return
-	}
-	return
-}
-
-// listen creates an lconn by listening on a UDP address. It takes an IPVersion
-// because the UDPAddr returned by ResolveUDPAddr has the network "udp", as
-// opposed to either "udp4" or "udp6", even when an explicit network was
-// requested.
-func listen(laddr *net.UDPAddr, maxLen int, hmacKey []byte) (l *lconn, err error) {
-	ipVer := IPVersionFromUDPAddr(laddr)
-	var conn *net.UDPConn
-	conn, err = net.ListenUDP(ipVer.udpNetwork(), laddr)
-	if err != nil {
-		return
-	}
-	l = &lconn{nconn: &nconn{}}
-	l.init(conn, ipVer)
-	var cap int
-	if maxLen == 0 {
-		cap, _ = detectMTU(l.localAddr().IP)
-	} else if maxLen < maxHeaderLen {
-		// TODO this could actually be down to the minimum test packet size
-		cap = maxHeaderLen
-	} else {
-		cap = maxLen
-	}
-	l.pkt = newPacket(0, cap, hmacKey)
-	return
-}
-
-// listenAll creates lconns on multiple addresses, with separate lconns for IPv4
-// and IPv6, so that socket options can be set correctly, which is not possible
-// with a dual stack conn.
-func listenAll(ipVer IPVersion, addrs []string, maxPacketLen int,
-	hmacKey []byte) (lconns []*lconn, err error) {
-	laddrs, err := resolveListenAddrs(addrs, ipVer)
-	if err != nil {
-		return
-	}
-	lconns = make([]*lconn, 0, 16)
-	for _, laddr := range laddrs {
-		var l *lconn
-		l, err = listen(laddr, maxPacketLen, hmacKey)
-		if err != nil {
-			return
-		}
-		lconns = append(lconns, l)
-	}
-	if len(lconns) == 0 {
-		err = Errorf(NoSuitableAddressFound, "no suitable %s address found", ipVer)
 		return
 	}
 	return
