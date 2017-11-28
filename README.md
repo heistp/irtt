@@ -1001,6 +1001,12 @@ _Concrete tasks that just need doing..._
 
 - Fix out-of-order server replies when `-goroutines` > 1:
   - Use a channel and goroutine per client session, probably
+  - Use a received packet pool
+- Minimize server garbage
+  - Don't set source address for non-unspecified listener IPs
+  - Don't return copy of server conn when getting it from connmgr
+  - Review use of inner funcs
+- Run heap profiler on client
 - Update Running Server at Startup doc with Toke's irtt.service file
 - Use pflag options or something GNU compatible: https://github.com/spf13/pflag
 - Check that listeners exit only due to permanent errors, and exit code is set
@@ -1016,7 +1022,6 @@ _Concrete tasks that just need doing..._
 	- Limit open requests to prevent the equivalent of a "syn flood"
 	- Add per-IP limiting
   - Improve server close by repeating close packets up to four times
-- Make sure no garbage created in either client or server during test
 - Refactor events to allow for more than 64 total event types
 - Write a SmokePing probe (for FreeNet)
 

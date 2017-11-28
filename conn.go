@@ -14,6 +14,8 @@ import (
 
 const minOpenTimeout = 200 * time.Millisecond
 
+const setSourceAddress = true
+
 // nconn (network conn) is the embedded struct in conn and lconn connections. It
 // adds IPVersion, socket options and some helpers to net.UDPConn.
 type nconn struct {
@@ -361,10 +363,10 @@ func listenAll(ipVer IPVersion, addrs []string) (lconns []*lconn, err error) {
 
 func (l *lconn) sendTo(pkt *packet, addr *net.UDPAddr, srcIP net.IP) (err error) {
 	var n int
-	if l.ip4conn != nil {
+	if setSourceAddress && l.ip4conn != nil {
 		l.cm4.Src = srcIP
 		n, err = l.ip4conn.WriteTo(pkt.bytes(), &l.cm4, addr)
-	} else if l.ip6conn != nil {
+	} else if setSourceAddress && l.ip6conn != nil {
 		l.cm6.Src = srcIP
 		n, err = l.ip6conn.WriteTo(pkt.bytes(), &l.cm6, addr)
 	} else {
@@ -382,7 +384,7 @@ func (l *lconn) sendTo(pkt *packet, addr *net.UDPAddr, srcIP net.IP) (err error)
 func (l *lconn) receiveFrom(pkt *packet) (tafter time.Time, dstIP net.IP,
 	raddr *net.UDPAddr, err error) {
 	var n int
-	if l.ip4conn != nil {
+	if setSourceAddress && l.ip4conn != nil {
 		var cm *ipv4.ControlMessage
 		var src net.Addr
 		n, cm, src, err = l.ip4conn.ReadFrom(pkt.readTo())
@@ -392,7 +394,7 @@ func (l *lconn) receiveFrom(pkt *packet) (tafter time.Time, dstIP net.IP,
 		if cm != nil {
 			dstIP = cm.Dst
 		}
-	} else if l.ip6conn != nil {
+	} else if setSourceAddress && l.ip6conn != nil {
 		var cm *ipv6.ControlMessage
 		var src net.Addr
 		n, cm, src, err = l.ip6conn.ReadFrom(pkt.readTo())
