@@ -368,45 +368,45 @@ func (p *packet) addReceivedStatsFields(rs ReceivedStats) {
 
 // Timestamps
 
-func (p *packet) timestamp() (ts Timestamp) {
-	tget := func(wf fidx, mf fidx, t *Time) {
-		wb := p.get(wf)
-		if len(wb) > 0 {
-			t.setWallFromBytes(wb)
-		}
-		mb := p.get(mf)
-		if len(mb) > 0 {
-			t.setMonoFromBytes(mb)
-		}
+func (p *packet) tget(wf fidx, mf fidx, t *Time) {
+	wb := p.get(wf)
+	if len(wb) > 0 {
+		t.setWallFromBytes(wb)
 	}
+	mb := p.get(mf)
+	if len(mb) > 0 {
+		t.setMonoFromBytes(mb)
+	}
+}
 
-	tget(fRWall, fRMono, &ts.Receive)
-	tget(fMWall, fMMono, &ts.Receive)
-	tget(fMWall, fMMono, &ts.Send)
-	tget(fSWall, fSMono, &ts.Send)
+func (p *packet) timestamp() (ts Timestamp) {
+	p.tget(fRWall, fRMono, &ts.Receive)
+	p.tget(fMWall, fMMono, &ts.Receive)
+	p.tget(fMWall, fMMono, &ts.Send)
+	p.tget(fSWall, fSMono, &ts.Send)
 
 	return
 }
 
-func (p *packet) setTimestamp(ts Timestamp) {
-	tset := func(t *Time, wf fidx, mf fidx) {
-		if t.Wall != 0 {
-			t.wallToBytes(p.setTo(wf))
-		}
-		if t.Mono != 0 {
-			t.monoToBytes(p.setTo(mf))
-		}
+func (p *packet) tset(t *Time, wf fidx, mf fidx) {
+	if t.Wall != 0 {
+		t.wallToBytes(p.setTo(wf))
 	}
+	if t.Mono != 0 {
+		t.monoToBytes(p.setTo(mf))
+	}
+}
 
+func (p *packet) setTimestamp(ts Timestamp) {
 	if ts.IsMidpoint() {
-		tset(&ts.Receive, fMWall, fMMono)
+		p.tset(&ts.Receive, fMWall, fMMono)
 		return
 	}
 	if !ts.Receive.IsZero() {
-		tset(&ts.Receive, fRWall, fRMono)
+		p.tset(&ts.Receive, fRWall, fRMono)
 	}
 	if !ts.Send.IsZero() {
-		tset(&ts.Send, fSWall, fSMono)
+		p.tset(&ts.Send, fSWall, fSMono)
 	}
 }
 
@@ -479,7 +479,6 @@ func (p *packet) addTimestampFields(at StampAt, c Clock) {
 			}
 		}
 	}
-
 	atf(AtReceive, fRWall, fRMono)
 	atf(AtMidpoint, fMWall, fMMono)
 	atf(AtSend, fSWall, fSMono)

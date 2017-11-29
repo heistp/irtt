@@ -926,6 +926,11 @@ the client, and since start of the process for the server
    4) The server has an HMAC key set with `-hmac` and the client either has
       not specified a key or it's incorrect. Make sure the client has the
       correct HMAC key, also specified with the `-hmac` parameter.
+   5) You're trying to connect to a listener that's listening on an unspecified
+      IP address, and return packets are not routing properly, which can happen in
+      some network configurations. Try running the server with the `-setsrcip`
+      parameter, which sets the source address on all reply packets from listeners
+      on unspecified IP addresses.
 
 7) Why don't you include median values for send call time, timer error and
    server processing time?
@@ -1011,12 +1016,7 @@ the client, and since start of the process for the server
 _Concrete tasks that just need doing..._
 
 - Add `-concurrent` flag to server for one goroutine per client conn
-- Minimize server garbage
-  - Don't set source address for non-unspecified listener IPs
-  - Don't return copy of server conn when getting it from connmgr
-  - Review use of anonymous inner funcs on the hot path
 - Add a `-gc` flag to server: `off`, `on` and `idle`
-- Load test the server with the heap profiler
 - Run heap profiler on client
 - Check that listeners exit only due to permanent errors, and exit code is set
 - Add ability for client to request random fill from server

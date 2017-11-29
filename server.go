@@ -29,6 +29,7 @@ type Server struct {
 	IPVersion       IPVersion
 	Handler         Handler
 	EventMask       EventCode
+	SetSourceIP     bool
 	ThreadLock      bool
 	hardMaxDuration time.Duration
 	start           time.Time
@@ -50,6 +51,7 @@ func NewServer() *Server {
 		TTL:         DefaultTTL,
 		IPVersion:   DefaultIPVersion,
 		EventMask:   AllEvents,
+		SetSourceIP: DefaultSetSrcIP,
 		ThreadLock:  DefaultThreadLock,
 		shutdownC:   make(chan struct{}),
 	}
@@ -148,7 +150,7 @@ func (s *Server) warnOnMultipleAddresses() error {
 }
 
 func (s *Server) makeListeners() ([]*listener, error) {
-	lconns, err := listenAll(s.IPVersion, s.Addrs)
+	lconns, err := listenAll(s.IPVersion, s.Addrs, s.SetSourceIP)
 	if err != nil {
 		return nil, err
 	}
@@ -389,7 +391,7 @@ func (l *listener) readSingleAndReply(p *packet) (fatal bool, err error) {
 	}
 
 	// send response
-	if err = l.sendPacket(p, trecv, dstIP, &sc, true); err != nil {
+	if err = l.sendPacket(p, trecv, dstIP, sc, true); err != nil {
 		fatal = true
 	}
 
