@@ -1010,16 +1010,13 @@ the client, and since start of the process for the server
 
 _Concrete tasks that just need doing..._
 
-- Fix out-of-order server replies when `-goroutines` > 1:
-  - Use a channel and goroutine per client session, probably
-  - Use a received packet pool
+- Add `-concurrent` flag to server for one goroutine per client conn
 - Minimize server garbage
   - Don't set source address for non-unspecified listener IPs
   - Don't return copy of server conn when getting it from connmgr
   - Review use of anonymous inner funcs on the hot path
 - Add a `-gc` flag to server: `off`, `on` and `idle`
 - Load test the server with the heap profiler
-- Log IP address on server drops
 - Run heap profiler on client
 - Check that listeners exit only due to permanent errors, and exit code is set
 - Add ability for client to request random fill from server

@@ -26,7 +26,6 @@ type Server struct {
 	Filler          Filler
 	AllowStamp      AllowStamp
 	TTL             int
-	Goroutines      int
 	IPVersion       IPVersion
 	Handler         Handler
 	EventMask       EventCode
@@ -49,7 +48,6 @@ func NewServer() *Server {
 		Filler:      DefaultServerFiller,
 		AllowStamp:  DefaultAllowStamp,
 		TTL:         DefaultTTL,
-		Goroutines:  DefaultGoroutines,
 		IPVersion:   DefaultIPVersion,
 		EventMask:   AllEvents,
 		ThreadLock:  DefaultThreadLock,
@@ -64,9 +62,6 @@ func NewServer() *Server {
 func (s *Server) ListenAndServe() error {
 	// start is the base time that monotonic timestamp values are from
 	s.start = time.Now()
-
-	// detect CPUs when Goroutines == 0
-	s.detectCPUs()
 
 	// set max duration
 	if s.MaxDuration > 0 {
@@ -89,8 +84,8 @@ func (s *Server) ListenAndServe() error {
 		go l.listenAndServe(errC)
 	}
 
-	// wait for all goroutines
-	// shut down server (all listeners) if any listener fails
+	// wait for all listeners, and out of an abundance of caution, shut down
+	// all other listeners if any one of them fails
 	for i := 0; i < len(listeners); {
 		select {
 		case err := <-errC:
@@ -115,12 +110,6 @@ func (s *Server) Shutdown() {
 	if !s.shutdown {
 		close(s.shutdownC)
 		s.shutdown = true
-	}
-}
-
-func (s *Server) detectCPUs() {
-	if s.Goroutines == 0 {
-		s.Goroutines = runtime.NumCPU()
 	}
 }
 
@@ -162,11 +151,7 @@ func (s *Server) makeListeners() ([]*listener, error) {
 	}
 	ls := make([]*listener, 0, len(lconns))
 	for _, lconn := range lconns {
-		ls = append(ls, &listener{
-			Server: s,
-			conn:   lconn,
-			cmgr:   newConnMgr(s.PacketBurst, s.MinInterval),
-		})
+		ls = append(ls, newListener(s, lconn, newConnMgr(s.PacketBurst, s.MinInterval)))
 	}
 	return ls, nil
 }
@@ -181,6 +166,7 @@ func (s *Server) eventf(code EventCode, format string, args ...interface{}) {
 type listener struct {
 	*Server
 	conn        *lconn
+	pktPool     *pktPool
 	cmgr        *connmgr
 	raddr       *net.UDPAddr
 	mtx         sync.Mutex
@@ -188,6 +174,34 @@ type listener struct {
 	dscpSupport bool
 	closed      bool
 	closedMtx   sync.Mutex
+}
+
+func newListener(s *Server, lc *lconn, cmgr *connmgr) *listener {
+	/*
+		// this was the old logic for packet max length calculation- necessary?
+		var cap int
+		if l.MaxLength == 0 {
+			cap, _ = detectMTU(l.conn.localAddr().IP)
+		} else if l.MaxLength < maxHeaderLen {
+			// this could actually be down to the minimum test packet size, but is
+			// not worth that effort now
+			cap = maxHeaderLen
+		} else {
+			cap = l.MaxLength
+		}
+		p := newPacket(0, cap, l.HMACKey)
+	*/
+
+	pp := newPacketPool(func() *packet {
+		return newPacket(0, s.MaxLength, s.HMACKey)
+	}, 16)
+
+	return &listener{
+		Server:  s,
+		conn:    lc,
+		pktPool: pp,
+		cmgr:    newConnMgr(s.PacketBurst, s.MinInterval),
+	}
 }
 
 func (l *listener) listenAndServe(errC chan<- error) (err error) {
@@ -243,175 +257,145 @@ func (l *listener) listenAndServe(errC chan<- error) (err error) {
 		}
 	}
 
-	// if single goroutine, run in current goroutine
-	if l.Goroutines == 1 {
-		err = l.readAndReply()
-		if l.isClosed() {
-			err = nil
+	err = l.readAndReply()
+	if l.isClosed() {
+		err = nil
+	}
+	return
+}
+
+func (l *listener) readAndReply() (err error) {
+	for {
+		p := l.pktPool.get()
+		var fatal bool
+		fatal, err = l.readSingleAndReply(p)
+		if fatal {
+			return
+		}
+	}
+}
+
+func (l *listener) readSingleAndReply(p *packet) (fatal bool, err error) {
+	defer l.pktPool.put(p)
+
+	// read a packet
+	var trecv time.Time
+	var dstIP net.IP
+	trecv, dstIP, l.raddr, err = l.conn.receiveFrom(p)
+	if err != nil {
+		if e, ok := err.(*Error); ok {
+			l.eventf(dropCode(e.Code), "[%s] %s", l.raddr, err.Error())
+		} else {
+			fatal = true
 		}
 		return
 	}
 
-	// concurrent version
-	lerrC := make(chan error)
-	for i := 0; i < l.Goroutines; i++ {
-		go func() {
-			var lerr error
-			defer func() {
-				lerrC <- lerr
-			}()
-			lerr = l.readAndReply()
-		}()
+	// handle open
+	if p.flags()&flOpen != 0 {
+		var params *Params
+		params, err = parseParams(p.payload())
+		if err != nil {
+			l.eventf(DropUnparseableParams,
+				"[%s] unparseable negotiation parameters: %s",
+				l.raddr, err.Error())
+			return
+		}
+		l.restrictParams(p, params)
+		sc := l.cmgr.newConn(l.raddr, params, p.flags()&flClose != 0)
+		if p.flags()&flClose == 0 {
+			l.eventf(NewConn, "[%s] new connection, token=%016x",
+				l.raddr, sc.ctoken)
+			p.setConnToken(sc.ctoken)
+		} else {
+			l.eventf(OpenClose, "[%s] open-close", l.raddr)
+			p.setConnToken(0)
+		}
+		p.setReply(true)
+		p.setPayload(params.bytes())
+		if err = l.sendPacket(p, trecv, dstIP, sc, false); err != nil {
+			fatal = true
+		}
+		return
 	}
 
-	// wait for all goroutines and return the first error
-	for i := 0; i < l.Goroutines; i++ {
-		lerr := <-lerrC
-		if lerr != nil && err == nil && !l.isClosed() {
-			err = lerr
+	// handle close
+	if p.flags()&flClose != 0 {
+		if !l.addFields(p, fcloseRequest) {
+			return
 		}
+		sc := l.cmgr.remove(p.ctoken())
+		if sc == nil {
+			l.eventf(DropInvalidConnToken, "[%s] close for invalid conn token %016x",
+				l.raddr, p.ctoken())
+			return
+		}
+		// check remote address
+		if !udpAddrsEqual(l.raddr, &sc.raddr) {
+			l.eventf(DropAddressMismatch,
+				"[%s] drop close due to address mismatch (expected %s for %016x)",
+				l.raddr, &sc.raddr, p.ctoken())
+			return
+		}
+		l.eventf(CloseConn, "[%s] close connection, token=%016x", l.raddr, sc.ctoken)
+		return
+	}
+
+	// handle echo request
+	if !l.addFields(p, fechoRequest) {
+		return
+	}
+
+	// check conn, token and address
+	sc, exists, addrOk, intervalOk := l.cmgr.conn(p, l.raddr)
+	if !exists {
+		l.eventf(DropInvalidConnToken, "[%s] request for invalid conn token %016x",
+			l.raddr, p.ctoken())
+		return
+	}
+	if !addrOk {
+		l.eventf(DropAddressMismatch,
+			"[%s] drop request due to address mismatch (expected %s for %016x)", l.raddr,
+			&sc.raddr, p.ctoken())
+		return
+	}
+	if !intervalOk {
+		l.eventf(DropShortInterval,
+			"[%s] drop request due to short interval", l.raddr)
+		return
+	}
+
+	// set reply flag
+	p.setReply(true)
+
+	// check if max test duration exceeded (but still return packet)
+	if l.hardMaxDuration > 0 && time.Since(sc.firstUsed) > l.hardMaxDuration {
+		l.eventf(DurationLimitExceeded,
+			"[%s] closing connection due to duration limit exceeded", l.raddr)
+		l.cmgr.remove(p.ctoken())
+		p.setFlagBits(flClose)
+	}
+
+	// fill payload
+	if l.Filler != nil {
+		err = p.readPayload(l.Filler)
+		if err != nil {
+			fatal = true
+			return
+		}
+	}
+
+	// send response
+	if err = l.sendPacket(p, trecv, dstIP, &sc, true); err != nil {
+		fatal = true
 	}
 
 	return
 }
 
-func (l *listener) readAndReply() (err error) {
-	// create packet
-	var cap int
-	if l.MaxLength == 0 {
-		cap, _ = detectMTU(l.conn.localAddr().IP)
-	} else if l.MaxLength < maxHeaderLen {
-		// this could actually be down to the minimum test packet size, but is
-		// not worth that effort now
-		cap = maxHeaderLen
-	} else {
-		cap = l.MaxLength
-	}
-	p := newPacket(0, cap, l.HMACKey)
-
-	for {
-		// read a packet
-		var trecv time.Time
-		var dstIP net.IP
-		trecv, dstIP, l.raddr, err = l.conn.receiveFrom(p)
-		if err != nil {
-			if e, ok := err.(*Error); ok {
-				l.eventf(dropCode(e.Code), err.Error())
-				continue
-			}
-			return
-		}
-
-		// handle open
-		if p.flags()&flOpen != 0 {
-			var params *Params
-			params, err = parseParams(p.payload())
-			if err != nil {
-				l.eventf(DropUnparseableParams,
-					"drop due to unparseable negotiation parameters: %s", err.Error())
-				continue
-			}
-			l.restrictParams(p, params)
-			sc := l.cmgr.newConn(l.raddr, params, p.flags()&flClose != 0)
-			if p.flags()&flClose == 0 {
-				l.eventf(NewConn, "new connection from %s, token %016x",
-					l.raddr, sc.ctoken)
-				p.setConnToken(sc.ctoken)
-			} else {
-				l.eventf(OpenClose, "open-close from %s", l.raddr)
-				p.setConnToken(0)
-			}
-			p.setReply(true)
-			p.setPayload(params.bytes())
-			if err = l.sendPacket(p, trecv, dstIP, sc, false); err != nil {
-				return
-			}
-			continue
-		}
-
-		// handle close
-		if p.flags()&flClose != 0 {
-			if !l.addFields(p, fcloseRequest) {
-				continue
-			}
-			sc := l.cmgr.remove(p.ctoken())
-			if sc == nil {
-				l.eventf(DropInvalidConnToken, "close for invalid conn token %016x",
-					p.ctoken())
-				continue
-			}
-			// check remote address
-			if !udpAddrsEqual(l.raddr, &sc.raddr) {
-				l.eventf(DropAddressMismatch,
-					"drop close due to address mismatch, %s != %s for %x",
-					l.raddr, &sc.raddr, p.ctoken())
-				continue
-			}
-			l.eventf(CloseConn, "close from %s, token %016x", l.raddr, sc.ctoken)
-			continue
-		}
-
-		// handle echo request
-		if !l.addFields(p, fechoRequest) {
-			continue
-		}
-
-		// check conn, token and address
-		sc, exists, addrOk, intervalOk := l.cmgr.conn(p, l.raddr)
-		if !exists {
-			l.eventf(DropInvalidConnToken, "request for invalid conn token %016x",
-				p.ctoken())
-			continue
-		}
-		if !addrOk {
-			l.eventf(DropAddressMismatch,
-				"drop request due to address mismatch, %s != %s for %016x", l.raddr,
-				&sc.raddr, p.ctoken())
-			continue
-		}
-		if !intervalOk {
-			l.eventf(DropShortInterval,
-				"drop request due to short interval for %s (%016x)",
-				&sc.raddr, p.ctoken())
-			continue
-		}
-
-		// set reply flag
-		p.setReply(true)
-
-		// check if max test duration exceeded (but still return packet)
-		if l.hardMaxDuration > 0 && time.Since(sc.firstUsed) > l.hardMaxDuration {
-			l.eventf(DurationLimitExceeded,
-				"closed connection due to duration limit exceeded for %s (%016x)",
-				&sc.raddr, p.ctoken())
-			l.cmgr.remove(p.ctoken())
-			p.setFlagBits(flClose)
-		}
-
-		// fill payload
-		if l.Filler != nil {
-			err = p.readPayload(l.Filler)
-			if err != nil {
-				return
-			}
-		}
-
-		// send response
-		if err = l.sendPacket(p, trecv, dstIP, &sc, true); err != nil {
-			return
-		}
-	}
-}
-
 // sendPacket sends a packet, locking and setting socket options as necessary.
 func (l *listener) sendPacket(p *packet, trecv time.Time, srcIP net.IP,
 	sc *sconn, testPacket bool) (err error) {
-	// lock, if necessary (avoids socket options conflict)
-	if l.Goroutines > 1 {
-		l.mtx.Lock()
-		defer l.mtx.Unlock()
-	}
-
 	// set socket options
 	if l.dscpSupport {
 		l.conn.setDSCP(sc.params.DSCP)
@@ -523,4 +507,36 @@ func (l *listener) shutdown() {
 		}
 		l.closed = true
 	}
+}
+
+type pktPool struct {
+	pool []*packet
+	mtx  sync.Mutex
+	new  func() *packet
+}
+
+func newPacketPool(new func() *packet, cap int) *pktPool {
+	pp := &pktPool{
+		pool: make([]*packet, 0, cap),
+		new:  new,
+	}
+	return pp
+}
+
+func (po *pktPool) get() *packet {
+	po.mtx.Lock()
+	defer po.mtx.Unlock()
+	l := len(po.pool)
+	if l == 0 {
+		return po.new()
+	}
+	p := po.pool[l-1]
+	po.pool = po.pool[:l-1]
+	return p
+}
+
+func (po *pktPool) put(p *packet) {
+	po.mtx.Lock()
+	defer po.mtx.Unlock()
+	po.pool = append(po.pool, p)
 }

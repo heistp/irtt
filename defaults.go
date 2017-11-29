@@ -67,7 +67,6 @@ const (
 	DefaultMaxLength   = 0
 	DefaultPacketBurst = 10
 	DefaultAllowStamp  = DualStamps
-	DefaultGoroutines  = 1
 )
 
 // DefaultBindAddrs are the default bind addresses.
