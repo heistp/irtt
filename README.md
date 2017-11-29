@@ -327,12 +327,9 @@ service management or other custom configuration. Tutorials may be found on the
 Internet that describe how to do use systemd in greater detail, but a very
 simple method is as follows:
 
-1) Install the `irtt` executable into `/usr/local/bin`
+1) Install the `irtt` executable into `/usr/bin`
 
-2) Create a user to run the irtt server with `sudo adduser irtt` and supply the
-   requested details.
-
-3) Create a file `/etc/systemd/system/irtt.service` with the following contents
+2) Create a file `/etc/systemd/system/irtt.service` with the following contents
    (note that some commented out parts may be used to bind to a specific
    interface, and that you may also find the files `irtt.service` and
    `irtt@.service` in the source tree):
@@ -357,7 +354,7 @@ PrivateDevices=yes
 ProtectControlGroups=yes
 ProtectKernelTunables=yes
 ProtectSystem=strict
-ProtecyHome=yes
+ProtectHome=yes
 NoNewPrivileges=yes
 SystemCallArchitecture=native
 SystemCalls=@basic-io @io-event @network-io @signal @timer
@@ -366,15 +363,15 @@ SystemCalls=@basic-io @io-event @network-io @signal @timer
 WantedBy=multi-user.target
 ```
 
-4) Reload systemd with `sudo systemctl daemon-reload`
+3) Reload systemd with `sudo systemctl daemon-reload`
 
-5) Start the service with `sudo systemctl start irtt.service`
+4) Start the service with `sudo systemctl start irtt.service`
 
-6) Check the service status with `sudo systemctl status irtt.service`
+5) Check the service status with `sudo systemctl status irtt.service`
 
-7) Set the service to start at boot with `sudo systemctl enable irtt.service`
+6) Set the service to start at boot with `sudo systemctl enable irtt.service`
 
-8) View and follow the irtt server logs with `sudo journalctl -f -u irtt.service`
+7) View and follow the irtt server logs with `sudo journalctl -f -u irtt.service`
 
 See the irtt server's command line usage with `irtt server -h` to explore
 additional parameters you may want when starting your server, such as an hmac
@@ -382,15 +379,15 @@ key or restrictions on test parameters. To secure a server for public use, you
 may want to take additional steps outside of the scope of this tutorial for
 securing Linux services in general, including but not limited to:
 
-- Changing or disabling the irtt user's shell or password
-- Restricting the irtt user's file permissions
 - Setting up an iptables firewall (only UDP port 2112 must be open)
 - Setting up a chroot jail
 
 It should be noted that there are no known security vulnerabilities in the Go
-language at this time, and the steps above may or may not serve to enhance
-security in any way. Go-based servers are generally regarded as safe because of
-Go's high-level language constructs for memory management.
+language at this time, and the steps above, in particular the chroot jail, may
+or may not serve to enhance security in any way. Go-based servers are generally
+regarded as safe because of Go's high-level language constructs for memory
+management, and at this time IRTT makes no use of Go's
+[unsafe](https://golang.org/pkg/unsafe/) package.
 
 ### Tests and Benchmarks
 
@@ -417,7 +414,7 @@ a few basic pieces of system information
 "system_info": {
     "os": "darwin",
     "cpus": 8,
-    "go_version": "go1.9.1",
+    "go_version": "go1.9.2",
     "hostname": "tron.local"
 },
 ```
