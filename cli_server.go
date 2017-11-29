@@ -4,7 +4,6 @@ import (
 	"flag"
 	"os"
 	"os/signal"
-	"runtime"
 	"strings"
 	"syscall"
 )
@@ -43,9 +42,6 @@ func serverUsage() {
 	printf("               none: don't allow timestamps")
 	printf("               single: allow a single timestamp (send, receive or midpoint)")
 	printf("               dual: allow dual timestamps")
-	printf("-goroutines #  number of goroutines to serve requests with (default %d)", DefaultGoroutines)
-	printf("               0 means use the number of CPUs reported by Go (%d)", runtime.NumCPU())
-	printf("               increasing this adds both concurrency and lock contention")
 	printf("-thread        lock request handling goroutines to OS threads (may reduce")
 	printf("               mean latency, but may also add outliers)")
 	printf("")
@@ -64,7 +60,6 @@ func runServerCLI(args []string) {
 	var minInterval = fs.Duration("i", DefaultMinInterval, "min interval")
 	var maxLength = fs.Int("l", DefaultMaxLength, "max length")
 	var allowTimestampStr = fs.String("ts", DefaultAllowStamp.String(), "allow timestamp")
-	var goroutines = fs.Int("goroutines", DefaultGoroutines, "goroutines")
 	var hmacStr = fs.String("hmac", defaultHMACKey, "HMAC key")
 	var packetBurst = fs.Int("pburst", DefaultPacketBurst, "packet burst")
 	var fillStr = fs.String("fill", DefaultServerFiller.String(), "filler")
@@ -108,7 +103,6 @@ func runServerCLI(args []string) {
 	s.MaxLength = *maxLength
 	s.Filler = filler
 	s.TTL = *ttl
-	s.Goroutines = *goroutines
 	s.Handler = &serverHandler{}
 	s.IPVersion = ipVer
 	s.ThreadLock = *lockOSThread
