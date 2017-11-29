@@ -63,6 +63,9 @@ func (s *Server) ListenAndServe() error {
 	// start is the base time that monotonic timestamp values are from
 	s.start = time.Now()
 
+	// send ServerStart event
+	s.eventf(ServerStart, "starting IRTT server version %s", Version)
+
 	// set max duration
 	if s.MaxDuration > 0 {
 		s.hardMaxDuration = s.MaxDuration + durationGraceTime

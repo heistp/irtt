@@ -120,7 +120,6 @@ func runServerCLI(args []string) {
 		os.Exit(exitCodeDoubleSignal)
 	}()
 
-	printf("IRTT server starting...")
 	if err := s.ListenAndServe(); err != nil {
 		printf("Error: %s", err)
 	}
