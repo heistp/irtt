@@ -19,8 +19,6 @@ ProtectKernelTunables=yes
 ProtectSystem=strict
 ProtectHome=yes
 NoNewPrivileges=yes
-SystemCallArchitecture=native
-SystemCalls=@basic-io @io-event @network-io @signal @timer
 
 [Install]
 WantedBy=multi-user.target
