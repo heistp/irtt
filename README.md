@@ -202,8 +202,8 @@ anyway, perhaps before per-packet results matter. Note that in case of very high
 packet loss, the **total** number of packets received by the server but not
 returned to the client (which can be obtained using `-rs count/both` or
 `ReceivedStatsCount/ReceivedStatsBoth`) will still be correct, which will still
-provide an accurate loss percentage in each direction over the course of the
-test.
+provide an accurate _average_ loss percentage in each direction over the course
+of the test.
 
 If this limitation adversely affects your results, file an
 [Issue](https://github.com/peteheist/irtt/issues) so it can be discussed further.
@@ -332,19 +332,35 @@ simple method is as follows:
 2) Create a user to run the irtt server with `sudo adduser irtt` and supply the
    requested details.
 
-3) Create a file `/etc/systemd/system/irtt.service` with the following contents:
+3) Create a file `/etc/systemd/system/irtt.service` with the following contents
+   (note that some commented out parts may be used to bind to a specific
+   interface, and that you may also find the files `irtt.service` and
+   `irtt@.service` in the source tree):
 
 ```
 [Unit]
-Description=IRTT Server
+Description=irtt server
 After=network.target
+#BindsTo=sys-subsystem-net-devices-%i.device
+#After=sys-subsystem-net-devices-%i.device
 
 [Service]
-Type=simple
-User=irtt
-WorkingDirectory=/usr/local/bin
-ExecStart=/usr/local/bin/irtt server
-Restart=on-abort
+ExecStart=/usr/bin/irtt server # -b %%%i
+User=nobody
+Restart=on-failure
+
+# Sandboxing
+# Some of these are not present in old versions of systemd.
+# Comment out as appropriate.
+PrivateTmp=yes
+PrivateDevices=yes
+ProtectControlGroups=yes
+ProtectKernelTunables=yes
+ProtectSystem=strict
+ProtecyHome=yes
+NoNewPrivileges=yes
+SystemCallArchitecture=native
+SystemCalls=@basic-io @io-event @network-io @signal @timer
 
 [Install]
 WantedBy=multi-user.target
@@ -1005,10 +1021,9 @@ _Concrete tasks that just need doing..._
 - Minimize server garbage
   - Don't set source address for non-unspecified listener IPs
   - Don't return copy of server conn when getting it from connmgr
-  - Review use of inner funcs
+  - Review use of anonymous inner funcs on the hot path
+- Add a `-gc` flag to server: `off`, `on` and `idle`
 - Run heap profiler on client
-- Update Running Server at Startup doc with Toke's irtt.service file
-- Use pflag options or something GNU compatible: https://github.com/spf13/pflag
 - Check that listeners exit only due to permanent errors, and exit code is set
 - Add ability for client to request random fill from server
 - Add protocol version number along with client check
@@ -1023,6 +1038,7 @@ _Concrete tasks that just need doing..._
 	- Add per-IP limiting
   - Improve server close by repeating close packets up to four times
 - Refactor events to allow for more than 64 total event types
+- Use pflag options or something GNU compatible: https://github.com/spf13/pflag
 - Write a SmokePing probe (for FreeNet)
 
 ### Roadmap
