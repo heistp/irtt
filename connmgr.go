@@ -71,7 +71,7 @@ func (cm *connmgr) newConn(raddr *net.UDPAddr, p *Params, temporary bool) *sconn
 	return sc
 }
 
-func (cm *connmgr) conn(p *packet, raddr *net.UDPAddr) (sconn sconn,
+func (cm *connmgr) conn(p *packet, raddr *net.UDPAddr) (sconn *sconn,
 	exists bool, addrOk bool, intervalOk bool) {
 	cm.mtx.Lock()
 	defer cm.mtx.Unlock()
@@ -126,7 +126,7 @@ func (cm *connmgr) conn(p *packet, raddr *net.UDPAddr) (sconn sconn,
 	// update seqno and last used times
 	sc.lastSeqno = seqno
 	sc.lastUsed = now
-	sconn = *sc
+	sconn = sc
 	return
 }
 

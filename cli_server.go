@@ -42,6 +42,9 @@ func serverUsage() {
 	printf("               none: don't allow timestamps")
 	printf("               single: allow a single timestamp (send, receive or midpoint)")
 	printf("               dual: allow dual timestamps")
+	printf("-setsrcip      set source IP address on all outgoing packets from listeners")
+	printf("               on unspecified IP addresses (use for more reliable reply")
+	printf("               routing, but increases per-packet heap allocations)")
 	printf("-thread        lock request handling goroutines to OS threads (may reduce")
 	printf("               mean latency, but may also add outliers)")
 	printf("")
@@ -66,6 +69,7 @@ func runServerCLI(args []string) {
 	var ipv4 = fs.Bool("4", false, "IPv4 only")
 	var ipv6 = fs.Bool("6", false, "IPv6 only")
 	var ttl = fs.Int("ttl", DefaultTTL, "IP time to live")
+	var setSrcIP = fs.Bool("setsrcip", DefaultSetSrcIP, "set source IP")
 	var lockOSThread = fs.Bool("thread", DefaultThreadLock, "thread")
 	fs.Parse(args)
 
@@ -105,6 +109,7 @@ func runServerCLI(args []string) {
 	s.TTL = *ttl
 	s.Handler = &serverHandler{}
 	s.IPVersion = ipVer
+	s.SetSourceIP = *setSrcIP
 	s.ThreadLock = *lockOSThread
 
 	// install signal handler to stop server

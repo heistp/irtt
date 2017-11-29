@@ -14,8 +14,6 @@ import (
 
 const minOpenTimeout = 200 * time.Millisecond
 
-const setSourceAddress = true
-
 // nconn (network conn) is the embedded struct in conn and lconn connections. It
 // adds IPVersion, socket options and some helpers to net.UDPConn.
 type nconn struct {
@@ -320,19 +318,20 @@ func (c *cconn) close() (err error) {
 type lconn struct {
 	*nconn
 	//pkt *packet
-	cm4 ipv4.ControlMessage
-	cm6 ipv6.ControlMessage
+	cm4      ipv4.ControlMessage
+	cm6      ipv6.ControlMessage
+	setSrcIP bool
 }
 
 // listen creates an lconn by listening on a UDP address.
-func listen(laddr *net.UDPAddr) (l *lconn, err error) {
+func listen(laddr *net.UDPAddr, setSrcIP bool) (l *lconn, err error) {
 	ipVer := IPVersionFromUDPAddr(laddr)
 	var conn *net.UDPConn
 	conn, err = net.ListenUDP(ipVer.udpNetwork(), laddr)
 	if err != nil {
 		return
 	}
-	l = &lconn{nconn: &nconn{}}
+	l = &lconn{nconn: &nconn{}, setSrcIP: setSrcIP && laddr.IP.IsUnspecified()}
 	l.init(conn, ipVer)
 	return
 }
@@ -340,7 +339,7 @@ func listen(laddr *net.UDPAddr) (l *lconn, err error) {
 // listenAll creates lconns on multiple addresses, with separate lconns for IPv4
 // and IPv6, so that socket options can be set correctly, which is not possible
 // with a dual stack conn.
-func listenAll(ipVer IPVersion, addrs []string) (lconns []*lconn, err error) {
+func listenAll(ipVer IPVersion, addrs []string, setSrcIP bool) (lconns []*lconn, err error) {
 	laddrs, err := resolveListenAddrs(addrs, ipVer)
 	if err != nil {
 		return
@@ -348,7 +347,7 @@ func listenAll(ipVer IPVersion, addrs []string) (lconns []*lconn, err error) {
 	lconns = make([]*lconn, 0, 16)
 	for _, laddr := range laddrs {
 		var l *lconn
-		l, err = listen(laddr)
+		l, err = listen(laddr, setSrcIP)
 		if err != nil {
 			return
 		}
@@ -363,12 +362,16 @@ func listenAll(ipVer IPVersion, addrs []string) (lconns []*lconn, err error) {
 
 func (l *lconn) sendTo(pkt *packet, addr *net.UDPAddr, srcIP net.IP) (err error) {
 	var n int
-	if setSourceAddress && l.ip4conn != nil {
-		l.cm4.Src = srcIP
-		n, err = l.ip4conn.WriteTo(pkt.bytes(), &l.cm4, addr)
-	} else if setSourceAddress && l.ip6conn != nil {
-		l.cm6.Src = srcIP
-		n, err = l.ip6conn.WriteTo(pkt.bytes(), &l.cm6, addr)
+	if l.setSrcIP {
+		if l.ip4conn != nil {
+			l.cm4.Src = srcIP
+			n, err = l.ip4conn.WriteTo(pkt.bytes(), &l.cm4, addr)
+		} else if l.ip6conn != nil {
+			l.cm6.Src = srcIP
+			n, err = l.ip6conn.WriteTo(pkt.bytes(), &l.cm6, addr)
+		} else {
+			n, err = l.conn.WriteToUDP(pkt.bytes(), addr)
+		}
 	} else {
 		n, err = l.conn.WriteToUDP(pkt.bytes(), addr)
 	}
@@ -384,25 +387,29 @@ func (l *lconn) sendTo(pkt *packet, addr *net.UDPAddr, srcIP net.IP) (err error)
 func (l *lconn) receiveFrom(pkt *packet) (tafter time.Time, dstIP net.IP,
 	raddr *net.UDPAddr, err error) {
 	var n int
-	if setSourceAddress && l.ip4conn != nil {
-		var cm *ipv4.ControlMessage
-		var src net.Addr
-		n, cm, src, err = l.ip4conn.ReadFrom(pkt.readTo())
-		if src != nil {
-			raddr = src.(*net.UDPAddr)
-		}
-		if cm != nil {
-			dstIP = cm.Dst
-		}
-	} else if setSourceAddress && l.ip6conn != nil {
-		var cm *ipv6.ControlMessage
-		var src net.Addr
-		n, cm, src, err = l.ip6conn.ReadFrom(pkt.readTo())
-		if src != nil {
-			raddr = src.(*net.UDPAddr)
-		}
-		if cm != nil {
-			dstIP = cm.Dst
+	if l.setSrcIP {
+		if l.ip4conn != nil {
+			var cm *ipv4.ControlMessage
+			var src net.Addr
+			n, cm, src, err = l.ip4conn.ReadFrom(pkt.readTo())
+			if src != nil {
+				raddr = src.(*net.UDPAddr)
+			}
+			if cm != nil {
+				dstIP = cm.Dst
+			}
+		} else if l.ip6conn != nil {
+			var cm *ipv6.ControlMessage
+			var src net.Addr
+			n, cm, src, err = l.ip6conn.ReadFrom(pkt.readTo())
+			if src != nil {
+				raddr = src.(*net.UDPAddr)
+			}
+			if cm != nil {
+				dstIP = cm.Dst
+			}
+		} else {
+			n, raddr, err = l.conn.ReadFromUDP(pkt.readTo())
 		}
 	} else {
 		n, raddr, err = l.conn.ReadFromUDP(pkt.readTo())
