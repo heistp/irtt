@@ -1031,7 +1031,6 @@ _Concrete tasks that just need doing..._
 	- Limit open requests to prevent the equivalent of a "syn flood"
 	- Add per-IP limiting
   - Improve server close by repeating close packets up to four times
-- Refactor events to allow for more than 64 total event types
 - Use pflag options or something GNU compatible: https://github.com/spf13/pflag
 - Write a SmokePing probe (for FreeNet)
 
@@ -1063,6 +1062,7 @@ _Planned for the future..._
 _Collection area for undefined or uncertain stuff..._
 
 - Map error codes to exit codes
+- Refactor events to allow for more than 64 total event types
 - Prototype TCP throughput test and compare straight Go vs iperf/netperf
 - Add a subcommand to the CLI to convert JSON to CSV
 - Support a range of server ports to improve concurrency and maybe defeat

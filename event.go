@@ -13,6 +13,7 @@ type EventCode uint64
 // Event codes.
 const (
 	MultipleAddresses EventCode = 1 << iota
+	ServerStart
 	ListenerStart
 	ListenerStop
 	ListenerError
