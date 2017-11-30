@@ -12,7 +12,7 @@ const expirationTime = 1 * time.Minute
 
 // number of conns to check to remove on each add (two seems to be the least
 // aggresive number where the map size still levels off over time)
-const checkExpiredCount = 2
+const checkExpiredCount = 5
 
 // allocate space for this number of concurrent conns, initially
 const connmgrInitSize = 128
