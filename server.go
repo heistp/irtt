@@ -182,23 +182,10 @@ type listener struct {
 }
 
 func newListener(s *Server, lc *lconn, cmgr *connmgr) *listener {
-	/*
-		// this was the old logic for packet max length calculation- necessary?
-		var cap int
-		if l.MaxLength == 0 {
-			cap, _ = detectMTU(l.conn.localAddr().IP)
-		} else if l.MaxLength < maxHeaderLen {
-			// this could actually be down to the minimum test packet size, but is
-			// not worth that effort now
-			cap = maxHeaderLen
-		} else {
-			cap = l.MaxLength
-		}
-		p := newPacket(0, cap, l.HMACKey)
-	*/
+	cap, _ := detectMTU(lc.localAddr().IP)
 
 	pp := newPacketPool(func() *packet {
-		return newPacket(0, s.MaxLength, s.HMACKey)
+		return newPacket(0, cap, s.HMACKey)
 	}, 16)
 
 	return &listener{
