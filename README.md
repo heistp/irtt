@@ -1017,6 +1017,8 @@ _Concrete tasks that just need doing..._
 
 - Add `-concurrent` flag to server for one goroutine per client conn
 - Add a `-gc` flag to server: `off`, `on` and `idle`
+- Check or replace session cleanup mechanism
+- Add a session timeout and max interval so client doesn't send to a closed conn
 - Run heap profiler on client
 - Check that listeners exit only due to permanent errors, and exit code is set
 - Add ability for client to request random fill from server

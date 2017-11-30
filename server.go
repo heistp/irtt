@@ -273,14 +273,14 @@ func (l *listener) readAndReply() (err error) {
 	for {
 		p := l.pktPool.get()
 		var fatal bool
-		fatal, err = l.readSingleAndReply(p)
+		fatal, err = l.readOneAndReply(p)
 		if fatal {
 			return
 		}
 	}
 }
 
-func (l *listener) readSingleAndReply(p *packet) (fatal bool, err error) {
+func (l *listener) readOneAndReply(p *packet) (fatal bool, err error) {
 	defer l.pktPool.put(p)
 
 	// read a packet
