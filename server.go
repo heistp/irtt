@@ -516,8 +516,8 @@ func (l *listener) shutdown() {
 
 type pktPool struct {
 	pool []*packet
-	mtx  sync.Mutex
-	new  func() *packet
+	//mtx  sync.Mutex
+	new func() *packet
 }
 
 func newPacketPool(new func() *packet, cap int) *pktPool {
@@ -529,8 +529,8 @@ func newPacketPool(new func() *packet, cap int) *pktPool {
 }
 
 func (po *pktPool) get() *packet {
-	po.mtx.Lock()
-	defer po.mtx.Unlock()
+	//po.mtx.Lock()
+	//defer po.mtx.Unlock()
 	l := len(po.pool)
 	if l == 0 {
 		return po.new()
@@ -541,7 +541,7 @@ func (po *pktPool) get() *packet {
 }
 
 func (po *pktPool) put(p *packet) {
-	po.mtx.Lock()
-	defer po.mtx.Unlock()
+	//po.mtx.Lock()
+	//defer po.mtx.Unlock()
 	po.pool = append(po.pool, p)
 }
