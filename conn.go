@@ -12,6 +12,9 @@ import (
 	"golang.org/x/net/ipv6"
 )
 
+// minOpenTimeout sets the minimum time open() will wait before sending the
+// next packet. This prevents clients from requesting a timeout that sends
+// packets to the server too quickly.
 const minOpenTimeout = 200 * time.Millisecond
 
 // nconn (network conn) is the embedded struct in conn and lconn connections. It
@@ -317,7 +320,6 @@ func (c *cconn) close() (err error) {
 // lconn is used for server listeners
 type lconn struct {
 	*nconn
-	//pkt *packet
 	cm4      ipv4.ControlMessage
 	cm6      ipv6.ControlMessage
 	setSrcIP bool
@@ -384,7 +386,7 @@ func (l *lconn) sendTo(pkt *packet, addr *net.UDPAddr, srcIP net.IP) (err error)
 	return
 }
 
-func (l *lconn) receiveFrom(pkt *packet) (tafter time.Time, dstIP net.IP,
+func (l *lconn) receiveFrom(pkt *packet) (trecv time.Time, dstIP net.IP,
 	raddr *net.UDPAddr, err error) {
 	var n int
 	if l.setSrcIP {
@@ -414,7 +416,7 @@ func (l *lconn) receiveFrom(pkt *packet) (tafter time.Time, dstIP net.IP,
 	} else {
 		n, raddr, err = l.conn.ReadFromUDP(pkt.readTo())
 	}
-	tafter = time.Now()
+	trecv = time.Now()
 	if err != nil {
 		return
 	}

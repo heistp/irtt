@@ -30,6 +30,7 @@ type Server struct {
 	Handler         Handler
 	EventMask       EventCode
 	SetSourceIP     bool
+	Concurrent      bool
 	ThreadLock      bool
 	hardMaxDuration time.Duration
 	start           time.Time
@@ -52,6 +53,7 @@ func NewServer() *Server {
 		IPVersion:   DefaultIPVersion,
 		EventMask:   AllEvents,
 		SetSourceIP: DefaultSetSrcIP,
+		Concurrent:  DefaultConcurrent,
 		ThreadLock:  DefaultThreadLock,
 		shutdownC:   make(chan struct{}),
 	}
@@ -89,20 +91,21 @@ func (s *Server) ListenAndServe() error {
 		go l.listenAndServe(errC)
 	}
 
+	// wait on shutdown chan
+	go func() {
+		<-s.shutdownC
+		for _, l := range listeners {
+			l.shutdown()
+		}
+	}()
+
 	// wait for all listeners, and out of an abundance of caution, shut down
 	// all other listeners if any one of them fails
 	for i := 0; i < len(listeners); {
-		select {
-		case err := <-errC:
-			if err != nil {
-				s.Shutdown()
-			}
-			i++
-		case <-s.shutdownC:
-			for _, l := range listeners {
-				l.shutdown()
-			}
+		if err := <-errC; err != nil {
+			s.Shutdown()
 		}
+		i++
 	}
 
 	return nil
@@ -174,7 +177,6 @@ type listener struct {
 	pktPool     *pktPool
 	cmgr        *connmgr
 	raddr       *net.UDPAddr
-	mtx         sync.Mutex
 	dscp        int
 	dscpSupport bool
 	closed      bool
@@ -239,37 +241,41 @@ func (l *listener) listenAndServe(errC chan<- error) (err error) {
 	}
 
 	// enable receipt of destination IP
-	if rdsterr := l.conn.setReceiveDstAddr(true); rdsterr != nil {
-		l.eventf(NoReceiveDstAddrSupport,
-			"no support for determining packet destination address (%s)", rdsterr)
-		if l.conn.localAddr().IP.IsUnspecified() {
+	if l.SetSourceIP && l.conn.localAddr().IP.IsUnspecified() {
+		if rdsterr := l.conn.setReceiveDstAddr(true); rdsterr != nil {
+			l.eventf(NoReceiveDstAddrSupport,
+				"no support for determining packet destination address (%s)", rdsterr)
 			if err := l.warnOnMultipleAddresses(); err != nil {
 				return err
 			}
 		}
 	}
 
-	err = l.readAndReply()
+	if l.Concurrent {
+		err = l.readAndReplyConcurrent()
+	} else {
+		err = l.readAndReply()
+	}
 	if l.isClosed() {
 		err = nil
 	}
 	return
 }
 
-func (l *listener) readAndReply() (err error) {
+func (l *listener) readAndReplyConcurrent() (err error) {
+	panic("not implemented")
+}
+
+func (l *listener) readAndReply() error {
+	p := l.pktPool.new()
 	for {
-		p := l.pktPool.get()
-		var fatal bool
-		fatal, err = l.readOneAndReply(p)
-		if fatal {
-			return
+		if fatal, err := l.readOneAndReply(p); fatal {
+			return err
 		}
 	}
 }
 
 func (l *listener) readOneAndReply(p *packet) (fatal bool, err error) {
-	defer l.pktPool.put(p)
-
 	// read a packet
 	var trecv time.Time
 	var dstIP net.IP
@@ -503,8 +509,8 @@ func (l *listener) shutdown() {
 
 type pktPool struct {
 	pool []*packet
-	//mtx  sync.Mutex
-	new func() *packet
+	mtx  sync.Mutex
+	new  func() *packet
 }
 
 func newPacketPool(new func() *packet, cap int) *pktPool {
@@ -516,8 +522,8 @@ func newPacketPool(new func() *packet, cap int) *pktPool {
 }
 
 func (po *pktPool) get() *packet {
-	//po.mtx.Lock()
-	//defer po.mtx.Unlock()
+	po.mtx.Lock()
+	defer po.mtx.Unlock()
 	l := len(po.pool)
 	if l == 0 {
 		return po.new()
@@ -528,7 +534,7 @@ func (po *pktPool) get() *packet {
 }
 
 func (po *pktPool) put(p *packet) {
-	//po.mtx.Lock()
-	//defer po.mtx.Unlock()
+	po.mtx.Lock()
+	defer po.mtx.Unlock()
 	po.pool = append(po.pool, p)
 }
