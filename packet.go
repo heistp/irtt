@@ -177,6 +177,9 @@ type packet struct {
 }
 
 func newPacket(tlen int, cap int, hmacKey []byte) *packet {
+	if cap < maxHeaderLen {
+		cap = maxHeaderLen
+	}
 	p := &packet{fbuf: newFbuf(newFields(), tlen, cap)}
 	if len(hmacKey) > 0 {
 		p.setFields(finitHMAC, true)

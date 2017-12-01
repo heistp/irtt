@@ -267,7 +267,7 @@ func (c *Client) send(ctx context.Context) error {
 
 	// include 0 timestamp in appropriate fields
 	seqno := Seqno(0)
-	p := c.conn.spkt
+	p := c.conn.newPacket()
 	p.addFields(fechoRequest, true)
 	p.zeroReceivedStats(c.ReceivedStats)
 	p.stampZeroes(c.StampAt, c.Clock)
@@ -299,7 +299,7 @@ func (c *Client) send(ctx context.Context) error {
 		var err error
 		var tsent time.Time
 		if clientDropsPercent == 0 || rand.Float32() > clientDropsPercent {
-			tsent, err = c.conn.send()
+			tsent, err = c.conn.send(p)
 		} else {
 			time.Sleep(20 * time.Microsecond)
 			tsent, err = time.Now(), nil
@@ -367,11 +367,11 @@ func (c *Client) receive() error {
 		runtime.LockOSThread()
 	}
 
-	p := c.conn.rpkt
+	p := c.conn.newPacket()
 
 	for {
 		// read a packet
-		trecv, err := c.conn.receive()
+		trecv, err := c.conn.receive(p)
 		if err != nil {
 			return err
 		}
@@ -388,9 +388,8 @@ func (c *Client) receive() error {
 
 		// return an error if reply packet was too small
 		if p.length() < c.Length {
-			return Errorf(ShortReply,
-				"sent %d byte request but received %d byte reply",
-				c.conn.spkt.length(), p.length())
+			return Errorf(ShortReply, "received short reply (%d bytes)",
+				p.length())
 		}
 
 		// add expected received stats fields
