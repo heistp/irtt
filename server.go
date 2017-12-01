@@ -4,6 +4,7 @@ import (
 	"math/rand"
 	"net"
 	"runtime"
+	"runtime/debug"
 	"sync"
 	"time"
 )
@@ -31,9 +32,12 @@ type Server struct {
 	EventMask       EventCode
 	SetSourceIP     bool
 	Concurrent      bool
+	GCMode          GCMode
 	ThreadLock      bool
 	hardMaxDuration time.Duration
 	start           time.Time
+	connRefs        int
+	connRefMtx      sync.Mutex
 	shutdown        bool
 	shutdownMtx     sync.Mutex
 	shutdownC       chan struct{}
@@ -54,6 +58,7 @@ func NewServer() *Server {
 		EventMask:   AllEvents,
 		SetSourceIP: DefaultSetSrcIP,
 		Concurrent:  DefaultConcurrent,
+		GCMode:      DefaultGCMode,
 		ThreadLock:  DefaultThreadLock,
 		shutdownC:   make(chan struct{}),
 	}
@@ -91,6 +96,11 @@ func (s *Server) ListenAndServe() error {
 		go l.listenAndServe(errC)
 	}
 
+	// disable GC, if requested
+	if s.GCMode == GCOff {
+		debug.SetGCPercent(-1)
+	}
+
 	// wait on shutdown chan
 	go func() {
 		<-s.shutdownC
@@ -101,11 +111,10 @@ func (s *Server) ListenAndServe() error {
 
 	// wait for all listeners, and out of an abundance of caution, shut down
 	// all other listeners if any one of them fails
-	for i := 0; i < len(listeners); {
+	for i := 0; i < len(listeners); i++ {
 		if err := <-errC; err != nil {
 			s.Shutdown()
 		}
-		i++
 	}
 
 	return nil
@@ -159,9 +168,31 @@ func (s *Server) makeListeners() ([]*listener, error) {
 	}
 	ls := make([]*listener, 0, len(lconns))
 	for _, lconn := range lconns {
-		ls = append(ls, newListener(s, lconn, newConnMgr(s.PacketBurst, s.MinInterval)))
+		ls = append(ls, newListener(s, lconn))
 	}
 	return ls, nil
+}
+
+func (s *Server) connRef(b bool) {
+	s.connRefMtx.Lock()
+	defer s.connRefMtx.Unlock()
+	if b {
+		s.connRefs++
+		if s.connRefs == 1 {
+			runtime.GC()
+			if s.GCMode == GCIdle {
+				debug.SetGCPercent(-1)
+			}
+		}
+	} else {
+		s.connRefs--
+		if s.connRefs == 0 {
+			if s.GCMode == GCIdle {
+				debug.SetGCPercent(100)
+			}
+			runtime.GC()
+		}
+	}
 }
 
 func (s *Server) eventf(code EventCode, format string, args ...interface{}) {
@@ -182,7 +213,7 @@ type listener struct {
 	closedMtx   sync.Mutex
 }
 
-func newListener(s *Server, lc *lconn, cmgr *connmgr) *listener {
+func newListener(s *Server, lc *lconn) *listener {
 	cap, _ := detectMTU(lc.localAddr().IP)
 
 	pp := newPacketPool(func() *packet {
@@ -193,7 +224,7 @@ func newListener(s *Server, lc *lconn, cmgr *connmgr) *listener {
 		Server:  s,
 		conn:    lc,
 		pktPool: pp,
-		cmgr:    newConnMgr(s.PacketBurst, s.MinInterval),
+		cmgr:    newConnMgr(s.connRef, s.PacketBurst, s.MinInterval),
 	}
 }
 
