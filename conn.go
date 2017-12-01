@@ -179,8 +179,7 @@ func (c *cconn) open(ctx context.Context) (err error) {
 		orp := newPacket(0, maxHeaderLen, c.cfg.HMACKey)
 
 		for {
-			_, rerr = c.receive(orp)
-			if rerr != nil {
+			if rerr = c.receive(orp); rerr != nil {
 				return
 			}
 			if orp.flags()&flOpen == 0 {
@@ -223,7 +222,7 @@ func (c *cconn) open(ctx context.Context) (err error) {
 	sp.updateHMAC()
 	var received bool
 	for _, to := range c.cfg.OpenTimeouts {
-		_, err = c.send(sp)
+		err = c.send(sp)
 		if err != nil {
 			return
 		}
@@ -244,10 +243,11 @@ func (c *cconn) open(ctx context.Context) (err error) {
 	return
 }
 
-func (c *cconn) send(p *packet) (tafter time.Time, err error) {
+func (c *cconn) send(p *packet) (err error) {
 	var n int
 	n, err = c.conn.Write(p.bytes())
-	tafter = time.Now()
+	p.tsent = time.Now()
+	p.trcvd = time.Time{}
 	if err != nil {
 		return
 	}
@@ -257,10 +257,11 @@ func (c *cconn) send(p *packet) (tafter time.Time, err error) {
 	return
 }
 
-func (c *cconn) receive(p *packet) (tafter time.Time, err error) {
+func (c *cconn) receive(p *packet) (err error) {
 	var n int
 	n, err = c.conn.Read(p.readTo())
-	tafter = time.Now()
+	p.trcvd = time.Now()
+	p.tsent = time.Time{}
 	if err != nil {
 		return
 	}
@@ -282,6 +283,7 @@ func (c *cconn) receive(p *packet) (tafter time.Time, err error) {
 func (c *cconn) newPacket() *packet {
 	p := newPacket(0, c.cfg.Length, c.cfg.HMACKey)
 	p.setConnToken(c.ctoken)
+	p.raddr = c.conn.RemoteAddr().(*net.UDPAddr)
 	return p
 }
 
@@ -310,7 +312,7 @@ func (c *cconn) close() (err error) {
 		cp.setFlagBits(flClose)
 		cp.setConnToken(c.ctoken)
 		cp.updateHMAC()
-		_, err = c.send(cp)
+		err = c.send(cp)
 	}
 	return
 }
@@ -360,68 +362,68 @@ func listenAll(ipVer IPVersion, addrs []string, setSrcIP bool) (lconns []*lconn,
 	return
 }
 
-func (l *lconn) sendTo(pkt *packet, addr *net.UDPAddr, srcIP net.IP) (err error) {
+func (l *lconn) send(p *packet) (err error) {
 	var n int
-	if l.setSrcIP {
-		if l.ip4conn != nil {
-			l.cm4.Src = srcIP
-			n, err = l.ip4conn.WriteTo(pkt.bytes(), &l.cm4, addr)
-		} else if l.ip6conn != nil {
-			l.cm6.Src = srcIP
-			n, err = l.ip6conn.WriteTo(pkt.bytes(), &l.cm6, addr)
-		} else {
-			n, err = l.conn.WriteToUDP(pkt.bytes(), addr)
-		}
+	if !l.setSrcIP {
+		n, err = l.conn.WriteToUDP(p.bytes(), p.raddr)
+	} else if l.ip4conn != nil {
+		l.cm4.Src = p.srcIP
+		n, err = l.ip4conn.WriteTo(p.bytes(), &l.cm4, p.raddr)
 	} else {
-		n, err = l.conn.WriteToUDP(pkt.bytes(), addr)
+		l.cm6.Src = p.srcIP
+		n, err = l.ip6conn.WriteTo(p.bytes(), &l.cm6, p.raddr)
 	}
+	p.tsent = time.Now()
+	p.trcvd = time.Time{}
 	if err != nil {
 		return
 	}
-	if n < pkt.length() {
-		err = Errorf(ShortWrite, "only %d/%d bytes were sent", n, pkt.length())
+	if n < p.length() {
+		err = Errorf(ShortWrite, "only %d/%d bytes were sent", n, p.length())
 	}
 	return
 }
 
-func (l *lconn) receiveFrom(pkt *packet) (trecv time.Time, dstIP net.IP,
-	raddr *net.UDPAddr, err error) {
+func (l *lconn) receive(p *packet) (err error) {
 	var n int
-	if l.setSrcIP {
-		if l.ip4conn != nil {
-			var cm *ipv4.ControlMessage
-			var src net.Addr
-			n, cm, src, err = l.ip4conn.ReadFrom(pkt.readTo())
-			if src != nil {
-				raddr = src.(*net.UDPAddr)
-			}
-			if cm != nil {
-				dstIP = cm.Dst
-			}
-		} else if l.ip6conn != nil {
-			var cm *ipv6.ControlMessage
-			var src net.Addr
-			n, cm, src, err = l.ip6conn.ReadFrom(pkt.readTo())
-			if src != nil {
-				raddr = src.(*net.UDPAddr)
-			}
-			if cm != nil {
-				dstIP = cm.Dst
-			}
+	if !l.setSrcIP {
+		n, p.raddr, err = l.conn.ReadFromUDP(p.readTo())
+		p.dstIP = nil
+	} else if l.ip4conn != nil {
+		var cm *ipv4.ControlMessage
+		var src net.Addr
+		n, cm, src, err = l.ip4conn.ReadFrom(p.readTo())
+		if src != nil {
+			p.raddr = src.(*net.UDPAddr)
+		}
+		if cm != nil {
+			p.dstIP = cm.Dst
 		} else {
-			n, raddr, err = l.conn.ReadFromUDP(pkt.readTo())
+			p.dstIP = nil
 		}
 	} else {
-		n, raddr, err = l.conn.ReadFromUDP(pkt.readTo())
+		var cm *ipv6.ControlMessage
+		var src net.Addr
+		n, cm, src, err = l.ip6conn.ReadFrom(p.readTo())
+		if src != nil {
+			p.raddr = src.(*net.UDPAddr)
+		}
+		if cm != nil {
+			p.dstIP = cm.Dst
+		} else {
+			p.dstIP = nil
+		}
 	}
-	trecv = time.Now()
+	p.srcIP = nil
+	p.trcvd = time.Now()
+	p.tsent = time.Time{}
 	if err != nil {
 		return
 	}
-	if err = pkt.readReset(n); err != nil {
+	if err = p.readReset(n); err != nil {
 		return
 	}
-	if pkt.reply() {
+	if p.reply() {
 		err = Errorf(UnexpectedReplyFlag, "unexpected reply flag set")
 		return
 	}

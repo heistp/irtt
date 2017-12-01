@@ -56,20 +56,23 @@ const AllEvents = EventCode(^uint64(0))
 // Event is an event sent to a Handler.
 type Event struct {
 	EventCode  EventCode
-	LocalAddr  net.Addr
-	RemoteAddr net.Addr
+	LocalAddr  *net.UDPAddr
+	RemoteAddr *net.UDPAddr
 	format     string
 	Detail     []interface{}
 }
 
 // Eventf returns a new event.
-func Eventf(code EventCode, laddr net.Addr, raddr net.Addr, format string,
+func Eventf(code EventCode, laddr *net.UDPAddr, raddr *net.UDPAddr, format string,
 	args ...interface{}) *Event {
 	return &Event{code, laddr, raddr, format, args}
 }
 
 func (e *Event) String() string {
 	msg := fmt.Sprintf(e.format, e.Detail...)
+	if e.RemoteAddr != nil {
+		return fmt.Sprintf("[%s] [%s] %s", e.EventCode.String(), e.RemoteAddr, msg)
+	}
 	return fmt.Sprintf("[%s] %s", e.EventCode.String(), msg)
 }
 
