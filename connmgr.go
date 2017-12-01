@@ -67,7 +67,7 @@ func (cm *connmgr) newConn(raddr *net.UDPAddr, p *Params, temporary bool) *sconn
 	return sc
 }
 
-func (cm *connmgr) conn(p *packet, raddr *net.UDPAddr) (sconn *sconn,
+func (cm *connmgr) conn(p *packet) (sconn *sconn,
 	exists bool, addrOk bool, intervalOk bool) {
 	ct := p.ctoken()
 	sc := cm.conns[ct]
@@ -79,7 +79,7 @@ func (cm *connmgr) conn(p *packet, raddr *net.UDPAddr) (sconn *sconn,
 		delete(cm.conns, ct)
 		return
 	}
-	if !udpAddrsEqual(raddr, &sc.raddr) {
+	if !udpAddrsEqual(p.raddr, &sc.raddr) {
 		return
 	}
 	addrOk = true

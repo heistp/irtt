@@ -85,7 +85,7 @@ func (s *Server) ListenAndServe() error {
 	errC := make(chan error)
 	for _, l := range listeners {
 		// send ListenerStart event
-		l.eventf(ListenerStart, "starting %s listener on %s", l.conn.ipVer,
+		l.eventf(ListenerStart, nil, "starting %s listener on %s", l.conn.ipVer,
 			l.conn.localAddr())
 
 		go l.listenAndServe(errC)
@@ -176,7 +176,6 @@ type listener struct {
 	conn        *lconn
 	pktPool     *pktPool
 	cmgr        *connmgr
-	raddr       *net.UDPAddr
 	dscp        int
 	dscpSupport bool
 	closed      bool
@@ -212,9 +211,9 @@ func (l *listener) listenAndServe(errC chan<- error) (err error) {
 	// always log error or stoppage
 	defer func() {
 		if err != nil {
-			l.eventf(ListenerError, "listener shut down due to error (%s)", err)
+			l.eventf(ListenerError, nil, "listener shut down due to error (%s)", err)
 		} else {
-			l.eventf(ListenerStop, "listener stopped")
+			l.eventf(ListenerStop, nil, "listener stopped")
 		}
 	}()
 
@@ -235,7 +234,7 @@ func (l *listener) listenAndServe(errC chan<- error) (err error) {
 	de1 := l.conn.setDSCP(1)
 	de0 := l.conn.setDSCP(0)
 	if de1 != nil || de0 != nil {
-		l.eventf(NoDSCPSupport, "no DSCP support available (%s)", de1.Error())
+		l.eventf(NoDSCPSupport, nil, "no DSCP support available (%s)", de1.Error())
 	} else {
 		l.dscpSupport = true
 	}
@@ -243,7 +242,7 @@ func (l *listener) listenAndServe(errC chan<- error) (err error) {
 	// enable receipt of destination IP
 	if l.SetSourceIP && l.conn.localAddr().IP.IsUnspecified() {
 		if rdsterr := l.conn.setReceiveDstAddr(true); rdsterr != nil {
-			l.eventf(NoReceiveDstAddrSupport,
+			l.eventf(NoReceiveDstAddrSupport, nil,
 				"no support for determining packet destination address (%s)", rdsterr)
 			if err := l.warnOnMultipleAddresses(); err != nil {
 				return err
@@ -277,16 +276,19 @@ func (l *listener) readAndReply() error {
 
 func (l *listener) readOneAndReply(p *packet) (fatal bool, err error) {
 	// read a packet
-	var trecv time.Time
-	var dstIP net.IP
-	trecv, dstIP, l.raddr, err = l.conn.receiveFrom(p)
+	err = l.conn.receive(p)
 	if err != nil {
 		if e, ok := err.(*Error); ok {
-			l.eventf(dropCode(e.Code), "[%s] %s", l.raddr, err.Error())
+			l.eventf(dropCode(e.Code), p.raddr, "%s", err.Error())
 		} else {
 			fatal = true
 		}
 		return
+	}
+
+	// set source IP from received destination, if necessary
+	if l.SetSourceIP {
+		p.srcIP = p.dstIP
 	}
 
 	// handle open
@@ -294,24 +296,23 @@ func (l *listener) readOneAndReply(p *packet) (fatal bool, err error) {
 		var params *Params
 		params, err = parseParams(p.payload())
 		if err != nil {
-			l.eventf(DropUnparseableParams,
-				"[%s] unparseable negotiation parameters: %s",
-				l.raddr, err.Error())
+			l.eventf(DropUnparseableParams, p.raddr,
+				"unparseable negotiation parameters: %s", err.Error())
 			return
 		}
 		l.restrictParams(p, params)
-		sc := l.cmgr.newConn(l.raddr, params, p.flags()&flClose != 0)
+		sc := l.cmgr.newConn(p.raddr, params, p.flags()&flClose != 0)
 		if p.flags()&flClose == 0 {
-			l.eventf(NewConn, "[%s] new connection, token=%016x",
-				l.raddr, sc.ctoken)
+			l.eventf(NewConn, p.raddr, "new connection, token=%016x",
+				sc.ctoken)
 			p.setConnToken(sc.ctoken)
 		} else {
-			l.eventf(OpenClose, "[%s] open-close", l.raddr)
+			l.eventf(OpenClose, p.raddr, "open-close")
 			p.setConnToken(0)
 		}
 		p.setReply(true)
 		p.setPayload(params.bytes())
-		if err = l.sendPacket(p, trecv, dstIP, sc, false); err != nil {
+		if err = l.sendPacket(p, sc, false); err != nil {
 			fatal = true
 		}
 		return
@@ -324,18 +325,18 @@ func (l *listener) readOneAndReply(p *packet) (fatal bool, err error) {
 		}
 		sc := l.cmgr.remove(p.ctoken())
 		if sc == nil {
-			l.eventf(DropInvalidConnToken, "[%s] close for invalid conn token %016x",
-				l.raddr, p.ctoken())
+			l.eventf(DropInvalidConnToken, p.raddr,
+				"close for invalid conn token %016x", p.ctoken())
 			return
 		}
 		// check remote address
-		if !udpAddrsEqual(l.raddr, &sc.raddr) {
-			l.eventf(DropAddressMismatch,
-				"[%s] drop close due to address mismatch (expected %s for %016x)",
-				l.raddr, &sc.raddr, p.ctoken())
+		if !udpAddrsEqual(p.raddr, &sc.raddr) {
+			l.eventf(DropAddressMismatch, p.raddr,
+				"drop close due to address mismatch (expected %s for %016x)",
+				&sc.raddr, p.ctoken())
 			return
 		}
-		l.eventf(CloseConn, "[%s] close connection, token=%016x", l.raddr, sc.ctoken)
+		l.eventf(CloseConn, p.raddr, "close connection, token=%016x", sc.ctoken)
 		return
 	}
 
@@ -345,21 +346,21 @@ func (l *listener) readOneAndReply(p *packet) (fatal bool, err error) {
 	}
 
 	// check conn, token and address
-	sc, exists, addrOk, intervalOk := l.cmgr.conn(p, l.raddr)
+	sc, exists, addrOk, intervalOk := l.cmgr.conn(p)
 	if !exists {
-		l.eventf(DropInvalidConnToken, "[%s] request for invalid conn token %016x",
-			l.raddr, p.ctoken())
+		l.eventf(DropInvalidConnToken, p.raddr,
+			"request for invalid conn token %016x", p.ctoken())
 		return
 	}
 	if !addrOk {
-		l.eventf(DropAddressMismatch,
-			"[%s] drop request due to address mismatch (expected %s for %016x)", l.raddr,
+		l.eventf(DropAddressMismatch, p.raddr,
+			"drop request due to address mismatch (expected %s for %016x)",
 			&sc.raddr, p.ctoken())
 		return
 	}
 	if !intervalOk {
-		l.eventf(DropShortInterval,
-			"[%s] drop request due to short interval", l.raddr)
+		l.eventf(DropShortInterval, p.raddr,
+			"drop request due to short interval")
 		return
 	}
 
@@ -368,8 +369,8 @@ func (l *listener) readOneAndReply(p *packet) (fatal bool, err error) {
 
 	// check if max test duration exceeded (but still return packet)
 	if l.hardMaxDuration > 0 && time.Since(sc.firstUsed) > l.hardMaxDuration {
-		l.eventf(DurationLimitExceeded,
-			"[%s] closing connection due to duration limit exceeded", l.raddr)
+		l.eventf(DurationLimitExceeded, p.raddr,
+			"closing connection due to duration limit exceeded")
 		l.cmgr.remove(p.ctoken())
 		p.setFlagBits(flClose)
 	}
@@ -384,7 +385,7 @@ func (l *listener) readOneAndReply(p *packet) (fatal bool, err error) {
 	}
 
 	// send response
-	if err = l.sendPacket(p, trecv, dstIP, sc, true); err != nil {
+	if err = l.sendPacket(p, sc, true); err != nil {
 		fatal = true
 	}
 
@@ -392,8 +393,7 @@ func (l *listener) readOneAndReply(p *packet) (fatal bool, err error) {
 }
 
 // sendPacket sends a packet, locking and setting socket options as necessary.
-func (l *listener) sendPacket(p *packet, trecv time.Time, srcIP net.IP,
-	sc *sconn, testPacket bool) (err error) {
+func (l *listener) sendPacket(p *packet, sc *sconn, testPacket bool) (err error) {
 	// set socket options
 	if l.dscpSupport {
 		l.conn.setDSCP(sc.params.DSCP)
@@ -418,12 +418,12 @@ func (l *listener) sendPacket(p *packet, trecv time.Time, srcIP net.IP,
 			var rt Time
 			var st Time
 			if at == AtMidpoint {
-				mt := midpoint(trecv, time.Now())
+				mt := midpoint(p.trcvd, time.Now())
 				rt = newTime(mt, cl)
 				st = newTime(mt, cl)
 			} else {
 				if at&AtReceive != 0 {
-					rt = newTime(trecv, cl)
+					rt = newTime(p.trcvd, cl)
 				}
 				if at&AtSend != 0 {
 					st = newTime(time.Now(), cl)
@@ -446,14 +446,14 @@ func (l *listener) sendPacket(p *packet, trecv time.Time, srcIP net.IP,
 	// simulate duplicates, if necessary
 	if serverDupsPercent > 0 {
 		for rand.Float32() < serverDupsPercent {
-			err = l.conn.sendTo(p, l.raddr, srcIP)
+			err = l.conn.send(p)
 			if err != nil {
 				return
 			}
 		}
 	}
 
-	err = l.conn.sendTo(p, l.raddr, srcIP)
+	err = l.conn.send(p)
 
 	return
 }
@@ -474,19 +474,20 @@ func (l *listener) restrictParams(pkt *packet, p *Params) {
 	}
 }
 
-func (l *listener) addFields(pkt *packet, fidxs []fidx) bool {
-	if err := pkt.addFields(fidxs, false); err != nil {
+func (l *listener) addFields(p *packet, fidxs []fidx) bool {
+	if err := p.addFields(fidxs, false); err != nil {
 		if e, ok := err.(*Error); ok {
-			l.eventf(dropCode(e.Code), err.Error())
+			l.eventf(dropCode(e.Code), p.raddr, err.Error())
 		}
 		return false
 	}
 	return true
 }
 
-func (l *listener) eventf(code EventCode, format string, args ...interface{}) {
+func (l *listener) eventf(code EventCode, raddr *net.UDPAddr, format string,
+	args ...interface{}) {
 	if l.Handler != nil && l.EventMask&code != 0 {
-		l.Handler.OnEvent(Eventf(code, l.conn.localAddr(), l.raddr, format, args...))
+		l.Handler.OnEvent(Eventf(code, l.conn.localAddr(), raddr, format, args...))
 	}
 }
 

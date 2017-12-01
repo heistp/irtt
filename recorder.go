@@ -110,7 +110,7 @@ func (r *Recorder) recordTimerErr(terr time.Duration) {
 	r.TimerErrorStats.push(AbsDuration(terr))
 }
 
-func (r *Recorder) recordReceive(p *packet, trecv time.Time, sts *Timestamp) bool {
+func (r *Recorder) recordReceive(p *packet, sts *Timestamp) bool {
 	r.mtx.Lock()
 	defer r.mtx.Unlock()
 
@@ -147,7 +147,7 @@ func (r *Recorder) recordReceive(p *packet, trecv time.Time, sts *Timestamp) boo
 	r.lastSeqno = seqno
 
 	// update client received times
-	rtd.Client.Receive.set(trecv)
+	rtd.Client.Receive.set(p.trcvd)
 
 	// update RTT and RTT stats
 	rtd.Server = *sts
@@ -163,9 +163,9 @@ func (r *Recorder) recordReceive(p *packet, trecv time.Time, sts *Timestamp) boo
 
 	// set received times
 	if r.FirstReceived.IsZero() {
-		r.FirstReceived = trecv
+		r.FirstReceived = p.trcvd
 	}
-	r.LastReceived = trecv
+	r.LastReceived = p.trcvd
 
 	// update server packets received
 	if p.hasReceivedCount() {

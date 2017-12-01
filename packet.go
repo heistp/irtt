@@ -7,6 +7,7 @@ import (
 	"hash"
 	"io"
 	"math"
+	"net"
 	"time"
 )
 
@@ -174,6 +175,11 @@ type packet struct {
 	*fbuf
 	md5Hash hash.Hash
 	hmacKey []byte
+	raddr   *net.UDPAddr
+	tsent   time.Time
+	trcvd   time.Time
+	srcIP   net.IP
+	dstIP   net.IP
 }
 
 func newPacket(tlen int, cap int, hmacKey []byte) *packet {
@@ -190,18 +196,6 @@ func newPacket(tlen int, cap int, hmacKey []byte) *packet {
 	}
 	p.set(fMagic, magic)
 	return p
-}
-
-func (p *packet) reset() error {
-	if p.md5Hash != nil {
-		p.setFields(finitHMAC, true)
-	} else {
-		p.setFields(finit, true)
-	}
-	flen, _ := p.sumFields()
-	p.buf = p.buf[:flen]
-	p.tlen = 0
-	return p.fbuf.validate()
 }
 
 func (p *packet) readReset(n int) error {

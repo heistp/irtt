@@ -65,7 +65,7 @@ func (c *Client) Run(ctx context.Context) (r *Result, err error) {
 	defer c.close()
 
 	// notify about connected
-	c.eventf(Connected, "connected to %s", c.remoteAddr())
+	c.eventf(Connected, "connection established")
 
 	// check parameter changes
 	var changed bool
@@ -297,12 +297,11 @@ func (c *Client) send(ctx context.Context) error {
 		// send to network and record times right before and after
 		tsend := c.rec.recordPreSend()
 		var err error
-		var tsent time.Time
 		if clientDropsPercent == 0 || rand.Float32() > clientDropsPercent {
-			tsent, err = c.conn.send(p)
+			err = c.conn.send(p)
 		} else {
+			// simulate drop with an average send time
 			time.Sleep(20 * time.Microsecond)
-			tsent, err = time.Now(), nil
 		}
 
 		// return on error
@@ -312,7 +311,7 @@ func (c *Client) send(ctx context.Context) error {
 		}
 
 		// record send call
-		c.rec.recordPostSend(tsend, tsent, uint64(p.length()))
+		c.rec.recordPostSend(tsend, p.tsent, uint64(p.length()))
 
 		// prepare next packet (before sleep, so the next send time is as
 		// precise as possible)
@@ -333,7 +332,7 @@ func (c *Client) send(ctx context.Context) error {
 		// if we're under half-way to the next interval, sleep until the next
 		// interval, but if we're over half-way, sleep until the interval after
 		// that
-		if tsent.Sub(c.rec.Start)%c.Interval < c.Interval/2 {
+		if p.tsent.Sub(c.rec.Start)%c.Interval < c.Interval/2 {
 			tnext = tnext.Add(c.Interval)
 		} else {
 			tnext = tnext.Add(2 * c.Interval)
@@ -371,7 +370,7 @@ func (c *Client) receive() error {
 
 	for {
 		// read a packet
-		trecv, err := c.conn.receive(p)
+		err := c.conn.receive(p)
 		if err != nil {
 			return err
 		}
@@ -414,7 +413,7 @@ func (c *Client) receive() error {
 		sts := p.timestamp()
 
 		// record receive if all went well (may fail if seqno not found)
-		ok := c.rec.recordReceive(p, trecv, &sts)
+		ok := c.rec.recordReceive(p, &sts)
 		if !ok {
 			return Errorf(UnexpectedSequenceNumber, "unexpected reply sequence number %d", p.seqno())
 		}

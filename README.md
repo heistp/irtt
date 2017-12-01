@@ -1015,9 +1015,7 @@ the client, and since start of the process for the server
 
 _Concrete tasks that just need doing..._
 
-- Server refactoring:
-  - Put tsent, trecvd, srcIP, dstIP and raddr into packet
-  - Move server communication into sconn
+- Move server communication into sconn
 - Add `-concurrent` flag to server for one goroutine per client conn
 - Add a `-gc` flag to server: `off`, `on` and `idle`
 - Check or replace session cleanup mechanism
@@ -1036,7 +1034,7 @@ _Concrete tasks that just need doing..._
 	- Add bitrate limiting
 	- Limit open requests to prevent the equivalent of a "syn flood"
 	- Add per-IP limiting
-  - Improve server close by repeating close packets up to four times
+  - Improve client close by repeating close packets up to four times
 - Use pflag options or something GNU compatible: https://github.com/spf13/pflag
 - Write a SmokePing probe (for FreeNet)
 
@@ -1060,7 +1058,7 @@ _Planned for the future..._
 	- none (no conn token in header, for minimum packet sizes during local use)
 	- token (what we have today, 64-bit token in header)
 	- nacl-hmac (hmac key negotiated with public/private key encryption)
-- Implement graceful server shutdown
+- Implement graceful server shutdown with sconn close
 - Implement zero-downtime restarts
 
 ### Inbox
