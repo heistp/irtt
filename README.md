@@ -1015,6 +1015,10 @@ the client, and since start of the process for the server
 
 _Concrete tasks that just need doing..._
 
+- Server refactoring:
+  - Externalize packet from cconn
+  - Put tsent, trecvd, srcIP, dstIP and raddr into packet
+  - Move server communication into sconn
 - Add `-concurrent` flag to server for one goroutine per client conn
 - Add a `-gc` flag to server: `off`, `on` and `idle`
 - Check or replace session cleanup mechanism

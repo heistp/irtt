@@ -40,7 +40,6 @@ type connmgr struct {
 	conns       map[ctoken]*sconn
 	packetBurst float64
 	minInterval time.Duration
-	//mtx         sync.Mutex
 }
 
 func newConnMgr(packetBurst int, minInterval time.Duration) *connmgr {
@@ -52,8 +51,6 @@ func newConnMgr(packetBurst int, minInterval time.Duration) *connmgr {
 }
 
 func (cm *connmgr) newConn(raddr *net.UDPAddr, p *Params, temporary bool) *sconn {
-	//cm.mtx.Lock()
-	//defer cm.mtx.Unlock()
 	cm.removeSomeExpired()
 	ct := cm.newCtoken()
 	sc := &sconn{
@@ -72,8 +69,6 @@ func (cm *connmgr) newConn(raddr *net.UDPAddr, p *Params, temporary bool) *sconn
 
 func (cm *connmgr) conn(p *packet, raddr *net.UDPAddr) (sconn *sconn,
 	exists bool, addrOk bool, intervalOk bool) {
-	//cm.mtx.Lock()
-	//defer cm.mtx.Unlock()
 	ct := p.ctoken()
 	sc := cm.conns[ct]
 	if sc == nil {
@@ -130,8 +125,6 @@ func (cm *connmgr) conn(p *packet, raddr *net.UDPAddr) (sconn *sconn,
 }
 
 func (cm *connmgr) remove(ct ctoken) (sc *sconn) {
-	//cm.mtx.Lock()
-	//defer cm.mtx.Unlock()
 	var ok bool
 	if sc, ok = cm.conns[ct]; ok {
 		delete(cm.conns, ct)
