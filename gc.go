@@ -9,12 +9,12 @@ type GCMode int
 
 // StampAt constants.
 const (
-	GCIdle GCMode = iota
-	GCOn
+	GCOn GCMode = iota
 	GCOff
+	GCIdle
 )
 
-var gcms = [...]string{"idle", "on", "off"}
+var gcms = [...]string{"on", "off", "idle"}
 
 func (gm GCMode) String() string {
 	if int(gm) < 0 || int(gm) >= len(gcms) {
