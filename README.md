@@ -24,23 +24,24 @@ submitting a new bug or feature request.
 ## Table of Contents
 
 1. [Introduction](#introduction)
-	1. [Motivation and Goals](#motivation-and-goals)
-	2. [Features](#features)
-	3. [Limitations](#limitations)
+    1. [Motivation and Goals](#motivation-and-goals)
+    2. [Features](#features)
+    3. [Limitations](#limitations)
+    4. [Known Issues](#known-issues)
 2. [Getting Started](#getting-started)
-	1. [Installation](#installation)
-	2. [Quick Start](#quick-start)
+    1. [Installation](#installation)
+    2. [Quick Start](#quick-start)
 3. [Running IRTT](#running-irtt)
-	1. [Client Options](#client-options)
-	2. [Server Options](#server-options)
-  3. [Running Server at Startup](#running-server-at-startup)
-	4. [Tests and Benchmarks](#tests-and-benchmarks)
+    1. [Client Options](#client-options)
+    2. [Server Options](#server-options)
+    3. [Running Server at Startup](#running-server-at-startup)
+    4. [Tests and Benchmarks](#tests-and-benchmarks)
 4. [Results](#results)
-	1. [Test Output](#test-output)
-	2. [JSON Format](#json-format)
+    1. [Test Output](#test-output)
+    2. [JSON Format](#json-format)
 5. [Internals](#internals)
-	1. [Packet Format](#packet-format)
-	2. [Security](#security)
+    1. [Packet Format](#packet-format)
+    2. [Security](#security)
 6. [Frequently Asked Questions](#frequently-asked-questions)
 7. [TODO and Roadmap](#todo-and-roadmap)
 8. [Thanks](#thanks)
@@ -84,7 +85,7 @@ general purpose tool as well. The goals of this project are to:
 	- [IPDV (instantaneous packet delay variation)](https://en.wikipedia.org/wiki/Packet_delay_variation), usually referred to as jitter
 	- [Packet loss](https://en.wikipedia.org/wiki/Packet_loss), with upstream and downstream differentiation
 	- [Out-of-order](https://en.wikipedia.org/wiki/Out-of-order_delivery)
-		(measured by late packets metric) and duplicate packets
+		(measured using late packets metric) and [duplicate](https://wiki.wireshark.org/DuplicatePackets) packets
 	- [Bitrate](https://en.wikipedia.org/wiki/Bit_rate)
 	- Timer error, send call time and server processing time
 - Statistics: min, max, mean, median (for most quantities) and standard deviation
@@ -223,6 +224,15 @@ But Go also has benefits that are useful for this application:
 - Memory footprint tends to be significantly lower than with some interpreted
 	languages
 - It's easy to support a broad array of hardware and OS combinations
+
+### Known Issues
+
+- Windows is unable to set DSCP values.
+- The server doesn't run well on 32-bit Windows platforms. When connecting with
+  a client, you may see `Terminated due to receive error...`. To work around
+  this, disable dual timestamps from the client by including `-ts midpoint`.
+  This appears to be a bug in either Go's 32-bit compiler or runtime for
+  Windows.
 
 ## Getting Started
 
@@ -1000,15 +1010,6 @@ the client, and since start of the process for the server
     [unsafe](https://golang.org/pkg/unsafe/) package, but so far this
     optimization has not been shown to be necessary.
 
-14) Why when I run `irtt server` on 32-bit Windows then try to connect with a
-    client do I see the error: `Terminated due to receive error: sent 60 byte
-    request but received 44 byte reply`
-
-    Don't run irtt on 32-bit Windows. :) Alternatively, to work around this,
-    disable dual timestamps from the client by including `-ts midpoint`. This
-    appears to be a bug in either Go's 32-bit compiler or runtime for Windows.
-    I doubt anyone is in a hurry to fix it.
-
 ## TODO and Roadmap
 
 ### TODO
@@ -1017,10 +1018,8 @@ _Concrete tasks that just need doing..._
 
 - Move server communication into sconn
 - Add `-concurrent` flag to server for one goroutine per client conn
-- Add a `-gc` flag to server: `off`, `on` and `idle`
 - Check or replace session cleanup mechanism
 - Add a session timeout and max interval so client doesn't send to a closed conn
-- Review logic for "enable receipt of destination IP"
 - Run heap profiler on client
 - Check that listeners exit only due to permanent errors, and exit code is set
 - Add ability for client to request random fill from server

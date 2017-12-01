@@ -38,13 +38,15 @@ func (sc *sconn) expired() bool {
 
 type connmgr struct {
 	conns       map[ctoken]*sconn
+	ref         func(bool)
 	packetBurst float64
 	minInterval time.Duration
 }
 
-func newConnMgr(packetBurst int, minInterval time.Duration) *connmgr {
+func newConnMgr(ref func(bool), packetBurst int, minInterval time.Duration) *connmgr {
 	return &connmgr{
 		conns:       make(map[ctoken]*sconn, connmgrInitSize),
+		ref:         ref,
 		packetBurst: float64(packetBurst),
 		minInterval: minInterval,
 	}
@@ -62,6 +64,7 @@ func (cm *connmgr) newConn(raddr *net.UDPAddr, p *Params, temporary bool) *sconn
 		packetBucket: float64(cm.packetBurst),
 	}
 	if !temporary {
+		cm.ref(true)
 		cm.conns[ct] = sc
 	}
 	return sc
@@ -128,6 +131,7 @@ func (cm *connmgr) remove(ct ctoken) (sc *sconn) {
 	var ok bool
 	if sc, ok = cm.conns[ct]; ok {
 		delete(cm.conns, ct)
+		cm.ref(false)
 	}
 	return
 }

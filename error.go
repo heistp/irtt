@@ -67,6 +67,7 @@ const (
 	NoMatchingInterfaces
 	NoMatchingInterfacesUp
 	UnspecifiedWithSpecifiedAddresses
+	InvalidGCModeString
 )
 
 // Error is an IRTT error.
