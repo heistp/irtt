@@ -110,8 +110,7 @@ func (n *nconn) close() error {
 // cconn is used for client connections
 type cconn struct {
 	*nconn
-	spkt   *packet
-	rpkt   *packet
+	cfg    *Config
 	ctoken ctoken
 }
 
@@ -146,28 +145,20 @@ func dial(ctx context.Context, cfg *Config) (*cconn, error) {
 	cfg.RemoteAddress = cfg.RemoteAddr.String()
 
 	// create cconn
-	c := &cconn{nconn: &nconn{}}
+	c := &cconn{nconn: &nconn{}, cfg: cfg}
 	c.init(conn, cfg.IPVersion)
 
-	// create send and receive packets
-	cap := cfg.Length
-	if cap < maxHeaderLen {
-		cap = maxHeaderLen
-	}
-	c.spkt = newPacket(0, cap, cfg.HMACKey)
-	c.rpkt = newPacket(0, cap, cfg.HMACKey)
-
 	// open connection to server
-	if err = c.open(ctx, cfg); err != nil {
+	if err = c.open(ctx); err != nil {
 		return c, err
 	}
 
 	return c, nil
 }
 
-func (c *cconn) open(ctx context.Context, cfg *Config) (err error) {
+func (c *cconn) open(ctx context.Context) (err error) {
 	// validate open timeouts
-	for _, to := range cfg.OpenTimeouts {
+	for _, to := range c.cfg.OpenTimeouts {
 		if to < minOpenTimeout {
 			err = Errorf(OpenTimeoutTooShort,
 				"open timeout %s must be >= %s", to, minOpenTimeout)
@@ -176,7 +167,7 @@ func (c *cconn) open(ctx context.Context, cfg *Config) (err error) {
 	}
 
 	errC := make(chan error)
-	params := &cfg.Params
+	params := &c.cfg.Params
 
 	// start receiving open replies and drop anything else
 	go func() {
@@ -185,29 +176,31 @@ func (c *cconn) open(ctx context.Context, cfg *Config) (err error) {
 			errC <- rerr
 		}()
 
+		orp := newPacket(0, maxHeaderLen, c.cfg.HMACKey)
+
 		for {
-			_, rerr = c.receive()
+			_, rerr = c.receive(orp)
 			if rerr != nil {
 				return
 			}
-			if c.rpkt.flags()&flOpen == 0 {
+			if orp.flags()&flOpen == 0 {
 				continue
 			}
-			if rerr = c.rpkt.addFields(fopenReply, false); rerr != nil {
+			if rerr = orp.addFields(fopenReply, false); rerr != nil {
 				return
 			}
-			if c.rpkt.flags()&flClose == 0 && c.rpkt.ctoken() == 0 {
+			if orp.flags()&flClose == 0 && orp.ctoken() == 0 {
 				rerr = Errorf(ConnTokenZero, "received invalid zero conn token")
 				return
 			}
 			var sp *Params
-			sp, rerr = parseParams(c.rpkt.payload())
+			sp, rerr = parseParams(orp.payload())
 			if rerr != nil {
 				return
 			}
 			*params = *sp
-			c.ctoken = c.rpkt.ctoken()
-			if c.rpkt.flags()&flClose != 0 {
+			c.ctoken = orp.ctoken()
+			if orp.flags()&flClose != 0 {
 				rerr = Errorf(ServerClosed, "server closed connection during open")
 				c.close()
 			}
@@ -216,23 +209,21 @@ func (c *cconn) open(ctx context.Context, cfg *Config) (err error) {
 	}()
 
 	// start sending open requests
+	sp := newPacket(0, maxHeaderLen, c.cfg.HMACKey)
 	defer func() {
-		c.spkt.clearFlagBits(flOpen | flClose)
-		c.spkt.setPayload([]byte{})
-		c.spkt.setConnToken(c.ctoken)
 		if err != nil {
 			c.close()
 		}
 	}()
-	c.spkt.setFlagBits(flOpen)
-	if cfg.NoTest {
-		c.spkt.setFlagBits(flClose)
+	sp.setFlagBits(flOpen)
+	if c.cfg.NoTest {
+		sp.setFlagBits(flClose)
 	}
-	c.spkt.setPayload(params.bytes())
-	c.spkt.updateHMAC()
+	sp.setPayload(params.bytes())
+	sp.updateHMAC()
 	var received bool
-	for _, to := range cfg.OpenTimeouts {
-		_, err = c.send()
+	for _, to := range c.cfg.OpenTimeouts {
+		_, err = c.send(sp)
 		if err != nil {
 			return
 		}
@@ -253,39 +244,45 @@ func (c *cconn) open(ctx context.Context, cfg *Config) (err error) {
 	return
 }
 
-func (c *cconn) send() (tafter time.Time, err error) {
+func (c *cconn) send(p *packet) (tafter time.Time, err error) {
 	var n int
-	n, err = c.conn.Write(c.spkt.bytes())
+	n, err = c.conn.Write(p.bytes())
 	tafter = time.Now()
 	if err != nil {
 		return
 	}
-	if n < c.spkt.length() {
-		err = Errorf(ShortWrite, "only %d/%d bytes were sent", n, c.spkt.length())
+	if n < p.length() {
+		err = Errorf(ShortWrite, "only %d/%d bytes were sent", n, p.length())
 	}
 	return
 }
 
-func (c *cconn) receive() (tafter time.Time, err error) {
+func (c *cconn) receive(p *packet) (tafter time.Time, err error) {
 	var n int
-	n, err = c.conn.Read(c.rpkt.readTo())
+	n, err = c.conn.Read(p.readTo())
 	tafter = time.Now()
 	if err != nil {
 		return
 	}
-	if err = c.rpkt.readReset(n); err != nil {
+	if err = p.readReset(n); err != nil {
 		return
 	}
-	if !c.rpkt.reply() {
+	if !p.reply() {
 		err = Errorf(ExpectedReplyFlag, "reply flag not set")
 		return
 	}
-	if c.rpkt.flags()&flClose != 0 {
+	if p.flags()&flClose != 0 {
 		err = Errorf(ServerClosed, "server closed connection")
 		c.close()
 		return
 	}
 	return
+}
+
+func (c *cconn) newPacket() *packet {
+	p := newPacket(0, c.cfg.Length, c.cfg.HMACKey)
+	p.setConnToken(c.ctoken)
+	return p
 }
 
 func (c *cconn) remoteAddr() *net.UDPAddr {
@@ -306,13 +303,14 @@ func (c *cconn) close() (err error) {
 
 	// send one close packet if necessary
 	if c.ctoken != 0 {
-		if err = c.spkt.setFields(fcloseRequest, true); err != nil {
+		cp := newPacket(0, maxHeaderLen, c.cfg.HMACKey)
+		if err = cp.setFields(fcloseRequest, true); err != nil {
 			return
 		}
-		c.spkt.setFlagBits(flClose)
-		c.spkt.setConnToken(c.ctoken)
-		c.spkt.updateHMAC()
-		_, err = c.send()
+		cp.setFlagBits(flClose)
+		cp.setConnToken(c.ctoken)
+		cp.updateHMAC()
+		_, err = c.send(cp)
 	}
 	return
 }
