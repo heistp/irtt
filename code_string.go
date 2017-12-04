@@ -5,23 +5,38 @@ package irtt
 import "fmt"
 
 const (
-	_Code_name_0 = "UnexpectedOpenFlagInvalidGCModeStringUnspecifiedWithSpecifiedAddressesNoMatchingInterfacesUpNoMatchingInterfacesAllocateResultsPanicOpenTimeoutTooShortInvalidReceivedStatsStringInvalidReceivedStatsIntParamsChangedInvalidParamValueInvalidServerRestrictionOpenTimeoutNoSuitableAddressFoundUnknownParamParamOverflowShortParamBufferServerClosedInvalidFlagBitsSetConnTokenZeroDurationNonPositiveIntervalNonPositiveDFNotSupportedInconsistentClocksNonexclusiveMidpointTStampUnexpectedHMACBadHMACNoHMACBadMagicNoSuchWaiterNoSuchTimerNoSuchFillerNoSuchAveragerInvalidWaitDurationInvalidWaitFactorInvalidWaitStringInvalidSleepFactorInvalidClockIntInvalidClockStringInvalidAllowStampStringInvalidStampAtIntInvalidStampAtStringFieldsCapacityTooLargeFieldsLengthTooLargeInvalidDFStringUnexpectedSequenceNumberClockMismatchStampAtMismatchShortReplyUnexpectedReplyFlagExpectedReplyFlagShortWriteTTLErrorDFErrorDSCPErrorInvalidExpAvgAlphaInvalidWinAvgWindow"
-	_Code_name_1 = "MultipleAddressesServerStartListenerStartListenerStopListenerErrorDropDropUnparseableParamsDropInvalidConnTokenDropAddressMismatchDropShortIntervalConnectingConnectedWaitForPacketsNewConnOpenCloseCloseConnNoDSCPSupportServerRestrictionDurationLimitExceededNoTestNoReceiveDstAddrSupport"
+	_Code_name_0 = "OpenTimeoutTooShortInvalidReceivedStatsStringInvalidReceivedStatsIntParamsChangedInvalidServerRestrictionOpenTimeoutServerClosedConnTokenZeroDurationNonPositiveIntervalNonPositiveNoSuchWaiterNoSuchTimerNoSuchFillerNoSuchAveragerInvalidWaitDurationInvalidWaitFactorInvalidWaitStringInvalidSleepFactorUnexpectedSequenceNumberClockMismatchStampAtMismatchShortReplyExpectedReplyFlagDSCPErrorTTLErrorDFErrorUnexpectedOpenFlagAllocateResultsPanicInvalidExpAvgAlphaInvalidWinAvgWindow"
+	_Code_name_1 = "NoSuitableAddressFoundUnexpectedReplyFlagInvalidGCModeStringUnspecifiedWithSpecifiedAddressesNoMatchingInterfacesUpNoMatchingInterfaces"
+	_Code_name_2 = "InvalidParamValueUnknownParamParamOverflowShortParamBufferInvalidFlagBitsSetDFNotSupportedInconsistentClocksNonexclusiveMidpointTStampUnexpectedHMACBadHMACNoHMACBadMagicInvalidClockIntInvalidClockStringInvalidAllowStampStringInvalidStampAtIntInvalidStampAtStringFieldsCapacityTooLargeFieldsLengthTooLargeInvalidDFStringShortWrite"
+	_Code_name_3 = "MultipleAddressesServerStartListenerStartListenerStopListenerErrorDropDropUnparseableParamsDropInvalidConnTokenDropAddressMismatchDropShortIntervalNewConnOpenCloseCloseConnNoDSCPSupportDurationLimitExceededNoReceiveDstAddrSupport"
+	_Code_name_4 = "ConnectingConnectedWaitForPacketsServerRestrictionNoTest"
 )
 
 var (
-	_Code_index_0 = [...]uint16{0, 18, 37, 70, 92, 112, 132, 151, 177, 200, 213, 230, 254, 265, 287, 299, 312, 328, 340, 358, 371, 390, 409, 423, 441, 467, 481, 488, 494, 502, 514, 525, 537, 551, 570, 587, 604, 622, 637, 655, 678, 695, 715, 737, 757, 772, 796, 809, 824, 834, 853, 870, 880, 888, 895, 904, 922, 941}
-	_Code_index_1 = [...]uint16{0, 17, 28, 41, 53, 66, 70, 91, 111, 130, 147, 157, 166, 180, 187, 196, 205, 218, 235, 256, 262, 285}
+	_Code_index_0 = [...]uint16{0, 19, 45, 68, 81, 105, 116, 128, 141, 160, 179, 191, 202, 214, 228, 247, 264, 281, 299, 323, 336, 351, 361, 378, 387, 395, 402, 420, 440, 458, 477}
+	_Code_index_1 = [...]uint8{0, 22, 41, 60, 93, 115, 135}
+	_Code_index_2 = [...]uint16{0, 17, 29, 42, 58, 76, 90, 108, 134, 148, 155, 161, 169, 184, 202, 225, 242, 262, 284, 304, 319, 329}
+	_Code_index_3 = [...]uint8{0, 17, 28, 41, 53, 66, 70, 91, 111, 130, 147, 154, 163, 172, 185, 206, 229}
+	_Code_index_4 = [...]uint8{0, 10, 19, 33, 50, 56}
 )
 
 func (i Code) String() string {
 	switch {
-	case -57 <= i && i <= -1:
-		i -= -57
+	case -2077 <= i && i <= -2048:
+		i -= -2077
 		return _Code_name_0[_Code_index_0[i]:_Code_index_0[i+1]]
-	case 1 <= i && i <= 21:
-		i -= 1
+	case -1029 <= i && i <= -1024:
+		i -= -1029
 		return _Code_name_1[_Code_index_1[i]:_Code_index_1[i+1]]
+	case -21 <= i && i <= -1:
+		i -= -21
+		return _Code_name_2[_Code_index_2[i]:_Code_index_2[i+1]]
+	case 1024 <= i && i <= 1039:
+		i -= 1024
+		return _Code_name_3[_Code_index_3[i]:_Code_index_3[i+1]]
+	case 2048 <= i && i <= 2052:
+		i -= 2048
+		return _Code_name_4[_Code_index_4[i]:_Code_index_4[i+1]]
 	default:
 		return fmt.Sprintf("Code(%d)", i)
 	}

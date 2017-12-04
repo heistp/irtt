@@ -1,19 +1,8 @@
 package irtt
 
-// Error codes.
+// Common error codes.
 const (
-	InvalidWinAvgWindow Code = (iota + 1) * -1
-	InvalidExpAvgAlpha
-	DSCPError
-	DFError
-	TTLError
-	ShortWrite
-	ExpectedReplyFlag
-	UnexpectedReplyFlag
-	ShortReply
-	StampAtMismatch
-	ClockMismatch
-	UnexpectedSequenceNumber
+	ShortWrite Code = -1 * (iota + 1)
 	InvalidDFString
 	FieldsLengthTooLarge
 	FieldsCapacityTooLarge
@@ -22,6 +11,44 @@ const (
 	InvalidAllowStampString
 	InvalidClockString
 	InvalidClockInt
+	BadMagic
+	NoHMAC
+	BadHMAC
+	UnexpectedHMAC
+	NonexclusiveMidpointTStamp
+	InconsistentClocks
+	DFNotSupported
+	InvalidFlagBitsSet
+	ShortParamBuffer
+	ParamOverflow
+	UnknownParam
+	InvalidParamValue
+)
+
+// Server error codes.
+const (
+	NoMatchingInterfaces Code = -1 * (iota + 1*1024)
+	NoMatchingInterfacesUp
+	UnspecifiedWithSpecifiedAddresses
+	InvalidGCModeString
+	UnexpectedReplyFlag
+	NoSuitableAddressFound
+)
+
+// Client error codes.
+const (
+	InvalidWinAvgWindow Code = -1 * (iota + 2*1024)
+	InvalidExpAvgAlpha
+	AllocateResultsPanic
+	UnexpectedOpenFlag
+	DFError
+	TTLError
+	DSCPError
+	ExpectedReplyFlag
+	ShortReply
+	StampAtMismatch
+	ClockMismatch
+	UnexpectedSequenceNumber
 	InvalidSleepFactor
 	InvalidWaitString
 	InvalidWaitFactor
@@ -30,35 +57,16 @@ const (
 	NoSuchFiller
 	NoSuchTimer
 	NoSuchWaiter
-	BadMagic
-	NoHMAC
-	BadHMAC
-	UnexpectedHMAC
-	NonexclusiveMidpointTStamp
-	InconsistentClocks
-	DFNotSupported
 	IntervalNonPositive
 	DurationNonPositive
 	ConnTokenZero
-	InvalidFlagBitsSet
 	ServerClosed
-	ShortParamBuffer
-	ParamOverflow
-	UnknownParam
-	NoSuitableAddressFound
 	OpenTimeout
 	InvalidServerRestriction
-	InvalidParamValue
 	ParamsChanged
 	InvalidReceivedStatsInt
 	InvalidReceivedStatsString
 	OpenTimeoutTooShort
-	AllocateResultsPanic
-	NoMatchingInterfaces
-	NoMatchingInterfacesUp
-	UnspecifiedWithSpecifiedAddresses
-	InvalidGCModeString
-	UnexpectedOpenFlag
 )
 
 // Error is an IRTT error.

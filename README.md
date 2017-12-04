@@ -885,7 +885,7 @@ the client, and since start of the process for the server
 	 The client and server clocks must be synchronized for one-way delay values to
 	 be meaningful (although, the relative change of send and receive delay may be
    useful to look at even without clock synchronization). Well-configured NTP
-   hosts may be able to synchronize within a few milliseconds.
+   hosts may be able to synchronize to within a few milliseconds.
 	 [PTP](https://en.wikipedia.org/wiki/Precision_Time_Protocol)
 	 ([Linux](http://linuxptp.sourceforge.net) implementation here) is capable of
    much higher precision. For example, using two
@@ -940,7 +940,9 @@ the client, and since start of the process for the server
       IP address, and return packets are not routing properly, which can happen in
       some network configurations. Try running the server with the `-setsrcip`
       parameter, which sets the source address on all reply packets from listeners
-      on unspecified IP addresses.
+      on unspecified IP addresses. This is not done by default in order to avoid
+      the additional per-packet heap allocations required by the
+      `golang.org/x/net` packages.
 
 7) Why don't you include median values for send call time, timer error and
    server processing time?
@@ -967,7 +969,7 @@ the client, and since start of the process for the server
 10) Are there any plans for translation to other languages?
 
     While some parts of the API were designed to keep i18n possible, there is no
-    support for it built in to the Go standard libraries. It should be possible,
+    support for i18n built in to the Go standard libraries. It should be possible,
     but could be a challenge, and is not something I'm likely to undertake myself.
 
 11) Why do I get `Error: failed to allocate results buffer for X round trips
@@ -999,7 +1001,8 @@ the client, and since start of the process for the server
       properly. Rather than using an unspecified IP address though, you may also
       listen on all addresses on all adapters with `-b "%*"`. This however has
       the limitation that it will not listen on new adapters and addresses
-      dynamically like using an unspecified IP does.
+      dynamically like using an unspecified IP does, so on Windows, you'll have
+      to accept either one limitation or the other.
 
 13) Why is little endian byte order used in the packet format?
 
@@ -1016,9 +1019,8 @@ the client, and since start of the process for the server
 
 _Concrete tasks that just need doing..._
 
-- Separate client, server and common events and errors
 - Move server communication into sconn and connmgr into listener
-  - Get rid of specific drop events
+  - Get rid of remaining specific drop events, use generic Drop + error
 - Add `-concurrent` flag to server for one goroutine per client conn
 - Check or replace session cleanup mechanism
 - Add a session timeout and max interval so client doesn't send to a closed conn

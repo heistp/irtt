@@ -10,9 +10,9 @@ type Code int
 
 //go:generate stringer -type=Code
 
-// Event codes.
+// Server event codes.
 const (
-	MultipleAddresses Code = iota + 1
+	MultipleAddresses Code = iota + 1*1024
 	ServerStart
 	ListenerStart
 	ListenerStop
@@ -22,17 +22,21 @@ const (
 	DropInvalidConnToken
 	DropAddressMismatch
 	DropShortInterval
-	Connecting
-	Connected
-	WaitForPackets
 	NewConn
 	OpenClose
 	CloseConn
 	NoDSCPSupport
-	ServerRestriction
 	DurationLimitExceeded
-	NoTest
 	NoReceiveDstAddrSupport
+)
+
+// Client event codes.
+const (
+	Connecting Code = iota + 2*1024
+	Connected
+	WaitForPackets
+	ServerRestriction
+	NoTest
 )
 
 // Event is an event sent to a Handler.
