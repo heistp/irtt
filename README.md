@@ -1012,30 +1012,33 @@ the client, and since start of the process for the server
 
 ## TODO and Roadmap
 
-### TODO
+### TODO v0.9
 
 _Concrete tasks that just need doing..._
 
-- Move server communication into sconn
+- Separate client, server and common events and errors
+- Move server communication into sconn and connmgr into listener
+  - Get rid of specific drop events
 - Add `-concurrent` flag to server for one goroutine per client conn
 - Check or replace session cleanup mechanism
 - Add a session timeout and max interval so client doesn't send to a closed conn
-- Run heap profiler on client
 - Check that listeners exit only due to permanent errors, and exit code is set
 - Add ability for client to request random fill from server
 - Add protocol version number along with client check
-- Add seqno to the Max and maybe Min columns in the text output
 - Refactor packet manipulation to improve readability and prevent multiple validations
 - Improve client connection closure by:
   - Repeating close packets up to four times until acknowledgement, like open
   - Including received packet stats in the acknowledgement from the server
+- Use pflag options or something GNU compatible: https://github.com/spf13/pflag
+- Run heap profiler on client
+
+### TODO v1.0
+
 - Improve robustness and security of public servers:
 	- Add bitrate limiting
 	- Limit open requests to prevent the equivalent of a "syn flood"
 	- Add per-IP limiting
-  - Improve client close by repeating close packets up to four times
-- Use pflag options or something GNU compatible: https://github.com/spf13/pflag
-- Write a SmokePing probe (for FreeNet)
+- Write a SmokePing probe
 
 ### Roadmap
 
@@ -1048,9 +1051,7 @@ _Planned for the future..._
   - Determine if asymmetric send schedules (between client and server) required
 - Improve induced latency and jitter:
   - Use Go profiling, scheduler tracing, strace and sar
-  - See if netperf udp_rr averages multiple samples to 200ms
-  - Experiment with disabling server garbage collection
-  - Do more thorough tests of `chrt -r 99`
+  - Do more thorough tests of `chrt -r 99`, `-thread` and `-gc`
   - Find or file issue with Go team over scheduler performance
   - Prototype doing all thread scheduling for Linux in C
 - Add different server authentication modes:
@@ -1065,7 +1066,7 @@ _Planned for the future..._
 _Collection area for undefined or uncertain stuff..._
 
 - Map error codes to exit codes
-- Refactor events to allow for more than 64 total event types
+- Add seqno to the Max and maybe Min columns in the text output
 - Prototype TCP throughput test and compare straight Go vs iperf/netperf
 - Add a subcommand to the CLI to convert JSON to CSV
 - Support a range of server ports to improve concurrency and maybe defeat

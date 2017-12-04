@@ -275,7 +275,6 @@ func (c *cconn) receive(p *packet) (err error) {
 	if p.flags()&flClose != 0 {
 		err = Errorf(ServerClosed, "server closed connection")
 		c.close()
-		return
 	}
 	return
 }

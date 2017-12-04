@@ -285,7 +285,6 @@ func runClientCLI(args []string) {
 	cfg.FillAll = *fillAll
 	cfg.HMACKey = hmacKey
 	cfg.Handler = &clientHandler{*quiet, *reallyQuiet}
-	cfg.EventMask = AllEvents ^ WaitForPackets
 	cfg.ThreadLock = *threadLock
 
 	// run test

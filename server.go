@@ -29,7 +29,6 @@ type Server struct {
 	TTL             int
 	IPVersion       IPVersion
 	Handler         Handler
-	EventMask       EventCode
 	SetSourceIP     bool
 	Concurrent      bool
 	GCMode          GCMode
@@ -55,7 +54,6 @@ func NewServer() *Server {
 		AllowStamp:  DefaultAllowStamp,
 		TTL:         DefaultTTL,
 		IPVersion:   DefaultIPVersion,
-		EventMask:   AllEvents,
 		SetSourceIP: DefaultSetSrcIP,
 		Concurrent:  DefaultConcurrent,
 		GCMode:      DefaultGCMode,
@@ -195,9 +193,9 @@ func (s *Server) connRef(b bool) {
 	}
 }
 
-func (s *Server) eventf(code EventCode, format string, args ...interface{}) {
-	if s.Handler != nil && s.EventMask&code != 0 {
-		s.Handler.OnEvent(Eventf(code, nil, nil, format, args...))
+func (s *Server) eventf(code Code, format string, detail ...interface{}) {
+	if s.Handler != nil {
+		s.Handler.OnEvent(Eventf(code, nil, nil, format, detail...))
 	}
 }
 
@@ -309,8 +307,8 @@ func (l *listener) readOneAndReply(p *packet) (fatal bool, err error) {
 	// read a packet
 	err = l.conn.receive(p)
 	if err != nil {
-		if e, ok := err.(*Error); ok {
-			l.eventf(dropCode(e.Code), p.raddr, "%s", err.Error())
+		if _, ok := err.(*Error); ok {
+			l.eventf(Drop, p.raddr, "%s", err.Error())
 		} else {
 			fatal = true
 		}
@@ -507,18 +505,18 @@ func (l *listener) restrictParams(pkt *packet, p *Params) {
 
 func (l *listener) addFields(p *packet, fidxs []fidx) bool {
 	if err := p.addFields(fidxs, false); err != nil {
-		if e, ok := err.(*Error); ok {
-			l.eventf(dropCode(e.Code), p.raddr, err.Error())
+		if _, ok := err.(*Error); ok {
+			l.eventf(Drop, p.raddr, "%s", err.Error())
 		}
 		return false
 	}
 	return true
 }
 
-func (l *listener) eventf(code EventCode, raddr *net.UDPAddr, format string,
-	args ...interface{}) {
-	if l.Handler != nil && l.EventMask&code != 0 {
-		l.Handler.OnEvent(Eventf(code, l.conn.localAddr(), raddr, format, args...))
+func (l *listener) eventf(code Code, raddr *net.UDPAddr, format string,
+	detail ...interface{}) {
+	if l.Handler != nil {
+		l.Handler.OnEvent(Eventf(code, l.conn.localAddr(), raddr, format, detail...))
 	}
 }
 
