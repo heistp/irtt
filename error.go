@@ -1,15 +1,8 @@
 package irtt
 
-import "fmt"
-
-// ErrorCode is a code identifying an Error.
-type ErrorCode int
-
-//go:generate stringer -type=ErrorCode
-
 // Error codes.
 const (
-	InvalidWinAvgWindow ErrorCode = iota
+	InvalidWinAvgWindow Code = (iota + 1) * -1
 	InvalidExpAvgAlpha
 	DSCPError
 	DFError
@@ -30,7 +23,6 @@ const (
 	InvalidClockString
 	InvalidClockInt
 	InvalidSleepFactor
-	IntervalNotPermitted
 	InvalidWaitString
 	InvalidWaitFactor
 	InvalidWaitDuration
@@ -44,12 +36,10 @@ const (
 	UnexpectedHMAC
 	NonexclusiveMidpointTStamp
 	InconsistentClocks
-	ListenerPanic
 	DFNotSupported
 	IntervalNonPositive
 	DurationNonPositive
 	ConnTokenZero
-	ConnClosed
 	InvalidFlagBitsSet
 	ServerClosed
 	ShortParamBuffer
@@ -68,20 +58,19 @@ const (
 	NoMatchingInterfacesUp
 	UnspecifiedWithSpecifiedAddresses
 	InvalidGCModeString
+	UnexpectedOpenFlag
 )
 
 // Error is an IRTT error.
 type Error struct {
-	Code   ErrorCode
-	format string
-	Detail []interface{}
+	*Event
 }
 
 // Errorf returns a new Error.
-func Errorf(code ErrorCode, format string, args ...interface{}) *Error {
-	return &Error{code, format, args}
+func Errorf(code Code, format string, detail ...interface{}) *Error {
+	return &Error{Eventf(code, nil, nil, format, detail...)}
 }
 
 func (e *Error) Error() string {
-	return fmt.Sprintf(e.format, e.Detail...)
+	return e.Event.String()
 }

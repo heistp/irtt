@@ -24,7 +24,6 @@ type Config struct {
 	FillAll      bool
 	HMACKey      []byte
 	Handler      ClientHandler
-	EventMask    EventCode
 	ThreadLock   bool
 	Supplied     *Config
 }
@@ -48,7 +47,6 @@ func NewDefaultConfig() *Config {
 		TTL:          DefaultTTL,
 		Timer:        DefaultTimer,
 		Waiter:       DefaultWait,
-		EventMask:    DefaultEventMask,
 		ThreadLock:   DefaultThreadLock,
 	}
 }

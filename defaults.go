@@ -31,7 +31,6 @@ const (
 	DefaultHybridTimerSleepFactor  = 0.95
 	DefaultAverageWindow           = 5
 	DefaultExponentialAverageAlpha = 0.1
-	DefaultEventMask               = AllEvents
 )
 
 // DefaultOpenTimeouts are the default timeouts used when the client opens a

@@ -5,38 +5,23 @@ import (
 	"net"
 )
 
-// EventCode uniquely identifies events to improve context.
-type EventCode uint64
+// Code uniquely identifies events and errors to improve context.
+type Code int
 
-//go:generate stringer -type=EventCode
+//go:generate stringer -type=Code
 
 // Event codes.
 const (
-	MultipleAddresses EventCode = 1 << iota
+	MultipleAddresses Code = iota + 1
 	ServerStart
 	ListenerStart
 	ListenerStop
 	ListenerError
-	DropBadMagic
-	DropNoHMAC
-	DropBadHMAC
-	DropUnexpectedHMAC
-	DropNonexclusiveMidpointStamp
-	DropInconsistentClocks
-	DropPacketError
-	DropExpectedReply
-	DropUnexpectedReply
-	DropUnexpectedOpenFlag
-	DropSmallPacket
-	DropInvalidFlagBitsSet
+	Drop
+	DropUnparseableParams
 	DropInvalidConnToken
 	DropAddressMismatch
-	DropUnparseableParams
 	DropShortInterval
-	SockoptDSCPFail
-	SockoptDSCPAbort
-	SockoptDFFail
-	SockoptDFAbort
 	Connecting
 	Connected
 	WaitForPackets
@@ -50,12 +35,9 @@ const (
 	NoReceiveDstAddrSupport
 )
 
-// AllEvents is a mask matching all events.
-const AllEvents = EventCode(^uint64(0))
-
 // Event is an event sent to a Handler.
 type Event struct {
-	EventCode  EventCode
+	Code       Code
 	LocalAddr  *net.UDPAddr
 	RemoteAddr *net.UDPAddr
 	format     string
@@ -63,56 +45,21 @@ type Event struct {
 }
 
 // Eventf returns a new event.
-func Eventf(code EventCode, laddr *net.UDPAddr, raddr *net.UDPAddr, format string,
-	args ...interface{}) *Event {
-	return &Event{code, laddr, raddr, format, args}
+func Eventf(code Code, laddr *net.UDPAddr, raddr *net.UDPAddr, format string,
+	detail ...interface{}) *Event {
+	return &Event{code, laddr, raddr, format, detail}
 }
 
 func (e *Event) String() string {
 	msg := fmt.Sprintf(e.format, e.Detail...)
 	if e.RemoteAddr != nil {
-		return fmt.Sprintf("[%s] [%s] %s", e.EventCode.String(), e.RemoteAddr, msg)
+		return fmt.Sprintf("[%s] [%s] %s", e.RemoteAddr, e.Code.String(), msg)
 	}
-	return fmt.Sprintf("[%s] %s", e.EventCode.String(), msg)
+	return fmt.Sprintf("[%s] %s", e.Code.String(), msg)
 }
 
 // Handler is called with events.
 type Handler interface {
 	// OnEvent is called when an event occurs.
 	OnEvent(e *Event)
-}
-
-// dropCode returns an EventCode for an ErrorCode for packet errors. This is not
-// very maintainable, because every time I add or change packet errors I
-// have to make sure this mapping stays in sync, but I don't want to resort to
-// reflection or other tricks to maintain this mapping, and I don't want common
-// error and event codes, because: 1) the 64-bit uint isn't large enough to hold
-// them all, and 2) there may not be parity between errors and events.
-func dropCode(errcode ErrorCode) EventCode {
-	switch errcode {
-	case BadMagic:
-		return DropBadMagic
-	case NoHMAC:
-		return DropNoHMAC
-	case BadHMAC:
-		return DropBadHMAC
-	case UnexpectedHMAC:
-		return DropUnexpectedHMAC
-	case NonexclusiveMidpointTStamp:
-		return DropNonexclusiveMidpointStamp
-	case InconsistentClocks:
-		return DropInconsistentClocks
-	case FieldsLengthTooLarge:
-		return DropSmallPacket
-	case FieldsCapacityTooLarge:
-		return DropSmallPacket
-	case ExpectedReplyFlag:
-		return DropExpectedReply
-	case UnexpectedReplyFlag:
-		return DropUnexpectedReply
-	case InvalidFlagBitsSet:
-		return DropInvalidFlagBitsSet
-	default:
-		return DropPacketError
-	}
 }

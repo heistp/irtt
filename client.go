@@ -377,9 +377,7 @@ func (c *Client) receive() error {
 
 		// drop packets with open flag set
 		if p.flags()&flOpen != 0 {
-			c.eventf(DropUnexpectedOpenFlag,
-				"receiver dropped packet with unexpected open flag set")
-			continue
+			return Errorf(UnexpectedOpenFlag, "unexpected open flag set")
 		}
 
 		// add expected echo reply fields
@@ -444,9 +442,9 @@ func (c *Client) wait(ctx context.Context) (err error) {
 	return
 }
 
-func (c *Client) eventf(code EventCode, format string, args ...interface{}) {
-	if c.Handler != nil && c.EventMask&code != 0 {
-		c.Handler.OnEvent(Eventf(code, c.localAddr(), c.remoteAddr(), format, args...))
+func (c *Client) eventf(code Code, format string, detail ...interface{}) {
+	if c.Handler != nil {
+		c.Handler.OnEvent(Eventf(code, c.localAddr(), c.remoteAddr(), format, detail...))
 	}
 }
 
