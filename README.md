@@ -1019,9 +1019,9 @@ the client, and since start of the process for the server
 
 _Concrete tasks that just need doing..._
 
-- Make a ServerConfig and stop embedding Server in listener
 - Move server communication into sconn and connmgr into listener
   - Get rid of remaining specific drop events, use generic Drop + error
+  - Improve connRef design
 - Add `-concurrent` flag to server for one goroutine per client conn
 - Check or replace session cleanup mechanism
 - Add a session timeout and max interval so client doesn't send to a closed conn
