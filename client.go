@@ -19,7 +19,7 @@ const clientDropsPercent = 0
 // Client is the Client. It must be created with NewClient. It may not be used
 // concurrently.
 type Client struct {
-	*Config
+	*ClientConfig
 	conn    *cconn
 	rec     *Recorder
 	closed  bool
@@ -27,12 +27,12 @@ type Client struct {
 }
 
 // NewClient returns a new client.
-func NewClient(cfg *Config) *Client {
+func NewClient(cfg *ClientConfig) *Client {
 	// create client
 	c := *cfg
 	c.Supplied = cfg
 	return &Client{
-		Config: &c,
+		ClientConfig: &c,
 	}
 }
 
@@ -58,8 +58,8 @@ func (c *Client) Run(ctx context.Context) (r *Result, err error) {
 	}
 
 	// dial server
-	c.conn, err = dial(ctx, c.Config)
-	if err != nil && (!c.Config.NoTest || !isClosedError(err)) {
+	c.conn, err = dial(ctx, c.ClientConfig)
+	if err != nil && (!c.ClientConfig.NoTest || !isClosedError(err)) {
 		return
 	}
 	defer c.close()
@@ -78,7 +78,7 @@ func (c *Client) Run(ctx context.Context) (r *Result, err error) {
 	}
 
 	// return if NoTest is set
-	if c.Config.NoTest {
+	if c.ClientConfig.NoTest {
 		err = nil
 		c.eventf(NoTest, "skipping test at user request")
 		return
@@ -141,7 +141,7 @@ func (c *Client) Run(ctx context.Context) (r *Result, err error) {
 	// re-enable GC
 	debug.SetGCPercent(100)
 
-	r = newResult(c.rec, c.Config, serr, rerr)
+	r = newResult(c.rec, c.ClientConfig, serr, rerr)
 	return
 }
 
