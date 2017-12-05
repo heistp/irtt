@@ -28,8 +28,8 @@ type ClientConfig struct {
 	Supplied     *ClientConfig
 }
 
-// NewDefaultConfig returns a new Config with the default settings.
-func NewDefaultConfig() *ClientConfig {
+// NewClientConfig returns a new ClientConfig with the default settings.
+func NewClientConfig() *ClientConfig {
 	return &ClientConfig{
 		LocalAddress: DefaultLocalAddress,
 		OpenTimeouts: DefaultOpenTimeouts,

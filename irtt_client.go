@@ -263,7 +263,7 @@ func runClientCLI(args []string) {
 	}()
 
 	// create config
-	cfg := NewDefaultConfig()
+	cfg := NewClientConfig()
 	cfg.LocalAddress = *laddrStr
 	cfg.RemoteAddress = raddrStr
 	cfg.OpenTimeouts = timeouts

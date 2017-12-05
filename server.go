@@ -13,52 +13,22 @@ import (
 const serverDupsPercent = 0
 const serverDropsPercent = 0
 
-// the grace period after the max duration is up when the conn is closed.
-const durationGraceTime = 10 * time.Second
-
 // Server is the irtt server.
 type Server struct {
-	Addrs           []string
-	HMACKey         []byte
-	MaxDuration     time.Duration
-	MinInterval     time.Duration
-	MaxLength       int
-	PacketBurst     int
-	Filler          Filler
-	AllowStamp      AllowStamp
-	TTL             int
-	IPVersion       IPVersion
-	Handler         Handler
-	SetSourceIP     bool
-	Concurrent      bool
-	GCMode          GCMode
-	ThreadLock      bool
-	hardMaxDuration time.Duration
-	start           time.Time
-	connRefs        int
-	connRefMtx      sync.Mutex
-	shutdown        bool
-	shutdownMtx     sync.Mutex
-	shutdownC       chan struct{}
+	*ServerConfig
+	start       time.Time
+	connRefs    int
+	connRefMtx  sync.Mutex
+	shutdown    bool
+	shutdownMtx sync.Mutex
+	shutdownC   chan struct{}
 }
 
-// NewServer creates a new server.
-func NewServer() *Server {
+// NewServer returns a new server.
+func NewServer(cfg *ServerConfig) *Server {
 	return &Server{
-		Addrs:       DefaultBindAddrs,
-		MaxDuration: DefaultMaxDuration,
-		MinInterval: DefaultMinInterval,
-		MaxLength:   DefaultMaxLength,
-		PacketBurst: DefaultPacketBurst,
-		Filler:      DefaultServerFiller,
-		AllowStamp:  DefaultAllowStamp,
-		TTL:         DefaultTTL,
-		IPVersion:   DefaultIPVersion,
-		SetSourceIP: DefaultSetSrcIP,
-		Concurrent:  DefaultConcurrent,
-		GCMode:      DefaultGCMode,
-		ThreadLock:  DefaultThreadLock,
-		shutdownC:   make(chan struct{}),
+		ServerConfig: cfg,
+		shutdownC:    make(chan struct{}),
 	}
 }
 
@@ -72,11 +42,6 @@ func (s *Server) ListenAndServe() error {
 
 	// send ServerStart event
 	s.eventf(ServerStart, "starting IRTT server version %s", Version)
-
-	// set max duration
-	if s.MaxDuration > 0 {
-		s.hardMaxDuration = s.MaxDuration + durationGraceTime
-	}
 
 	// make listeners
 	listeners, err := s.makeListeners()
@@ -128,45 +93,14 @@ func (s *Server) Shutdown() {
 	}
 }
 
-func (s *Server) warnOnMultipleAddresses() error {
-	ifaces, err := net.Interfaces()
-	if err != nil {
-		return err
-	}
-	n := 0
-	for _, i := range ifaces {
-		addrs, err := i.Addrs()
-		if err != nil {
-			return err
-		}
-		for _, addr := range addrs {
-			switch v := addr.(type) {
-			case *net.IPNet:
-				if v.IP.IsGlobalUnicast() {
-					n++
-				}
-			case *net.IPAddr:
-				if v.IP.IsGlobalUnicast() {
-					n++
-				}
-			}
-		}
-	}
-	if n > 1 {
-		s.eventf(MultipleAddresses, "warning: multiple IP addresses, all bind addresses "+
-			"should be explicitly specified with -b or clients may not be able to connect")
-	}
-	return nil
-}
-
 func (s *Server) makeListeners() ([]*listener, error) {
-	lconns, err := listenAll(s.IPVersion, s.Addrs, s.SetSourceIP)
+	lconns, err := listenAll(s.IPVersion, s.Addrs, s.SetSrcIP)
 	if err != nil {
 		return nil, err
 	}
 	ls := make([]*listener, 0, len(lconns))
 	for _, lconn := range lconns {
-		ls = append(ls, newListener(s, lconn))
+		ls = append(ls, newListener(s.ServerConfig, lconn, s.connRef))
 	}
 	return ls, nil
 }
@@ -201,7 +135,7 @@ func (s *Server) eventf(code Code, format string, detail ...interface{}) {
 
 // listener is a server listener.
 type listener struct {
-	*Server
+	*ServerConfig
 	conn        *lconn
 	pktPool     *pktPool
 	cmgr        *connmgr
@@ -211,18 +145,18 @@ type listener struct {
 	closedMtx   sync.Mutex
 }
 
-func newListener(s *Server, lc *lconn) *listener {
+func newListener(cfg *ServerConfig, lc *lconn, cref func(bool)) *listener {
 	cap, _ := detectMTU(lc.localAddr().IP)
 
 	pp := newPacketPool(func() *packet {
-		return newPacket(0, cap, s.HMACKey)
+		return newPacket(0, cap, cfg.HMACKey)
 	}, 16)
 
 	return &listener{
-		Server:  s,
-		conn:    lc,
-		pktPool: pp,
-		cmgr:    newConnMgr(s.connRef, s.PacketBurst, s.MinInterval),
+		ServerConfig: cfg,
+		conn:         lc,
+		pktPool:      pp,
+		cmgr:         newConnMgr(cref, cfg.PacketBurst, cfg.MinInterval),
 	}
 }
 
@@ -269,7 +203,7 @@ func (l *listener) listenAndServe(errC chan<- error) (err error) {
 	}
 
 	// enable receipt of destination IP
-	if l.SetSourceIP && l.conn.localAddr().IP.IsUnspecified() {
+	if l.SetSrcIP && l.conn.localAddr().IP.IsUnspecified() {
 		if rdsterr := l.conn.setReceiveDstAddr(true); rdsterr != nil {
 			l.eventf(NoReceiveDstAddrSupport, nil,
 				"no support for determining packet destination address (%s)", rdsterr)
@@ -316,7 +250,7 @@ func (l *listener) readOneAndReply(p *packet) (fatal bool, err error) {
 	}
 
 	// set source IP from received destination, if necessary
-	if l.SetSourceIP {
+	if l.SetSrcIP {
 		p.srcIP = p.dstIP
 	}
 
@@ -397,7 +331,7 @@ func (l *listener) readOneAndReply(p *packet) (fatal bool, err error) {
 	p.setReply(true)
 
 	// check if max test duration exceeded (but still return packet)
-	if l.hardMaxDuration > 0 && time.Since(sc.firstUsed) > l.hardMaxDuration {
+	if l.MaxDuration > 0 && time.Since(sc.firstUsed) > l.MaxDuration {
 		l.eventf(DurationLimitExceeded, p.raddr,
 			"closing connection due to duration limit exceeded")
 		l.cmgr.remove(p.ctoken())
@@ -511,6 +445,38 @@ func (l *listener) addFields(p *packet, fidxs []fidx) bool {
 		return false
 	}
 	return true
+}
+
+func (l *listener) warnOnMultipleAddresses() error {
+	ifaces, err := net.Interfaces()
+	if err != nil {
+		return err
+	}
+	n := 0
+	for _, i := range ifaces {
+		addrs, err := i.Addrs()
+		if err != nil {
+			return err
+		}
+		for _, addr := range addrs {
+			switch v := addr.(type) {
+			case *net.IPNet:
+				if v.IP.IsGlobalUnicast() {
+					n++
+				}
+			case *net.IPAddr:
+				if v.IP.IsGlobalUnicast() {
+					n++
+				}
+			}
+		}
+	}
+	if n > 1 {
+		l.eventf(MultipleAddresses, nil, "warning: multiple IP addresses, "+
+			"all bind addresses should be explicitly specified with -b or "+
+			"clients may not be able to connect")
+	}
+	return nil
 }
 
 func (l *listener) eventf(code Code, raddr *net.UDPAddr, format string,

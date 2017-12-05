@@ -105,22 +105,25 @@ func runServerCLI(args []string) {
 	gcMode, err := ParseGCMode(*gcModeStr)
 	exitOnError(err, exitCodeBadCommandLine)
 
+	// create server config
+	cfg := NewServerConfig()
+	cfg.Addrs = strings.Split(*baddrsStr, ",")
+	cfg.MaxDuration = *maxDuration
+	cfg.MinInterval = *minInterval
+	cfg.AllowStamp = allowStamp
+	cfg.HMACKey = hmacKey
+	cfg.PacketBurst = *packetBurst
+	cfg.MaxLength = *maxLength
+	cfg.Filler = filler
+	cfg.TTL = *ttl
+	cfg.Handler = &serverHandler{}
+	cfg.IPVersion = ipVer
+	cfg.SetSrcIP = *setSrcIP
+	cfg.GCMode = gcMode
+	cfg.ThreadLock = *lockOSThread
+
 	// create server
-	s := NewServer()
-	s.Addrs = strings.Split(*baddrsStr, ",")
-	s.MaxDuration = *maxDuration
-	s.MinInterval = *minInterval
-	s.AllowStamp = allowStamp
-	s.HMACKey = hmacKey
-	s.PacketBurst = *packetBurst
-	s.MaxLength = *maxLength
-	s.Filler = filler
-	s.TTL = *ttl
-	s.Handler = &serverHandler{}
-	s.IPVersion = ipVer
-	s.SetSourceIP = *setSrcIP
-	s.GCMode = gcMode
-	s.ThreadLock = *lockOSThread
+	s := NewServer(cfg)
 
 	// install signal handler to stop server
 	sigs := make(chan os.Signal, 1)
