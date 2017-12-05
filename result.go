@@ -9,15 +9,15 @@ import (
 
 // Result is returned from Run.
 type Result struct {
-	SystemInfo *SystemInfo `json:"system_info"`
-	Config     *Config     `json:"config"`
-	SendErr    error       `json:"send_err,omitempty"`
-	ReceiveErr error       `json:"receive_err,omitempty"`
+	SystemInfo *SystemInfo   `json:"system_info"`
+	Config     *ClientConfig `json:"config"`
+	SendErr    error         `json:"send_err,omitempty"`
+	ReceiveErr error         `json:"receive_err,omitempty"`
 	*Stats     `json:"stats"`
 	RoundTrips []RoundTrip `json:"round_trips"`
 }
 
-func newResult(rec *Recorder, cfg *Config, serr error, rerr error) *Result {
+func newResult(rec *Recorder, cfg *ClientConfig, serr error, rerr error) *Result {
 	stats := &Stats{Recorder: rec}
 	r := &Result{Stats: stats, Config: cfg, SystemInfo: NewSystemInfo(),
 		SendErr: serr, ReceiveErr: rerr}

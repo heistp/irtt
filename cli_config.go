@@ -5,8 +5,8 @@ import (
 	"net"
 )
 
-// Config defines the test configuration.
-type Config struct {
+// ClientConfig defines the Client configuration.
+type ClientConfig struct {
 	LocalAddress  string
 	RemoteAddress string
 	LocalAddr     net.Addr
@@ -25,12 +25,12 @@ type Config struct {
 	HMACKey      []byte
 	Handler      ClientHandler
 	ThreadLock   bool
-	Supplied     *Config
+	Supplied     *ClientConfig
 }
 
 // NewDefaultConfig returns a new Config with the default settings.
-func NewDefaultConfig() *Config {
-	return &Config{
+func NewDefaultConfig() *ClientConfig {
+	return &ClientConfig{
 		LocalAddress: DefaultLocalAddress,
 		OpenTimeouts: DefaultOpenTimeouts,
 		Params: Params{
@@ -52,7 +52,7 @@ func NewDefaultConfig() *Config {
 }
 
 // validate validates the configuration
-func (c *Config) validate() error {
+func (c *ClientConfig) validate() error {
 	if c.Interval <= 0 {
 		return Errorf(IntervalNonPositive, "interval (%s) must be > 0", c.Interval)
 	}
@@ -63,7 +63,7 @@ func (c *Config) validate() error {
 }
 
 // MarshalJSON implements the json.Marshaler interface.
-func (c *Config) MarshalJSON() ([]byte, error) {
+func (c *ClientConfig) MarshalJSON() ([]byte, error) {
 	fstr := "none"
 	if c.Filler != nil {
 		fstr = c.Filler.String()
@@ -74,16 +74,16 @@ func (c *Config) MarshalJSON() ([]byte, error) {
 		RemoteAddress string `json:"remote_address"`
 		OpenTimeouts  string `json:"open_timeouts"`
 		Params        `json:"params"`
-		StrictParams  bool      `json:"strict_params"`
-		IPVersion     IPVersion `json:"ip_version"`
-		DF            DF        `json:"df"`
-		TTL           int       `json:"ttl"`
-		Timer         string    `json:"timer"`
-		Waiter        string    `json:"waiter"`
-		Filler        string    `json:"filler"`
-		FillAll       bool      `json:"fill_all"`
-		ThreadLock    bool      `json:"thread_lock"`
-		Supplied      *Config   `json:"supplied,omitempty"`
+		StrictParams  bool          `json:"strict_params"`
+		IPVersion     IPVersion     `json:"ip_version"`
+		DF            DF            `json:"df"`
+		TTL           int           `json:"ttl"`
+		Timer         string        `json:"timer"`
+		Waiter        string        `json:"waiter"`
+		Filler        string        `json:"filler"`
+		FillAll       bool          `json:"fill_all"`
+		ThreadLock    bool          `json:"thread_lock"`
+		Supplied      *ClientConfig `json:"supplied,omitempty"`
 	}{
 		LocalAddress:  c.LocalAddress,
 		RemoteAddress: c.RemoteAddress,

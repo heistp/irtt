@@ -1019,7 +1019,6 @@ the client, and since start of the process for the server
 
 _Concrete tasks that just need doing..._
 
-- Rename Config to ClientConfig
 - Make a ServerConfig and stop embedding Server in listener
 - Move server communication into sconn and connmgr into listener
   - Get rid of remaining specific drop events, use generic Drop + error

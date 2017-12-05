@@ -110,11 +110,11 @@ func (n *nconn) close() error {
 // cconn is used for client connections
 type cconn struct {
 	*nconn
-	cfg    *Config
+	cfg    *ClientConfig
 	ctoken ctoken
 }
 
-func dial(ctx context.Context, cfg *Config) (*cconn, error) {
+func dial(ctx context.Context, cfg *ClientConfig) (*cconn, error) {
 	// resolve (could support trying multiple addresses in succession)
 	cfg.LocalAddress = addPort(cfg.LocalAddress, DefaultLocalPort)
 	laddr, err := net.ResolveUDPAddr(cfg.IPVersion.udpNetwork(),
