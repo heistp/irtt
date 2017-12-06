@@ -136,7 +136,6 @@ type listener struct {
 	conn        *lconn
 	pktPool     *pktPool
 	cmgr        *connmgr
-	dscp        int
 	dscpSupport bool
 	closed      bool
 	closedMtx   sync.Mutex
