@@ -14,11 +14,11 @@ type Code int
 const (
 	MultipleAddresses Code = iota + 1*1024
 	ServerStart
+	ServerStop
 	ListenerStart
 	ListenerStop
 	ListenerError
 	Drop
-	DropUnparseableParams
 	DropInvalidConnToken
 	DropAddressMismatch
 	DropShortInterval

@@ -1001,6 +1001,7 @@ _Concrete tasks that just need doing..._
 
 - Move server communication and update logic into sconn
   - Embed listener in sconn
+  - See if I can remove l.eventf calls in accept
   - Add serve method to sconn
   - Get rid of remaining specific drop events, use generic Drop + error
   - Improve connRef design
