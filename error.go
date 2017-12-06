@@ -43,7 +43,6 @@ const (
 	UnexpectedOpenFlag
 	DFError
 	TTLError
-	DSCPError
 	ExpectedReplyFlag
 	ShortReply
 	StampAtMismatch

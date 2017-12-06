@@ -227,7 +227,9 @@ But Go also has benefits that are useful for this application:
 
 ### Known Issues
 
-- Windows is unable to set DSCP values.
+- Windows is unable to set DSCP values for IPv6.
+- Windows is unable to set the source IP address, so `-setsrcip` may not be used
+  on the server.
 - The server doesn't run well on 32-bit Windows platforms. When connecting with
   a client, you may see `Terminated due to receive error...`. To work around
   this, disable dual timestamps from the client by including `-ts midpoint`.
@@ -982,29 +984,7 @@ the client, and since start of the process for the server
     `maxSliceCap` in [slice.go](https://golang.org/src/runtime/slice.go) and
     `_MaxMem` in [malloc.go](https://golang.org/src/runtime/malloc.go).
 
-12) Why when I start a server on Windows do I see these warnings:
-    - `[NoDSCPSupport] no DSCP support available (operation not supported)`
-    - `[NoReceiveDstAddrSupport] no support for determining packet destination
-      address (not supported by windows)`
-    - `[MultipleAddresses] warning: multiple IP addresses, all bind addresses
-      should be explicitly specified with -b or clients may not be able to
-      connect`
-
-    These are due to limitations in Go's support for the Windows platform. The
-    consequences of these limitations are:
-
-    - Packet DSCP (TOS) values can not be set.
-    - The server cannot determine the original destination address of incoming
-      packets, so it can't use the same address when sending replies. This means
-      that on machines with multiple network adapters, and when using
-      unspecified bind IP addresses, packets may not always return to clients
-      properly. Rather than using an unspecified IP address though, you may also
-      listen on all addresses on all adapters with `-b "%*"`. This however has
-      the limitation that it will not listen on new adapters and addresses
-      dynamically like using an unspecified IP does, so on Windows, you'll have
-      to accept either one limitation or the other.
-
-13) Why is little endian byte order used in the packet format?
+12) Why is little endian byte order used in the packet format?
 
     As for Google's [protobufs](https://github.com/google/protobuf), this was
     chosen because the vast majority of modern processors use little-endian byte
@@ -1019,7 +999,7 @@ the client, and since start of the process for the server
 
 _Concrete tasks that just need doing..._
 
-- Set client DSCP value in conn to parallel server
+- Either remove or allow setting of DF
 - Move server communication and update logic into sconn
   - Get rid of remaining specific drop events, use generic Drop + error
   - Improve connRef design
