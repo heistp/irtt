@@ -252,6 +252,9 @@ func (c *cconn) open(ctx context.Context) (err error) {
 }
 
 func (c *cconn) send(p *packet) (err error) {
+	if err = c.setDSCP(p.dscp); err != nil {
+		return
+	}
 	var n int
 	n, err = c.conn.Write(p.bytes())
 	p.tsent = time.Now()
@@ -270,6 +273,7 @@ func (c *cconn) receive(p *packet) (err error) {
 	n, err = c.conn.Read(p.readTo())
 	p.trcvd = time.Now()
 	p.tsent = time.Time{}
+	p.dscp = 0
 	if err != nil {
 		return
 	}

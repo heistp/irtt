@@ -2,6 +2,7 @@ package irtt
 
 import (
 	"context"
+	"fmt"
 	"math/rand"
 	"net"
 	"runtime"
@@ -86,12 +87,30 @@ func (c *Client) Run(ctx context.Context) (r *Result, err error) {
 
 	// ignore server restrictions for testing
 	if ignoreServerRestrictions {
+		fmt.Println("Ignoring server restrictions!")
 		c.Params = c.Supplied.Params
 	}
 
-	// set socket options
-	if err = c.setSockOpts(); err != nil {
+	// return error if DSCP can't be used
+	if c.DSCP != 0 && !c.conn.dscpSupport {
+		err = Errorf(NoDSCPSupport, "unable to set DSCP value (%s)", c.conn.dscpError)
 		return
+	}
+
+	// set DF value on socket
+	if c.DF != DefaultDF {
+		if derr := c.conn.setDF(c.DF); derr != nil {
+			err = Errorf(DFError, "unable to set do not fragment bit (%s)", derr)
+			return
+		}
+	}
+
+	// set TTL
+	if c.TTL != DefaultTTL {
+		if terr := c.conn.setTTL(c.TTL); terr != nil {
+			err = Errorf(TTLError, "unable to set TTL %d (%s)", c.TTL, terr)
+			return
+		}
 	}
 
 	// create recorder
@@ -176,32 +195,6 @@ func (c *Client) remoteAddr() *net.UDPAddr {
 	return c.conn.remoteAddr()
 }
 
-// setSockOpts sets socket options
-func (c *Client) setSockOpts() error {
-	// set DSCP value on socket
-	if c.DSCP != DefaultDSCP {
-		if err := c.conn.setDSCP(c.DSCP); err != nil {
-			return Errorf(DSCPError, "unable to set dscp value %d (%s)", c.DSCP, err)
-		}
-	}
-
-	// set DF value on socket
-	if c.DF != DefaultDF {
-		if err := c.conn.setDF(c.DF); err != nil {
-			return Errorf(DFError, "unable to set do not fragment bit (%s)", err)
-		}
-	}
-
-	// set TTL
-	if c.TTL != DefaultTTL {
-		if err := c.conn.setTTL(c.TTL); err != nil {
-			return Errorf(TTLError, "unable to set TTL %d (%s)", c.TTL, err)
-		}
-	}
-
-	return nil
-}
-
 // checkParameters checks any changes after the server returned restricted
 // parameters.
 func (c *Client) checkParameters() (changed bool, err error) {
@@ -268,6 +261,9 @@ func (c *Client) send(ctx context.Context) error {
 	// include 0 timestamp in appropriate fields
 	seqno := Seqno(0)
 	p := c.conn.newPacket()
+	if c.conn.dscpSupport {
+		p.dscp = c.DSCP
+	}
 	p.addFields(fechoRequest, true)
 	p.zeroReceivedStats(c.ReceivedStats)
 	p.stampZeroes(c.StampAt, c.Clock)
