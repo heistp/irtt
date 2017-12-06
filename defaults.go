@@ -66,6 +66,7 @@ const (
 	DefaultMaxLength   = 0
 	DefaultPacketBurst = 10
 	DefaultAllowStamp  = DualStamps
+	DefaultAllowDSCP   = true
 	DefaultSetSrcIP    = false
 	DefaultGCMode      = GCOn
 	DefaultConcurrent  = false

@@ -12,6 +12,7 @@ type ServerConfig struct {
 	PacketBurst int
 	Filler      Filler
 	AllowStamp  AllowStamp
+	AllowDSCP   bool
 	TTL         int
 	IPVersion   IPVersion
 	Handler     Handler
@@ -31,6 +32,7 @@ func NewServerConfig() *ServerConfig {
 		PacketBurst: DefaultPacketBurst,
 		Filler:      DefaultServerFiller,
 		AllowStamp:  DefaultAllowStamp,
+		AllowDSCP:   DefaultAllowDSCP,
 		TTL:         DefaultTTL,
 		IPVersion:   DefaultIPVersion,
 		SetSrcIP:    DefaultSetSrcIP,

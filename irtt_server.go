@@ -42,6 +42,7 @@ func serverUsage() {
 	printf("               none: don't allow timestamps")
 	printf("               single: allow a single timestamp (send, receive or midpoint)")
 	printf("               dual: allow dual timestamps")
+	printf("-nodscp        don't allow setting dscp (default %t)", !DefaultAllowDSCP)
 	printf("-setsrcip      set source IP address on all outgoing packets from listeners")
 	printf("               on unspecified IP addresses (use for more reliable reply")
 	printf("               routing, but increases per-packet heap allocations)")
@@ -73,6 +74,7 @@ func runServerCLI(args []string) {
 	var ipv4 = fs.Bool("4", false, "IPv4 only")
 	var ipv6 = fs.Bool("6", false, "IPv6 only")
 	var ttl = fs.Int("ttl", DefaultTTL, "IP time to live")
+	var noDSCP = fs.Bool("nodscp", !DefaultAllowDSCP, "no DSCP")
 	var setSrcIP = fs.Bool("setsrcip", DefaultSetSrcIP, "set source IP")
 	var gcModeStr = fs.String("gc", DefaultGCMode.String(), "gc mode")
 	var lockOSThread = fs.Bool("thread", DefaultThreadLock, "thread")
@@ -115,6 +117,7 @@ func runServerCLI(args []string) {
 	cfg.PacketBurst = *packetBurst
 	cfg.MaxLength = *maxLength
 	cfg.Filler = filler
+	cfg.AllowDSCP = !*noDSCP
 	cfg.TTL = *ttl
 	cfg.Handler = &serverHandler{}
 	cfg.IPVersion = ipVer
