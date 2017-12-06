@@ -180,6 +180,7 @@ type packet struct {
 	trcvd   time.Time
 	srcIP   net.IP
 	dstIP   net.IP
+	dscp    int
 }
 
 func newPacket(tlen int, cap int, hmacKey []byte) *packet {

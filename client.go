@@ -11,7 +11,7 @@ import (
 )
 
 // ignore server restrictions (for testing hard limits)
-const ignoreServerRestrictions = true
+const ignoreServerRestrictions = false
 
 // settings for testing
 const clientDropsPercent = 0

@@ -133,12 +133,11 @@ func (s *Server) connRef(b bool) {
 // listener is a server listener.
 type listener struct {
 	*ServerConfig
-	conn        *lconn
-	pktPool     *pktPool
-	cmgr        *connmgr
-	dscpSupport bool
-	closed      bool
-	closedMtx   sync.Mutex
+	conn      *lconn
+	pktPool   *pktPool
+	cmgr      *connmgr
+	closed    bool
+	closedMtx sync.Mutex
 }
 
 func newListener(cfg *ServerConfig, lc *lconn, cref func(bool)) *listener {
@@ -189,15 +188,10 @@ func (l *listener) listenAndServe(errC chan<- error) (err error) {
 		}
 	}
 
-	// determine if we can set DSCP
-	if l.AllowDSCP {
-		de1 := l.conn.setDSCP(1)
-		de0 := l.conn.setDSCP(0)
-		if de1 != nil || de0 != nil {
-			l.eventf(NoDSCPSupport, nil, "no DSCP support available (%s)", de1.Error())
-		} else {
-			l.dscpSupport = true
-		}
+	// warn if DSCP not supported
+	if l.AllowDSCP && !l.conn.dscpSupport {
+		l.eventf(NoDSCPSupport, nil, "[%s] no %s DSCP support available (%s)",
+			l.conn.localAddr(), l.conn.ipVer, l.conn.dscpError)
 	}
 
 	// enable receipt of destination IP
@@ -355,13 +349,11 @@ func (l *listener) readOneAndReply(p *packet) (fatal bool, err error) {
 
 // sendPacket sends a packet, locking and setting socket options as necessary.
 func (l *listener) sendPacket(p *packet, sc *sconn, testPacket bool) (err error) {
-	// set socket options
-	if l.AllowDSCP && l.dscpSupport {
-		l.conn.setDSCP(sc.params.DSCP)
-	}
-
 	// for test packets, add stats and timestamps according to conn params
 	if testPacket {
+		if l.AllowDSCP && l.conn.dscpSupport {
+			p.dscp = sc.params.DSCP
+		}
 		p.setLen(0)
 		if sc.params.ReceivedStats&ReceivedStatsCount != 0 {
 			p.setReceivedCount(sc.receivedCount)
@@ -397,6 +389,7 @@ func (l *listener) sendPacket(p *packet, sc *sconn, testPacket bool) (err error)
 		p.setLen(sc.params.Length)
 	}
 
+	// calculate HMAC
 	p.updateHMAC()
 
 	// simulate dropped packets, if necessary
@@ -430,7 +423,7 @@ func (l *listener) restrictParams(pkt *packet, p *Params) {
 		p.Length = pkt.capacity()
 	}
 	p.StampAt = l.AllowStamp.Restrict(p.StampAt)
-	if !l.AllowDSCP || !l.dscpSupport {
+	if !l.AllowDSCP || !l.conn.dscpSupport {
 		p.DSCP = 0
 	}
 }

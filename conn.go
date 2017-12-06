@@ -20,13 +20,15 @@ const minOpenTimeout = 200 * time.Millisecond
 // nconn (network conn) is the embedded struct in conn and lconn connections. It
 // adds IPVersion, socket options and some helpers to net.UDPConn.
 type nconn struct {
-	conn    *net.UDPConn
-	ipVer   IPVersion
-	ip4conn *ipv4.PacketConn
-	ip6conn *ipv6.PacketConn
-	dscp    int
-	ttl     int
-	df      DF
+	conn        *net.UDPConn
+	ipVer       IPVersion
+	ip4conn     *ipv4.PacketConn
+	ip6conn     *ipv6.PacketConn
+	dscp        int
+	dscpError   error
+	dscpSupport bool
+	ttl         int
+	df          DF
 }
 
 func (n *nconn) init(conn *net.UDPConn, ipVer IPVersion) {
@@ -37,9 +39,15 @@ func (n *nconn) init(conn *net.UDPConn, ipVer IPVersion) {
 	// create x/net conns for socket options
 	if n.ipVer&IPv4 != 0 {
 		n.ip4conn = ipv4.NewPacketConn(n.conn)
+		n.dscpError = n.ip4conn.SetTOS(1)
+		n.ip4conn.SetTOS(0)
 	} else {
 		n.ip6conn = ipv6.NewPacketConn(n.conn)
+		n.dscpError = n.ip6conn.SetTrafficClass(1)
+		n.ip6conn.SetTrafficClass(0)
 	}
+
+	n.dscpSupport = (n.dscpError == nil)
 }
 
 func (n *nconn) setDSCP(dscp int) (err error) {
@@ -362,6 +370,9 @@ func listenAll(ipVer IPVersion, addrs []string, setSrcIP bool) (lconns []*lconn,
 }
 
 func (l *lconn) send(p *packet) (err error) {
+	if err = l.setDSCP(p.dscp); err != nil {
+		return
+	}
 	var n int
 	if !l.setSrcIP {
 		n, err = l.conn.WriteToUDP(p.bytes(), p.raddr)
@@ -414,6 +425,7 @@ func (l *lconn) receive(p *packet) (err error) {
 		}
 	}
 	p.srcIP = nil
+	p.dscp = 0
 	p.trcvd = time.Now()
 	p.tsent = time.Time{}
 	if err != nil {
