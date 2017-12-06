@@ -41,7 +41,10 @@ func (s *Server) ListenAndServe() error {
 	s.start = time.Now()
 
 	// send ServerStart event
-	s.eventf(ServerStart, "starting IRTT server version %s", Version)
+	if s.Handler != nil {
+		s.Handler.OnEvent(Eventf(ServerStart, nil, nil,
+			"starting IRTT server version %s", Version))
+	}
 
 	// make listeners
 	listeners, err := s.makeListeners()
@@ -127,12 +130,6 @@ func (s *Server) connRef(b bool) {
 	}
 }
 
-func (s *Server) eventf(code Code, format string, detail ...interface{}) {
-	if s.Handler != nil {
-		s.Handler.OnEvent(Eventf(code, nil, nil, format, detail...))
-	}
-}
-
 // listener is a server listener.
 type listener struct {
 	*ServerConfig
@@ -156,7 +153,7 @@ func newListener(cfg *ServerConfig, lc *lconn, cref func(bool)) *listener {
 		ServerConfig: cfg,
 		conn:         lc,
 		pktPool:      pp,
-		cmgr:         newConnMgr(cref, cfg.PacketBurst, cfg.MinInterval),
+		cmgr:         newConnMgr(cfg, cref),
 	}
 }
 
@@ -264,7 +261,7 @@ func (l *listener) readOneAndReply(p *packet) (fatal bool, err error) {
 			return
 		}
 		l.restrictParams(p, params)
-		sc := l.cmgr.newConn(p.raddr, params, p.flags()&flClose != 0)
+		sc := l.cmgr.new(p.raddr, params, p.flags()&flClose != 0)
 		if p.flags()&flClose == 0 {
 			l.eventf(NewConn, p.raddr, "new connection, token=%016x",
 				sc.ctoken)
@@ -309,7 +306,7 @@ func (l *listener) readOneAndReply(p *packet) (fatal bool, err error) {
 	}
 
 	// check conn, token and address
-	sc, exists, addrOk, intervalOk := l.cmgr.conn(p)
+	sc, exists, addrOk, intervalOk := l.cmgr.get(p)
 	if !exists {
 		l.eventf(DropInvalidConnToken, p.raddr,
 			"request for invalid conn token %016x", p.ctoken())
