@@ -374,6 +374,7 @@ func listenAll(ipVer IPVersion, addrs []string, setSrcIP bool) (lconns []*lconn,
 }
 
 func (l *lconn) send(p *packet) (err error) {
+	p.updateHMAC()
 	if err = l.setDSCP(p.dscp); err != nil {
 		return
 	}

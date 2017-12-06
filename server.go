@@ -267,7 +267,7 @@ func (l *listener) readOneAndReply(p *packet) (fatal bool, err error) {
 		}
 		p.setReply(true)
 		p.setPayload(params.bytes())
-		if err = l.sendPacket(p, sc, false); err != nil {
+		if err = l.conn.send(p); err != nil {
 			fatal = true
 		}
 		return
@@ -339,58 +339,51 @@ func (l *listener) readOneAndReply(p *packet) (fatal bool, err error) {
 		}
 	}
 
-	// send response
-	if err = l.sendPacket(p, sc, true); err != nil {
-		fatal = true
+	// set packet dscp value
+	if l.AllowDSCP && l.conn.dscpSupport {
+		p.dscp = sc.params.DSCP
 	}
 
-	return
-}
+	// initialize test packet
+	p.setLen(0)
 
-// sendPacket sends a packet, locking and setting socket options as necessary.
-func (l *listener) sendPacket(p *packet, sc *sconn, testPacket bool) (err error) {
-	// for test packets, add stats and timestamps according to conn params
-	if testPacket {
-		if l.AllowDSCP && l.conn.dscpSupport {
-			p.dscp = sc.params.DSCP
-		}
-		p.setLen(0)
-		if sc.params.ReceivedStats&ReceivedStatsCount != 0 {
-			p.setReceivedCount(sc.receivedCount)
-		}
-		if sc.params.ReceivedStats&ReceivedStatsWindow != 0 {
-			if sc.rwinValid {
-				p.setReceivedWindow(sc.receivedWindow)
-			} else {
-				p.setReceivedWindow(0)
-			}
-		}
-		at := sc.params.StampAt
-		cl := sc.params.Clock
-		if at != AtNone {
-			var rt Time
-			var st Time
-			if at == AtMidpoint {
-				mt := midpoint(p.trcvd, time.Now())
-				rt = newTime(mt, cl)
-				st = newTime(mt, cl)
-			} else {
-				if at&AtReceive != 0 {
-					rt = newTime(p.trcvd, cl)
-				}
-				if at&AtSend != 0 {
-					st = newTime(time.Now(), cl)
-				}
-			}
-			p.setTimestamp(Timestamp{rt, st})
+	// set received stats
+	if sc.params.ReceivedStats&ReceivedStatsCount != 0 {
+		p.setReceivedCount(sc.receivedCount)
+	}
+	if sc.params.ReceivedStats&ReceivedStatsWindow != 0 {
+		if sc.rwinValid {
+			p.setReceivedWindow(sc.receivedWindow)
 		} else {
-			p.removeTimestamps()
+			p.setReceivedWindow(0)
 		}
-		p.setLen(sc.params.Length)
 	}
 
-	// calculate HMAC
-	p.updateHMAC()
+	// set timestamps
+	at := sc.params.StampAt
+	cl := sc.params.Clock
+	if at != AtNone {
+		var rt Time
+		var st Time
+		if at == AtMidpoint {
+			mt := midpoint(p.trcvd, time.Now())
+			rt = newTime(mt, cl)
+			st = newTime(mt, cl)
+		} else {
+			if at&AtReceive != 0 {
+				rt = newTime(p.trcvd, cl)
+			}
+			if at&AtSend != 0 {
+				st = newTime(time.Now(), cl)
+			}
+		}
+		p.setTimestamp(Timestamp{rt, st})
+	} else {
+		p.removeTimestamps()
+	}
+
+	// set length
+	p.setLen(sc.params.Length)
 
 	// simulate dropped packets, if necessary
 	if serverDropsPercent > 0 && rand.Float32() < serverDropsPercent {
@@ -400,14 +393,17 @@ func (l *listener) sendPacket(p *packet, sc *sconn, testPacket bool) (err error)
 	// simulate duplicates, if necessary
 	if serverDupsPercent > 0 {
 		for rand.Float32() < serverDupsPercent {
-			err = l.conn.send(p)
-			if err != nil {
+			if err = l.conn.send(p); err != nil {
+				fatal = true
 				return
 			}
 		}
 	}
 
-	err = l.conn.send(p)
+	// send response
+	if err = l.conn.send(p); err != nil {
+		fatal = true
+	}
 
 	return
 }
