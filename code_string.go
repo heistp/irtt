@@ -5,7 +5,7 @@ package irtt
 import "fmt"
 
 const (
-	_Code_name_0 = "OpenTimeoutTooShortInvalidReceivedStatsStringInvalidReceivedStatsIntParamsChangedInvalidServerRestrictionOpenTimeoutServerClosedConnTokenZeroDurationNonPositiveIntervalNonPositiveNoSuchWaiterNoSuchTimerNoSuchFillerNoSuchAveragerInvalidWaitDurationInvalidWaitFactorInvalidWaitStringInvalidSleepFactorUnexpectedSequenceNumberClockMismatchStampAtMismatchShortReplyExpectedReplyFlagDSCPErrorTTLErrorDFErrorUnexpectedOpenFlagAllocateResultsPanicInvalidExpAvgAlphaInvalidWinAvgWindow"
+	_Code_name_0 = "OpenTimeoutTooShortInvalidReceivedStatsStringInvalidReceivedStatsIntParamsChangedInvalidServerRestrictionOpenTimeoutServerClosedConnTokenZeroDurationNonPositiveIntervalNonPositiveNoSuchWaiterNoSuchTimerNoSuchFillerNoSuchAveragerInvalidWaitDurationInvalidWaitFactorInvalidWaitStringInvalidSleepFactorUnexpectedSequenceNumberClockMismatchStampAtMismatchShortReplyExpectedReplyFlagTTLErrorDFErrorUnexpectedOpenFlagAllocateResultsPanicInvalidExpAvgAlphaInvalidWinAvgWindow"
 	_Code_name_1 = "NoSuitableAddressFoundUnexpectedReplyFlagInvalidGCModeStringUnspecifiedWithSpecifiedAddressesNoMatchingInterfacesUpNoMatchingInterfaces"
 	_Code_name_2 = "InvalidParamValueUnknownParamParamOverflowShortParamBufferInvalidFlagBitsSetDFNotSupportedInconsistentClocksNonexclusiveMidpointTStampUnexpectedHMACBadHMACNoHMACBadMagicInvalidClockIntInvalidClockStringInvalidAllowStampStringInvalidStampAtIntInvalidStampAtStringFieldsCapacityTooLargeFieldsLengthTooLargeInvalidDFStringShortWrite"
 	_Code_name_3 = "MultipleAddressesServerStartListenerStartListenerStopListenerErrorDropDropUnparseableParamsDropInvalidConnTokenDropAddressMismatchDropShortIntervalNewConnOpenCloseCloseConnNoDSCPSupportDurationLimitExceededNoReceiveDstAddrSupport"
@@ -13,7 +13,7 @@ const (
 )
 
 var (
-	_Code_index_0 = [...]uint16{0, 19, 45, 68, 81, 105, 116, 128, 141, 160, 179, 191, 202, 214, 228, 247, 264, 281, 299, 323, 336, 351, 361, 378, 387, 395, 402, 420, 440, 458, 477}
+	_Code_index_0 = [...]uint16{0, 19, 45, 68, 81, 105, 116, 128, 141, 160, 179, 191, 202, 214, 228, 247, 264, 281, 299, 323, 336, 351, 361, 378, 386, 393, 411, 431, 449, 468}
 	_Code_index_1 = [...]uint8{0, 22, 41, 60, 93, 115, 135}
 	_Code_index_2 = [...]uint16{0, 17, 29, 42, 58, 76, 90, 108, 134, 148, 155, 161, 169, 184, 202, 225, 242, 262, 284, 304, 319, 329}
 	_Code_index_3 = [...]uint8{0, 17, 28, 41, 53, 66, 70, 91, 111, 130, 147, 154, 163, 172, 185, 206, 229}
@@ -22,8 +22,8 @@ var (
 
 func (i Code) String() string {
 	switch {
-	case -2077 <= i && i <= -2048:
-		i -= -2077
+	case -2076 <= i && i <= -2048:
+		i -= -2076
 		return _Code_name_0[_Code_index_0[i]:_Code_index_0[i+1]]
 	case -1029 <= i && i <= -1024:
 		i -= -1029

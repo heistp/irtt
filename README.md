@@ -999,8 +999,9 @@ the client, and since start of the process for the server
 
 _Concrete tasks that just need doing..._
 
-- Either remove or allow setting of DF
 - Move server communication and update logic into sconn
+  - Embed listener in sconn
+  - Add serve method to sconn
   - Get rid of remaining specific drop events, use generic Drop + error
   - Improve connRef design
 - Add `-concurrent` flag to server for one goroutine per client conn
