@@ -191,12 +191,14 @@ func (l *listener) listenAndServe(errC chan<- error) (err error) {
 	}
 
 	// determine if we can set DSCP
-	de1 := l.conn.setDSCP(1)
-	de0 := l.conn.setDSCP(0)
-	if de1 != nil || de0 != nil {
-		l.eventf(NoDSCPSupport, nil, "no DSCP support available (%s)", de1.Error())
-	} else {
-		l.dscpSupport = true
+	if l.AllowDSCP {
+		de1 := l.conn.setDSCP(1)
+		de0 := l.conn.setDSCP(0)
+		if de1 != nil || de0 != nil {
+			l.eventf(NoDSCPSupport, nil, "no DSCP support available (%s)", de1.Error())
+		} else {
+			l.dscpSupport = true
+		}
 	}
 
 	// enable receipt of destination IP
@@ -355,7 +357,7 @@ func (l *listener) readOneAndReply(p *packet) (fatal bool, err error) {
 // sendPacket sends a packet, locking and setting socket options as necessary.
 func (l *listener) sendPacket(p *packet, sc *sconn, testPacket bool) (err error) {
 	// set socket options
-	if l.dscpSupport {
+	if l.AllowDSCP && l.dscpSupport {
 		l.conn.setDSCP(sc.params.DSCP)
 	}
 
@@ -429,7 +431,7 @@ func (l *listener) restrictParams(pkt *packet, p *Params) {
 		p.Length = pkt.capacity()
 	}
 	p.StampAt = l.AllowStamp.Restrict(p.StampAt)
-	if !l.dscpSupport {
+	if !l.AllowDSCP || !l.dscpSupport {
 		p.DSCP = 0
 	}
 }
