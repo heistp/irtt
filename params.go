@@ -78,12 +78,12 @@ func (p *Params) readParam(b []byte) (int, error) {
 	case pDuration:
 		p.Duration = time.Duration(v)
 		if p.Duration <= 0 {
-			return 0, Errorf(InvalidParamValue, "duration %d is be <= 0", p.Duration)
+			return 0, Errorf(InvalidParamValue, "duration %d is <= 0", p.Duration)
 		}
 	case pInterval:
 		p.Interval = time.Duration(v)
 		if p.Interval <= 0 {
-			return 0, Errorf(InvalidParamValue, "interval %d is be <= 0", p.Interval)
+			return 0, Errorf(InvalidParamValue, "interval %d is <= 0", p.Interval)
 		}
 	case pLength:
 		p.Length = int(v)

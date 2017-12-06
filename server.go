@@ -1,6 +1,7 @@
 package irtt
 
 import (
+	"encoding/binary"
 	"math/rand"
 	"net"
 	"runtime"
@@ -12,6 +13,14 @@ import (
 // settings for testing
 const serverDupsPercent = 0
 const serverDropsPercent = 0
+
+// number of sconns to check to remove on each add (two seems to be the least
+// aggresive number where the map size still levels off over time, but I use 5
+// to clean up unused sconns more quickly)
+const checkExpiredCount = 5
+
+// initial capacity for sconns map
+const sconnsInitSize = 32
 
 // Server is the irtt server.
 type Server struct {
@@ -81,6 +90,12 @@ func (s *Server) ListenAndServe() error {
 		if err := <-errC; err != nil {
 			s.Shutdown()
 		}
+	}
+
+	// send ServerStop event
+	if s.Handler != nil {
+		s.Handler.OnEvent(Eventf(ServerStop, nil, nil,
+			"stopped IRTT server"))
 	}
 
 	return nil
@@ -169,9 +184,11 @@ func (l *listener) listenAndServe(errC chan<- error) (err error) {
 	// always log error or stoppage
 	defer func() {
 		if err != nil {
-			l.eventf(ListenerError, nil, "listener shut down due to error (%s)", err)
+			l.eventf(ListenerError, nil, "error for listener on %s (%s)",
+				l.conn.localAddr(), err)
 		} else {
-			l.eventf(ListenerStop, nil, "listener stopped")
+			l.eventf(ListenerStop, nil, "stopped listener on %s",
+				l.conn.localAddr())
 		}
 	}()
 
@@ -220,24 +237,21 @@ func (l *listener) readAndReplyConcurrent() (err error) {
 	panic("not implemented")
 }
 
-func (l *listener) readAndReply() error {
+func (l *listener) readAndReply() (err error) {
 	p := l.pktPool.new()
 	for {
-		if fatal, err := l.readOneAndReply(p); fatal {
-			return err
+		if err = l.readOneAndReply(p); err != nil {
+			if l.isFatalError(err) {
+				return
+			}
+			l.eventf(Drop, p.raddr, "%s", err.Error())
 		}
 	}
 }
 
-func (l *listener) readOneAndReply(p *packet) (fatal bool, err error) {
+func (l *listener) readOneAndReply(p *packet) (err error) {
 	// read a packet
-	err = l.conn.receive(p)
-	if err != nil {
-		if _, ok := err.(*Error); ok {
-			l.eventf(Drop, p.raddr, "%s", err.Error())
-		} else {
-			fatal = true
-		}
+	if err = l.conn.receive(p); err != nil {
 		return
 	}
 
@@ -248,30 +262,14 @@ func (l *listener) readOneAndReply(p *packet) (fatal bool, err error) {
 
 	// handle open
 	if p.flags()&flOpen != 0 {
-		var params *Params
-		params, err = parseParams(p.payload())
-		if err != nil {
-			l.eventf(DropUnparseableParams, p.raddr,
-				"unparseable negotiation parameters: %s", err.Error())
-			return
-		}
-		l.restrictParams(p, params)
-		sc := l.cmgr.new(p.raddr, params, p.flags()&flClose != 0)
-		if p.flags()&flClose == 0 {
-			l.eventf(NewConn, p.raddr, "new connection, token=%016x",
-				sc.ctoken)
-			p.setConnToken(sc.ctoken)
-		} else {
-			l.eventf(OpenClose, p.raddr, "open-close")
-			p.setConnToken(0)
-		}
-		p.setReply(true)
-		p.setPayload(params.bytes())
-		if err = l.conn.send(p); err != nil {
-			fatal = true
-		}
+		// serial: call accept to create sconn
+		// concurrent: create new goroutine and send packet to its channel
+		err = accept(l, p)
 		return
 	}
+
+	// serial: find sconn by ctoken and call its serve method
+	// concurrent: find sconn by ctoken and send packet to its channel
 
 	// handle close
 	if p.flags()&flClose != 0 {
@@ -334,7 +332,6 @@ func (l *listener) readOneAndReply(p *packet) (fatal bool, err error) {
 	if l.Filler != nil {
 		err = p.readPayload(l.Filler)
 		if err != nil {
-			fatal = true
 			return
 		}
 	}
@@ -394,17 +391,21 @@ func (l *listener) readOneAndReply(p *packet) (fatal bool, err error) {
 	if serverDupsPercent > 0 {
 		for rand.Float32() < serverDupsPercent {
 			if err = l.conn.send(p); err != nil {
-				fatal = true
 				return
 			}
 		}
 	}
 
 	// send response
-	if err = l.conn.send(p); err != nil {
-		fatal = true
-	}
+	err = l.conn.send(p)
 
+	return
+}
+
+func (l *listener) isFatalError(err error) (fatal bool) {
+	if nerr, ok := err.(net.Error); ok {
+		fatal = !nerr.Temporary()
+	}
 	return
 }
 
@@ -490,6 +491,7 @@ func (l *listener) shutdown() {
 	}
 }
 
+// pktPool pools packets to reduce per-packet heap allocations
 type pktPool struct {
 	pool []*packet
 	mtx  sync.Mutex
@@ -520,4 +522,123 @@ func (po *pktPool) put(p *packet) {
 	po.mtx.Lock()
 	defer po.mtx.Unlock()
 	po.pool = append(po.pool, p)
+}
+
+// connmgr manages server connections
+type connmgr struct {
+	*ServerConfig
+	ref    func(bool)
+	sconns map[ctoken]*sconn
+}
+
+func newConnMgr(cfg *ServerConfig, ref func(bool)) *connmgr {
+	return &connmgr{
+		ServerConfig: cfg,
+		ref:          ref,
+		sconns:       make(map[ctoken]*sconn, sconnsInitSize),
+	}
+}
+
+func (cm *connmgr) put(sc *sconn) {
+	cm.removeSomeExpired()
+	ct := cm.newCtoken()
+	sc.ctoken = ct
+	cm.sconns[ct] = sc
+	cm.ref(true)
+}
+
+func (cm *connmgr) get(p *packet) (sconn *sconn,
+	exists bool, addrOk bool, intervalOk bool) {
+	ct := p.ctoken()
+	sc := cm.sconns[ct]
+	if sc == nil {
+		return
+	}
+	exists = true
+	if sc.expired() {
+		delete(cm.sconns, ct)
+		return
+	}
+	if !udpAddrsEqual(p.raddr, &sc.raddr) {
+		return
+	}
+	addrOk = true
+	now := time.Now()
+	if sc.firstUsed.IsZero() {
+		sc.firstUsed = now
+	}
+	if cm.MinInterval > 0 {
+		if !sc.lastUsed.IsZero() {
+			earned := float64(now.Sub(sc.lastUsed)) / float64(cm.MinInterval)
+			sc.packetBucket += earned
+			if sc.packetBucket > float64(cm.PacketBurst) {
+				sc.packetBucket = float64(cm.PacketBurst)
+			}
+		}
+		if sc.packetBucket >= 1 {
+			sc.packetBucket--
+			intervalOk = true
+		}
+	} else {
+		intervalOk = true
+	}
+	// slide received seqno window
+	seqno := p.seqno()
+	sinceLastSeqno := seqno - sc.lastSeqno
+	if sinceLastSeqno > 0 {
+		sc.receivedWindow <<= sinceLastSeqno
+	}
+	if sinceLastSeqno >= 0 { // new, duplicate or first packet
+		sc.receivedWindow |= 0x1
+		sc.rwinValid = true
+	} else { // late packet
+		sc.receivedWindow |= (0x1 << -sinceLastSeqno)
+		sc.rwinValid = false
+	}
+	// update received count
+	sc.receivedCount++
+	// update seqno and last used times
+	sc.lastSeqno = seqno
+	sc.lastUsed = now
+	sconn = sc
+	return
+}
+
+func (cm *connmgr) remove(ct ctoken) (sc *sconn) {
+	var ok bool
+	if sc, ok = cm.sconns[ct]; ok {
+		delete(cm.sconns, ct)
+		cm.ref(false)
+	}
+	return
+}
+
+// removeSomeExpired checks checkExpiredCount sconns for expiration and removes
+// them if expired. Yes, I know, I'm depending on Go's random map iteration,
+// which per the language spec, I should not depend on. That said, this makes
+// for a highly CPU efficient way to eventually clean up expired sconns, and
+// because the Go team very intentionally made map order traversal random for a
+// good reason, I don't think that's going to change any time soon.
+func (cm *connmgr) removeSomeExpired() {
+	for i := 0; i < checkExpiredCount; i++ {
+		for ct, sc := range cm.sconns {
+			if sc.expired() {
+				delete(cm.sconns, ct)
+			}
+			break
+		}
+	}
+}
+
+func (cm *connmgr) newCtoken() ctoken {
+	var ct ctoken
+	b := make([]byte, 8)
+	for {
+		rand.Read(b)
+		ct = ctoken(binary.LittleEndian.Uint64(b))
+		if _, ok := cm.sconns[ct]; !ok {
+			break
+		}
+	}
+	return ct
 }
