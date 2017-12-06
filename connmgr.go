@@ -37,22 +37,20 @@ func (sc *sconn) expired() bool {
 }
 
 type connmgr struct {
-	conns       map[ctoken]*sconn
-	ref         func(bool)
-	packetBurst float64
-	minInterval time.Duration
+	*ServerConfig
+	ref   func(bool)
+	conns map[ctoken]*sconn
 }
 
-func newConnMgr(ref func(bool), packetBurst int, minInterval time.Duration) *connmgr {
+func newConnMgr(cfg *ServerConfig, ref func(bool)) *connmgr {
 	return &connmgr{
-		conns:       make(map[ctoken]*sconn, connmgrInitSize),
-		ref:         ref,
-		packetBurst: float64(packetBurst),
-		minInterval: minInterval,
+		ServerConfig: cfg,
+		ref:          ref,
+		conns:        make(map[ctoken]*sconn, connmgrInitSize),
 	}
 }
 
-func (cm *connmgr) newConn(raddr *net.UDPAddr, p *Params, temporary bool) *sconn {
+func (cm *connmgr) new(raddr *net.UDPAddr, p *Params, temporary bool) *sconn {
 	cm.removeSomeExpired()
 	ct := cm.newCtoken()
 	sc := &sconn{
@@ -61,7 +59,7 @@ func (cm *connmgr) newConn(raddr *net.UDPAddr, p *Params, temporary bool) *sconn
 		params:       p,
 		created:      time.Now(),
 		lastSeqno:    InvalidSeqno,
-		packetBucket: float64(cm.packetBurst),
+		packetBucket: float64(cm.PacketBurst),
 	}
 	if !temporary {
 		cm.ref(true)
@@ -70,7 +68,7 @@ func (cm *connmgr) newConn(raddr *net.UDPAddr, p *Params, temporary bool) *sconn
 	return sc
 }
 
-func (cm *connmgr) conn(p *packet) (sconn *sconn,
+func (cm *connmgr) get(p *packet) (sconn *sconn,
 	exists bool, addrOk bool, intervalOk bool) {
 	ct := p.ctoken()
 	sc := cm.conns[ct]
@@ -90,12 +88,12 @@ func (cm *connmgr) conn(p *packet) (sconn *sconn,
 	if sc.firstUsed.IsZero() {
 		sc.firstUsed = now
 	}
-	if cm.minInterval > 0 {
+	if cm.MinInterval > 0 {
 		if !sc.lastUsed.IsZero() {
-			earned := float64(now.Sub(sc.lastUsed)) / float64(cm.minInterval)
+			earned := float64(now.Sub(sc.lastUsed)) / float64(cm.MinInterval)
 			sc.packetBucket += earned
-			if sc.packetBucket > float64(cm.packetBurst) {
-				sc.packetBucket = float64(cm.packetBurst)
+			if sc.packetBucket > float64(cm.PacketBurst) {
+				sc.packetBucket = float64(cm.PacketBurst)
 			}
 		}
 		if sc.packetBucket >= 1 {
