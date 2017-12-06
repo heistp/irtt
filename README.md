@@ -1019,6 +1019,7 @@ the client, and since start of the process for the server
 
 _Concrete tasks that just need doing..._
 
+- Set client DSCP value in conn to parallel server
 - Move server communication and update logic into sconn
   - Get rid of remaining specific drop events, use generic Drop + error
   - Improve connRef design
