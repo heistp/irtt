@@ -141,9 +141,8 @@ func runServerCLI(args []string) {
 		os.Exit(exitCodeDoubleSignal)
 	}()
 
-	if err := s.ListenAndServe(); err != nil {
-		printf("Error: %s", err)
-	}
+	err = s.ListenAndServe()
+	exitOnError(err, exitCodeRuntimeError)
 }
 
 type serverHandler struct {

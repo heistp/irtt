@@ -999,14 +999,11 @@ the client, and since start of the process for the server
 
 _Concrete tasks that just need doing..._
 
-- Add grace period back to duration restriction
-- Move server communication and update logic into sconn
-  - Improve connRef design
-  - See if I can remove l.eventf calls in accept
+- Improve connRef design
+- See if I can remove l.eventf calls in accept
 - Add `-concurrent` flag to server for one goroutine per client conn
 - Check or replace session cleanup mechanism
 - Add a session timeout and max interval so client doesn't send to a closed conn
-- Check that listeners exit only due to permanent errors, and exit code is set
 - Add ability for client to request random fill from server
 - Add protocol version number along with client check
 - Refactor packet manipulation to improve readability and prevent multiple validations
