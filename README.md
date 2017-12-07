@@ -1000,11 +1000,10 @@ the client, and since start of the process for the server
 _Concrete tasks that just need doing..._
 
 - Move server communication and update logic into sconn
-  - Embed listener in sconn
-  - See if I can remove l.eventf calls in accept
   - Add serve method to sconn
   - Get rid of remaining specific drop events, use generic Drop + error
   - Improve connRef design
+  - See if I can remove l.eventf calls in accept
 - Add `-concurrent` flag to server for one goroutine per client conn
 - Check or replace session cleanup mechanism
 - Add a session timeout and max interval so client doesn't send to a closed conn
