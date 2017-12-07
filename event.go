@@ -22,6 +22,7 @@ const (
 	DropInvalidConnToken
 	DropAddressMismatch
 	DropShortInterval
+	DropTooLarge
 	NewConn
 	OpenClose
 	CloseConn

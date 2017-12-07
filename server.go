@@ -316,6 +316,11 @@ func (l *listener) readOneAndReply(p *packet) (err error) {
 			"drop request due to short interval")
 		return
 	}
+	if l.MaxLength > 0 && p.length() > l.MaxLength {
+		l.eventf(DropTooLarge, p.raddr,
+			"request too large (%d > %d)", p.length(), l.MaxLength)
+		return
+	}
 
 	// set reply flag
 	p.setReply(true)
@@ -416,8 +421,8 @@ func (l *listener) restrictParams(pkt *packet, p *Params) {
 	if l.MinInterval > 0 && p.Interval < l.MinInterval {
 		p.Interval = l.MinInterval
 	}
-	if p.Length > pkt.capacity() {
-		p.Length = pkt.capacity()
+	if l.MaxLength > 0 && p.Length > l.MaxLength {
+		p.Length = l.MaxLength
 	}
 	p.StampAt = l.AllowStamp.Restrict(p.StampAt)
 	if !l.AllowDSCP || !l.conn.dscpSupport {
