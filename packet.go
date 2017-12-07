@@ -122,6 +122,8 @@ var finitHMAC = []fidx{fMagic, fFlags, fHMAC}
 
 var fopenReply = []fidx{fMagic, fFlags, fConnToken}
 
+var fRequest = []fidx{fMagic, fFlags, fConnToken}
+
 var fcloseRequest = []fidx{fMagic, fFlags, fConnToken}
 
 var fechoRequest = []fidx{fMagic, fFlags, fConnToken, fSeqno}

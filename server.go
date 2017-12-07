@@ -10,10 +10,6 @@ import (
 	"time"
 )
 
-// settings for testing
-const serverDupsPercent = 0
-const serverDropsPercent = 0
-
 // number of sconns to check to remove on each add (two seems to be the least
 // aggresive number where the map size still levels off over time, but I use 5
 // to clean up unused sconns more quickly)
@@ -255,156 +251,31 @@ func (l *listener) readOneAndReply(p *packet) (err error) {
 		return
 	}
 
-	// set source IP from received destination, if necessary
-	if l.SetSrcIP {
-		p.srcIP = p.dstIP
-	}
-
 	// handle open
 	if p.flags()&flOpen != 0 {
-		// serial: call accept to create sconn
-		// concurrent: create new goroutine and send packet to its channel
 		err = accept(l, p)
 		return
 	}
 
-	// serial: find sconn by ctoken and call its serve method
-	// concurrent: find sconn by ctoken and send packet to its channel
-
-	// handle close
-	if p.flags()&flClose != 0 {
-		if !l.addFields(p, fcloseRequest) {
-			return
-		}
-		sc := l.cmgr.remove(p.ctoken())
-		if sc == nil {
-			l.eventf(DropInvalidConnToken, p.raddr,
-				"close for invalid conn token %016x", p.ctoken())
-			return
-		}
-		// check remote address
-		if !udpAddrsEqual(p.raddr, &sc.raddr) {
-			l.eventf(DropAddressMismatch, p.raddr,
-				"drop close due to address mismatch (expected %s for %016x)",
-				&sc.raddr, p.ctoken())
-			return
-		}
-		l.eventf(CloseConn, p.raddr, "close connection, token=%016x", sc.ctoken)
+	// handle packet for sconn
+	if err = p.addFields(fRequest, false); err != nil {
 		return
 	}
-
-	// handle echo request
-	if !l.addFields(p, fechoRequest) {
+	ct := p.ctoken()
+	sc := l.cmgr.get(ct)
+	if sc == nil {
+		err = Errorf(InvalidConnToken, "invalid conn token %016x", ct)
 		return
 	}
-
-	// check conn, token and address
-	sc, exists, addrOk, intervalOk := l.cmgr.get(p)
-	if !exists {
-		l.eventf(DropInvalidConnToken, p.raddr,
-			"request for invalid conn token %016x", p.ctoken())
-		return
-	}
-	if !addrOk {
-		l.eventf(DropAddressMismatch, p.raddr,
-			"drop request due to address mismatch (expected %s for %016x)",
-			&sc.raddr, p.ctoken())
-		return
-	}
-	if !intervalOk {
-		l.eventf(DropShortInterval, p.raddr,
-			"drop request due to short interval")
-		return
-	}
-	if l.MaxLength > 0 && p.length() > l.MaxLength {
-		l.eventf(DropTooLarge, p.raddr,
-			"request too large (%d > %d)", p.length(), l.MaxLength)
-		return
-	}
-
-	// set reply flag
-	p.setReply(true)
-
-	// check if max test duration exceeded (but still return packet)
-	if l.MaxDuration > 0 && time.Since(sc.firstUsed) > l.MaxDuration {
-		l.eventf(DurationLimitExceeded, p.raddr,
-			"closing connection due to duration limit exceeded")
-		l.cmgr.remove(p.ctoken())
-		p.setFlagBits(flClose)
-	}
-
-	// fill payload
-	if l.Filler != nil {
-		err = p.readPayload(l.Filler)
-		if err != nil {
-			return
-		}
-	}
-
-	// set packet dscp value
-	if l.AllowDSCP && l.conn.dscpSupport {
-		p.dscp = sc.params.DSCP
-	}
-
-	// initialize test packet
-	p.setLen(0)
-
-	// set received stats
-	if sc.params.ReceivedStats&ReceivedStatsCount != 0 {
-		p.setReceivedCount(sc.receivedCount)
-	}
-	if sc.params.ReceivedStats&ReceivedStatsWindow != 0 {
-		if sc.rwinValid {
-			p.setReceivedWindow(sc.receivedWindow)
-		} else {
-			p.setReceivedWindow(0)
-		}
-	}
-
-	// set timestamps
-	at := sc.params.StampAt
-	cl := sc.params.Clock
-	if at != AtNone {
-		var rt Time
-		var st Time
-		if at == AtMidpoint {
-			mt := midpoint(p.trcvd, time.Now())
-			rt = newTime(mt, cl)
-			st = newTime(mt, cl)
-		} else {
-			if at&AtReceive != 0 {
-				rt = newTime(p.trcvd, cl)
-			}
-			if at&AtSend != 0 {
-				st = newTime(time.Now(), cl)
-			}
-		}
-		p.setTimestamp(Timestamp{rt, st})
-	} else {
-		p.removeTimestamps()
-	}
-
-	// set length
-	p.setLen(sc.params.Length)
-
-	// simulate dropped packets, if necessary
-	if serverDropsPercent > 0 && rand.Float32() < serverDropsPercent {
-		return
-	}
-
-	// simulate duplicates, if necessary
-	if serverDupsPercent > 0 {
-		for rand.Float32() < serverDupsPercent {
-			if err = l.conn.send(p); err != nil {
-				return
-			}
-		}
-	}
-
-	// send response
-	err = l.conn.send(p)
-
+	err = sc.serve(p)
 	return
+}
+
+func (l *listener) eventf(code Code, raddr *net.UDPAddr, format string,
+	detail ...interface{}) {
+	if l.Handler != nil {
+		l.Handler.OnEvent(Eventf(code, l.conn.localAddr(), raddr, format, detail...))
+	}
 }
 
 func (l *listener) isFatalError(err error) (fatal bool) {
@@ -412,32 +283,6 @@ func (l *listener) isFatalError(err error) (fatal bool) {
 		fatal = !nerr.Temporary()
 	}
 	return
-}
-
-func (l *listener) restrictParams(pkt *packet, p *Params) {
-	if l.MaxDuration > 0 && p.Duration > l.MaxDuration {
-		p.Duration = l.MaxDuration
-	}
-	if l.MinInterval > 0 && p.Interval < l.MinInterval {
-		p.Interval = l.MinInterval
-	}
-	if l.MaxLength > 0 && p.Length > l.MaxLength {
-		p.Length = l.MaxLength
-	}
-	p.StampAt = l.AllowStamp.Restrict(p.StampAt)
-	if !l.AllowDSCP || !l.conn.dscpSupport {
-		p.DSCP = 0
-	}
-}
-
-func (l *listener) addFields(p *packet, fidxs []fidx) bool {
-	if err := p.addFields(fidxs, false); err != nil {
-		if _, ok := err.(*Error); ok {
-			l.eventf(Drop, p.raddr, "%s", err.Error())
-		}
-		return false
-	}
-	return true
 }
 
 func (l *listener) warnOnMultipleAddresses() error {
@@ -470,13 +315,6 @@ func (l *listener) warnOnMultipleAddresses() error {
 			"clients may not be able to connect")
 	}
 	return nil
-}
-
-func (l *listener) eventf(code Code, raddr *net.UDPAddr, format string,
-	detail ...interface{}) {
-	if l.Handler != nil {
-		l.Handler.OnEvent(Eventf(code, l.conn.localAddr(), raddr, format, detail...))
-	}
 }
 
 func (l *listener) isClosed() bool {
@@ -552,60 +390,15 @@ func (cm *connmgr) put(sc *sconn) {
 	cm.ref(true)
 }
 
-func (cm *connmgr) get(p *packet) (sconn *sconn,
-	exists bool, addrOk bool, intervalOk bool) {
-	ct := p.ctoken()
-	sc := cm.sconns[ct]
-	if sc == nil {
+func (cm *connmgr) get(ct ctoken) (sc *sconn) {
+	if sc = cm.sconns[ct]; sc == nil {
 		return
 	}
-	exists = true
 	if sc.expired() {
 		delete(cm.sconns, ct)
-		return
+		cm.ref(false)
+		sc = nil
 	}
-	if !udpAddrsEqual(p.raddr, &sc.raddr) {
-		return
-	}
-	addrOk = true
-	now := time.Now()
-	if sc.firstUsed.IsZero() {
-		sc.firstUsed = now
-	}
-	if cm.MinInterval > 0 {
-		if !sc.lastUsed.IsZero() {
-			earned := float64(now.Sub(sc.lastUsed)) / float64(cm.MinInterval)
-			sc.packetBucket += earned
-			if sc.packetBucket > float64(cm.PacketBurst) {
-				sc.packetBucket = float64(cm.PacketBurst)
-			}
-		}
-		if sc.packetBucket >= 1 {
-			sc.packetBucket--
-			intervalOk = true
-		}
-	} else {
-		intervalOk = true
-	}
-	// slide received seqno window
-	seqno := p.seqno()
-	sinceLastSeqno := seqno - sc.lastSeqno
-	if sinceLastSeqno > 0 {
-		sc.receivedWindow <<= sinceLastSeqno
-	}
-	if sinceLastSeqno >= 0 { // new, duplicate or first packet
-		sc.receivedWindow |= 0x1
-		sc.rwinValid = true
-	} else { // late packet
-		sc.receivedWindow |= (0x1 << -sinceLastSeqno)
-		sc.rwinValid = false
-	}
-	// update received count
-	sc.receivedCount++
-	// update seqno and last used times
-	sc.lastSeqno = seqno
-	sc.lastUsed = now
-	sconn = sc
 	return
 }
 

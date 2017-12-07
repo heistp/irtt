@@ -1000,10 +1000,7 @@ the client, and since start of the process for the server
 _Concrete tasks that just need doing..._
 
 - Add grace period back to duration restriction
-- Enforce length restriction with smaller receive buffer?
 - Move server communication and update logic into sconn
-  - Add serve method to sconn
-  - Get rid of remaining specific drop events, use generic Drop + error
   - Improve connRef design
   - See if I can remove l.eventf calls in accept
 - Add `-concurrent` flag to server for one goroutine per client conn
