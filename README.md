@@ -6,7 +6,7 @@ fixed period, and produces both human and machine parseable output.
 ## Start Here!
 
 IRTT is still under development, and as such has not yet met all of its
-[goals](#goals). In particular:
+[goals](#motivation-and-goals). In particular:
 
 - there's more work to do for public server security
 - the protocol and API are not finalized
@@ -999,6 +999,8 @@ the client, and since start of the process for the server
 
 _Concrete tasks that just need doing..._
 
+- Add grace period back to duration restriction
+- Enforce length restriction with smaller receive buffer?
 - Move server communication and update logic into sconn
   - Add serve method to sconn
   - Get rid of remaining specific drop events, use generic Drop + error
