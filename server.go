@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-// number of sconns to check to remove on each add (two seems to be the least
+// number of sconns to check to remove on each add (2 seems to be the least
 // aggresive number where the map size still levels off over time, but I use 5
 // to clean up unused sconns more quickly)
 const checkExpiredCount = 5
@@ -418,11 +418,13 @@ func (cm *connmgr) remove(ct ctoken) (sc *sconn) {
 // because the Go team very intentionally made map order traversal random for a
 // good reason, I don't think that's going to change any time soon.
 func (cm *connmgr) removeSomeExpired() {
-	for i := 0; i < checkExpiredCount; i++ {
-		for ct, sc := range cm.sconns {
-			if sc.expired() {
-				delete(cm.sconns, ct)
-			}
+	i := 0
+	for ct, sc := range cm.sconns {
+		if sc.expired() {
+			delete(cm.sconns, ct)
+			cm.ref(false)
+		}
+		if i++; i >= checkExpiredCount {
 			break
 		}
 	}
