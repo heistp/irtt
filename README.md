@@ -999,22 +999,20 @@ the client, and since start of the process for the server
 
 _Concrete tasks that just need doing..._
 
-- Improve connRef design
-- See if I can remove l.eventf calls in accept
 - Add `-concurrent` flag to server for one goroutine per client conn
-- Check or replace session cleanup mechanism
-- Add a session timeout and max interval so client doesn't send to a closed conn
-- Add ability for client to request random fill from server
 - Add protocol version number along with client check
-- Refactor packet manipulation to improve readability and prevent multiple validations
+- Add ability for client to request random fill from server
+- Use pflag options or something GNU compatible: https://github.com/spf13/pflag
+- Run heap profiler on client
+- Check or replace session cleanup and connRef mechanisms
+- Add a session timeout param and max interval so client doesn't send to a closed conn
 - Improve client connection closure by:
   - Repeating close packets up to four times until acknowledgement, like open
   - Including received packet stats in the acknowledgement from the server
-- Use pflag options or something GNU compatible: https://github.com/spf13/pflag
-- Run heap profiler on client
 
 ### TODO v1.0
 
+- Refactor packet manipulation to improve readability and prevent multiple validations
 - Improve robustness and security of public servers:
 	- Add bitrate limiting
 	- Limit open requests to prevent the equivalent of a "syn flood"
