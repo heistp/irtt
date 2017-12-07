@@ -64,7 +64,7 @@ const (
 	DefaultMaxDuration = time.Duration(0)
 	DefaultMinInterval = time.Duration(0)
 	DefaultMaxLength   = 0
-	DefaultPacketBurst = 10
+	DefaultPacketBurst = 5
 	DefaultAllowStamp  = DualStamps
 	DefaultAllowDSCP   = true
 	DefaultSetSrcIP    = false

@@ -33,6 +33,10 @@ const (
 	InvalidGCModeString
 	UnexpectedReplyFlag
 	NoSuitableAddressFound
+	InvalidConnToken
+	ShortInterval
+	LargeRequest
+	AddressMismatch
 )
 
 // Client error codes.

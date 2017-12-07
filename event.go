@@ -19,16 +19,13 @@ const (
 	ListenerStop
 	ListenerError
 	Drop
-	DropInvalidConnToken
-	DropAddressMismatch
-	DropShortInterval
-	DropTooLarge
 	NewConn
 	OpenClose
 	CloseConn
 	NoDSCPSupport
-	DurationLimitExceeded
+	ExceededDuration
 	NoReceiveDstAddrSupport
+	RemoveNoConn
 )
 
 // Client event codes.
