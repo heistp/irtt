@@ -13,6 +13,9 @@ const serverDropsPercent = 0
 // time after which sconns expire and may be removed
 const expirationTime = 1 * time.Minute
 
+// max duration grace period
+const maxDurationGrace = 2 * time.Second
+
 // sconn stores the state for a client's connection to the server
 type sconn struct {
 	*listener
@@ -151,7 +154,8 @@ func (sc *sconn) serve(p *packet) (err error) {
 	sc.lastSeqno = seqno
 
 	// check if max test duration exceeded (but still return packet)
-	if sc.MaxDuration > 0 && time.Since(sc.firstUsed) > sc.MaxDuration {
+	if sc.MaxDuration > 0 && time.Since(sc.firstUsed) >
+		sc.MaxDuration+maxDurationGrace {
 		sc.eventf(ExceededDuration, p.raddr,
 			"closing connection due to duration limit exceeded")
 		sc.cmgr.remove(sc.ctoken)
