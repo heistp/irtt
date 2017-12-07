@@ -993,6 +993,13 @@ the client, and since start of the process for the server
     [unsafe](https://golang.org/pkg/unsafe/) package, but so far this
     optimization has not been shown to be necessary.
 
+13) Why is the virt size (vsz) memory usage so high in Linux?
+
+    This likely has to do with the way Go allocates memory.  See
+    [this article](https://deferpanic.com/blog/understanding-golang-memory-usage/)
+    for more information. File an Issue if your resident usage (rss/res) is high
+    or you feel that memory consumption is somehow a problem.
+
 ## TODO and Roadmap
 
 ### TODO v0.9
@@ -1002,8 +1009,8 @@ _Concrete tasks that just need doing..._
 - Add `-concurrent` flag to server for one goroutine per client conn
 - Add protocol version number along with client check
 - Add ability for client to request random fill from server
-- Use pflag options or something GNU compatible: https://github.com/spf13/pflag
-- Run heap profiler on client
+- Use pflag options or something else GNU compatible
+- Run profiler on client
 - Check or replace session cleanup and connRef mechanisms
 - Add a session timeout param and max interval so client doesn't send to a closed conn
 - Improve client connection closure by:
