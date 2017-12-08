@@ -19,7 +19,6 @@ type ServerConfig struct {
 	SetSrcIP    bool
 	GCMode      GCMode
 	ThreadLock  bool
-	Concurrent  bool
 }
 
 // NewServerConfig returns a new ServerConfig with the default settings.
@@ -38,6 +37,5 @@ func NewServerConfig() *ServerConfig {
 		SetSrcIP:    DefaultSetSrcIP,
 		GCMode:      DefaultGCMode,
 		ThreadLock:  DefaultThreadLock,
-		Concurrent:  DefaultConcurrent,
 	}
 }
