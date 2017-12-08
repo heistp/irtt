@@ -52,7 +52,6 @@ func serverUsage() {
 	printf("               idle: garbage collector enabled only when idle")
 	printf("-thread        lock request handling goroutines to OS threads (may reduce")
 	printf("               mean latency, but may also add outliers)")
-	printf("-concurrent    use one goroutine per server connection")
 	printf("")
 	durationUsage()
 }
@@ -79,7 +78,6 @@ func runServerCLI(args []string) {
 	var setSrcIP = fs.Bool("setsrcip", DefaultSetSrcIP, "set source IP")
 	var gcModeStr = fs.String("gc", DefaultGCMode.String(), "gc mode")
 	var lockOSThread = fs.Bool("thread", DefaultThreadLock, "thread")
-	var concurrent = fs.Bool("concurrent", DefaultConcurrent, "concurrent")
 	fs.Parse(args)
 
 	// start profiling, if enabled in build
@@ -126,7 +124,6 @@ func runServerCLI(args []string) {
 	cfg.SetSrcIP = *setSrcIP
 	cfg.GCMode = gcMode
 	cfg.ThreadLock = *lockOSThread
-	cfg.Concurrent = *concurrent
 
 	// create server
 	s := NewServer(cfg)

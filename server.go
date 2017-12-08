@@ -226,34 +226,13 @@ func (l *listener) listenAndServe(errC chan<- error) (err error) {
 }
 
 func (l *listener) readAndReply() (err error) {
-	if l.Concurrent {
-		errch := make(chan error)
-		go func() {
-			for e := range errch {
-				if l.isFatalError(e) {
-					l.shutdown()
-				}
-				l.eventf(Drop, nil, "%s", e.Error())
+	p := l.pktPool.new()
+	for {
+		if err = l.readOneAndReply(p); err != nil {
+			if l.isFatalError(err) {
+				return
 			}
-		}()
-		for {
-			p := l.pktPool.get()
-			if err = l.readOneAndDispatch(p, errch); err != nil {
-				if l.isFatalError(err) {
-					return
-				}
-				l.eventf(Drop, p.raddr, "%s", err.Error())
-			}
-		}
-	} else {
-		p := l.pktPool.new()
-		for {
-			if err = l.readOneAndReply(p); err != nil {
-				if l.isFatalError(err) {
-					return
-				}
-				l.eventf(Drop, p.raddr, "%s", err.Error())
-			}
+			l.eventf(Drop, p.raddr, "%s", err.Error())
 		}
 	}
 }
@@ -281,32 +260,6 @@ func (l *listener) readOneAndReply(p *packet) (err error) {
 		return
 	}
 	_, err = sc.serve(p)
-	return
-}
-
-func (l *listener) readOneAndDispatch(p *packet, errch chan error) (err error) {
-	// read a packet
-	if err = l.conn.receive(p); err != nil {
-		return
-	}
-
-	// handle open
-	if p.flags()&flOpen != 0 {
-		go acceptAndServe(l, p, errch)
-		return
-	}
-
-	// handle packet for sconn
-	if err = p.addFields(fRequest, false); err != nil {
-		return
-	}
-	ct := p.ctoken()
-	sc := l.cmgr.get(ct)
-	if sc == nil {
-		err = Errorf(InvalidConnToken, "invalid conn token %016x", ct)
-		return
-	}
-	sc.in <- p
 	return
 }
 

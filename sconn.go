@@ -16,15 +16,11 @@ const expirationTime = 1 * time.Minute
 // max duration grace period
 const maxDurationGrace = 2 * time.Second
 
-// size of input channel buffer
-const inChanSize = 0
-
 // sconn stores the state for a client's connection to the server
 type sconn struct {
 	*listener
 	ctoken         ctoken
 	raddr          *net.UDPAddr
-	in             chan *packet
 	params         *Params
 	created        time.Time
 	firstUsed      time.Time
@@ -41,7 +37,6 @@ func newSconn(l *listener, raddr *net.UDPAddr) *sconn {
 	return &sconn{
 		listener:     l,
 		raddr:        raddr,
-		in:           make(chan *packet, inChanSize),
 		created:      time.Now(),
 		lastSeqno:    InvalidSeqno,
 		packetBucket: float64(l.PacketBurst),
@@ -79,27 +74,6 @@ func accept(l *listener, p *packet) (sc *sconn, err error) {
 	p.setPayload(params.bytes())
 	err = l.conn.send(p)
 	return
-}
-
-func acceptAndServe(l *listener, op *packet, errch chan error) {
-	var err error
-	defer func() {
-		if err != nil {
-			errch <- err
-		}
-	}()
-
-	sc, err := accept(l, op)
-	if err != nil {
-		return
-	}
-
-	var closed bool
-	for p := range sc.in {
-		if closed, err = sc.serve(p); closed || err != nil {
-			break
-		}
-	}
 }
 
 func (sc *sconn) serve(p *packet) (closed bool, err error) {
