@@ -16,11 +16,15 @@ const expirationTime = 1 * time.Minute
 // max duration grace period
 const maxDurationGrace = 2 * time.Second
 
+// size of input channel buffer
+const inChanSize = 0
+
 // sconn stores the state for a client's connection to the server
 type sconn struct {
 	*listener
 	ctoken         ctoken
-	raddr          net.UDPAddr
+	raddr          *net.UDPAddr
+	in             chan *packet
 	params         *Params
 	created        time.Time
 	firstUsed      time.Time
@@ -33,15 +37,20 @@ type sconn struct {
 	bytes          uint64
 }
 
-func accept(l *listener, p *packet) (err error) {
-	// create sconn
-	sc := &sconn{
+func newSconn(l *listener, raddr *net.UDPAddr) *sconn {
+	return &sconn{
 		listener:     l,
-		raddr:        *p.raddr,
+		raddr:        raddr,
+		in:           make(chan *packet, inChanSize),
 		created:      time.Now(),
 		lastSeqno:    InvalidSeqno,
 		packetBucket: float64(l.PacketBurst),
 	}
+}
+
+func accept(l *listener, p *packet) (sc *sconn, err error) {
+	// create sconn
+	sc = newSconn(l, p.raddr)
 
 	// parse, restrict and set params
 	var params *Params
@@ -72,28 +81,55 @@ func accept(l *listener, p *packet) (err error) {
 	return
 }
 
-func (sc *sconn) serve(p *packet) (err error) {
-	// check address
-	if !udpAddrsEqual(p.raddr, &sc.raddr) {
-		err = Errorf(AddressMismatch,
-			"drop due to address mismatch (expected %s for %016x)",
-			&sc.raddr, p.ctoken())
+func acceptAndServe(l *listener, op *packet, errch chan error) {
+	var err error
+	defer func() {
+		if err != nil {
+			errch <- err
+		}
+	}()
+
+	sc, err := accept(l, op)
+	if err != nil {
 		return
 	}
 
-	// handle close
+	var closed bool
+	for p := range sc.in {
+		if closed, err = sc.serve(p); closed || err != nil {
+			break
+		}
+	}
+}
+
+func (sc *sconn) serve(p *packet) (closed bool, err error) {
+	if !udpAddrsEqual(p.raddr, sc.raddr) {
+		err = Errorf(AddressMismatch, "address mismatch (expected %s for %016x)",
+			sc.raddr, p.ctoken())
+		return
+	}
 	if p.flags()&flClose != 0 {
-		if err = p.addFields(fcloseRequest, false); err != nil {
-			return
-		}
-		sc.eventf(CloseConn, p.raddr, "close connection, token=%016x", sc.ctoken)
-		if scr := sc.cmgr.remove(sc.ctoken); scr == nil {
-			sc.eventf(RemoveNoConn, p.raddr,
-				"sconn not in connmgr, token=%016x", sc.ctoken)
-		}
+		closed = true
+		err = sc.serveClose(p)
 		return
 	}
+	closed, err = sc.serveEcho(p)
+	return
+}
 
+func (sc *sconn) serveClose(p *packet) (err error) {
+	if err = p.addFields(fcloseRequest, false); err != nil {
+		return
+	}
+	sc.eventf(CloseConn, p.raddr, "close connection, token=%016x", sc.ctoken)
+	if scr := sc.cmgr.remove(sc.ctoken); scr == nil {
+		sc.eventf(RemoveNoConn, p.raddr,
+			"sconn not in connmgr, token=%016x", sc.ctoken)
+	}
+	return
+}
+
+func (sc *sconn) serveEcho(p *packet) (closed bool, err error) {
 	// handle echo request
 	if err = p.addFields(fechoRequest, false); err != nil {
 		return
@@ -160,6 +196,7 @@ func (sc *sconn) serve(p *packet) (err error) {
 			"closing connection due to duration limit exceeded")
 		sc.cmgr.remove(sc.ctoken)
 		p.setFlagBits(flClose)
+		closed = true
 	}
 
 	// set packet dscp value

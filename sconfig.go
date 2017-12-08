@@ -17,9 +17,9 @@ type ServerConfig struct {
 	IPVersion   IPVersion
 	Handler     Handler
 	SetSrcIP    bool
-	Concurrent  bool
 	GCMode      GCMode
 	ThreadLock  bool
+	Concurrent  bool
 }
 
 // NewServerConfig returns a new ServerConfig with the default settings.
@@ -36,8 +36,8 @@ func NewServerConfig() *ServerConfig {
 		TTL:         DefaultTTL,
 		IPVersion:   DefaultIPVersion,
 		SetSrcIP:    DefaultSetSrcIP,
-		Concurrent:  DefaultConcurrent,
 		GCMode:      DefaultGCMode,
 		ThreadLock:  DefaultThreadLock,
+		Concurrent:  DefaultConcurrent,
 	}
 }

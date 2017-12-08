@@ -1006,7 +1006,6 @@ the client, and since start of the process for the server
 
 _Concrete tasks that just need doing..._
 
-- Add `-concurrent` flag to server for one goroutine per client conn
 - Add protocol version number along with client check
 - Add ability for client to request random fill from server
 - Use pflag options or something else GNU compatible
@@ -1051,6 +1050,7 @@ _Planned for the future..._
 
 _Collection area for undefined or uncertain stuff..._
 
+- Find better model for concurrency (one goroutine per sconn induces latency)
 - Map error codes to exit codes
 - Add seqno to the Max and maybe Min columns in the text output
 - Prototype TCP throughput test and compare straight Go vs iperf/netperf
