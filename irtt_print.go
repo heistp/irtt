@@ -39,7 +39,11 @@ func flush() {
 func exitOnError(err error, code int) {
 	if err != nil {
 		printTo = os.Stderr
-		printf("Error: %s", err)
+		if _, ok := err.(*Error); ok {
+			printf("%s", err)
+		} else {
+			printf("Error: %s", err)
+		}
 		os.Exit(code)
 	}
 }

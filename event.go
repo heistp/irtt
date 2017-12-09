@@ -35,6 +35,7 @@ const (
 	WaitForPackets
 	ServerRestriction
 	NoTest
+	ConnectedClosed
 )
 
 // Event is an event sent to a Handler.

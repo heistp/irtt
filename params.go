@@ -10,7 +10,8 @@ type paramType int
 const paramsMaxLen = 64
 
 const (
-	pDuration = iota + 1
+	pProtoVersion = iota + 1
+	pDuration
 	pInterval
 	pLength
 	pReceivedStats
@@ -21,6 +22,7 @@ const (
 
 // Params are the test parameters sent to and received from the server.
 type Params struct {
+	ProtoVersion  int           `json:"proto_version"`
 	Duration      time.Duration `json:"duration"`
 	Interval      time.Duration `json:"interval"`
 	Length        int           `json:"length"`
@@ -45,6 +47,8 @@ func parseParams(b []byte) (*Params, error) {
 func (p *Params) bytes() []byte {
 	b := make([]byte, paramsMaxLen)
 	pos := 0
+	pos += binary.PutUvarint(b[pos:], pProtoVersion)
+	pos += binary.PutVarint(b[pos:], int64(p.ProtoVersion))
 	pos += binary.PutUvarint(b[pos:], pDuration)
 	pos += binary.PutVarint(b[pos:], int64(p.Duration))
 	pos += binary.PutUvarint(b[pos:], pInterval)
@@ -75,6 +79,8 @@ func (p *Params) readParam(b []byte) (int, error) {
 	}
 	pos += n
 	switch t {
+	case pProtoVersion:
+		p.ProtoVersion = int(v)
 	case pDuration:
 		p.Duration = time.Duration(v)
 		if p.Duration <= 0 {
@@ -105,7 +111,7 @@ func (p *Params) readParam(b []byte) (int, error) {
 	case pDSCP:
 		p.DSCP = int(v)
 	default:
-		return 0, Errorf(UnknownParam, "unknown negotiation param (0x%x = %d)", t, v)
+		// note: unknown params are silently ignored
 	}
 	return pos, nil
 }
