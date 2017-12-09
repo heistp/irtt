@@ -6,16 +6,6 @@ import (
 	"time"
 )
 
-// settings for testing
-const serverDupsPercent = 0
-const serverDropsPercent = 0
-
-// time after which sconns expire and may be removed
-const expirationTime = 1 * time.Minute
-
-// max duration grace period
-const maxDurationGrace = 2 * time.Second
-
 // sconn stores the state for a client's connection to the server
 type sconn struct {
 	*listener
@@ -255,7 +245,11 @@ func (sc *sconn) serveEcho(p *packet) (closed bool, err error) {
 }
 
 func (sc *sconn) expired() bool {
-	return !sc.lastUsed.IsZero() && time.Since(sc.lastUsed) > expirationTime
+	if sc.Timeout == 0 {
+		return false
+	}
+	return !sc.lastUsed.IsZero() &&
+		time.Since(sc.lastUsed) > sc.Timeout+timeoutGrace
 }
 
 func (sc *sconn) restrictParams(p *Params) {
@@ -267,6 +261,9 @@ func (sc *sconn) restrictParams(p *Params) {
 	}
 	if sc.MinInterval > 0 && p.Interval < sc.MinInterval {
 		p.Interval = sc.MinInterval
+	}
+	if sc.Timeout > 0 && p.Interval > sc.Timeout/maxIntervalTimeoutFactor {
+		p.Interval = sc.Timeout / maxIntervalTimeoutFactor
 	}
 	if sc.MaxLength > 0 && p.Length > sc.MaxLength {
 		p.Length = sc.MaxLength

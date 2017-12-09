@@ -915,13 +915,19 @@ the client, and since start of the process for the server
 	 end shortly after 800ms. If there are any outstanding packets, the wait time
 	 is observed, which by default is a multiple of the maximum RTT.
 
-5) Why does wait fall back to fixed duration when duration is less than RTT?
+5) Why is IPDV not reported when only one packet is received?
+
+   [IPDV](https://en.wikipedia.org/wiki/Packet_delay_variation) is the
+   difference in delay between successfully returned replies, so at least two
+   reply packets are required to make this calculation.
+
+6) Why does wait fall back to fixed duration when duration is less than RTT?
 
    If a full RTT has not elapsed, there is no way to know how long an
 	 appropriate wait time would be, so the wait falls back to a default fixed
 	 time (default is 4 seconds, same as ping).
 
-6) Why can't the client connect to the server, and instead I get
+7) Why can't the client connect to the server, and instead I get
    `Error: no reply from server`?
 
    There are a number of possible reasons for this:
@@ -946,7 +952,7 @@ the client, and since start of the process for the server
       the additional per-packet heap allocations required by the
       `golang.org/x/net` packages.
 
-7) Why don't you include median values for send call time, timer error and
+8) Why don't you include median values for send call time, timer error and
    server processing time?
 
    Those values aren't stored for each round trip, and it's difficult to do a
@@ -956,25 +962,25 @@ the client, and since start of the process for the server
 	 but so far it isn't a high priority. If it is for you, file an
    [Issue](https://github.com/peteheist/irtt/issues).
 
-8) I see you use MD5 for the HMAC. Isn't that insecure?
+9) I see you use MD5 for the HMAC. Isn't that insecure?
 
    MD5 should not have practical vulnerabilities when used in a message authenticate
    code. See [this page](https://en.wikipedia.org/wiki/Hash-based_message_authentication_code#Security)
    for more info.
 
-9) Will you add unit tests?
+10) Will you add unit tests?
 
-   Maybe some. I feel that the most important thing for a project of this size
-   is that the design is clear enough that bugs are next to impossible. IRTT
-   is not there yet though, particularly when it comes to packet manipulation.
+    Maybe some. I feel that the most important thing for a project of this size
+    is that the design is clear enough that bugs are next to impossible. IRTT
+    is not there yet though, particularly when it comes to packet manipulation.
 
-10) Are there any plans for translation to other languages?
+11) Are there any plans for translation to other languages?
 
     While some parts of the API were designed to keep i18n possible, there is no
     support for i18n built in to the Go standard libraries. It should be possible,
     but could be a challenge, and is not something I'm likely to undertake myself.
 
-11) Why do I get `Error: failed to allocate results buffer for X round trips
+12) Why do I get `Error: failed to allocate results buffer for X round trips
    (runtime error: makeslice: cap out of range)`?
 
     Your test interval and duration probably require a results buffer that's
@@ -984,7 +990,7 @@ the client, and since start of the process for the server
     `maxSliceCap` in [slice.go](https://golang.org/src/runtime/slice.go) and
     `_MaxMem` in [malloc.go](https://golang.org/src/runtime/malloc.go).
 
-12) Why is little endian byte order used in the packet format?
+13) Why is little endian byte order used in the packet format?
 
     As for Google's [protobufs](https://github.com/google/protobuf), this was
     chosen because the vast majority of modern processors use little-endian byte
@@ -993,9 +999,9 @@ the client, and since start of the process for the server
     [unsafe](https://golang.org/pkg/unsafe/) package, but so far this
     optimization has not been shown to be necessary.
 
-13) Why is the virt size (vsz) memory usage so high in Linux?
+14) Why is the virt size (vsz) memory usage so high in Linux?
 
-    This likely has to do with the way Go allocates memory. See
+    This has to do with the way Go allocates memory. See
     [this article](https://deferpanic.com/blog/understanding-golang-memory-usage/)
     for more information. File an Issue if your resident usage (rss/res) is high
     or you feel that memory consumption is somehow a problem.
@@ -1006,21 +1012,20 @@ the client, and since start of the process for the server
 
 _Concrete tasks that just need doing..._
 
-- Add ability for client to request random fill from server
-- Add a session timeout param and max interval so client doesn't send to a closed conn
+- Add ability for client to request no, pattern or random fills from server, and
+  for server to restrict it (default random only)
 - Improve client connection closure by:
   - Repeating close packets up to four times until acknowledgement, like open
   - Including received packet stats in the acknowledgement from the server
 - Use pflag options or something else GNU compatible
 - Check or replace session cleanup and connRef mechanisms
-- Check client scheduling logic, skip sleep on misses?
 - Run profiler on client
-
-- Changes to JSON:
+- Document changes to JSON:
   - add proto_version to params
 
 ### TODO v1.0
 
+- Add client flag to skip sleep and catch up after timer misses
 - Refactor packet manipulation to improve readability and prevent multiple validations
 - Improve robustness and security of public servers:
 	- Add bitrate limiting

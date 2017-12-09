@@ -10,14 +10,6 @@ import (
 	"time"
 )
 
-// number of sconns to check to remove on each add (2 seems to be the least
-// aggresive number where the map size still levels off over time, but I use 5
-// to clean up unused sconns more quickly)
-const checkExpiredCount = 5
-
-// initial capacity for sconns map
-const sconnsInitSize = 32
-
 // Server is the irtt server.
 type Server struct {
 	*ServerConfig

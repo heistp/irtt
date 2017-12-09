@@ -12,11 +12,6 @@ import (
 	"golang.org/x/net/ipv6"
 )
 
-// minOpenTimeout sets the minimum time open() will wait before sending the
-// next packet. This prevents clients from requesting a timeout that sends
-// packets to the server too quickly.
-const minOpenTimeout = 200 * time.Millisecond
-
 // nconn (network conn) is the embedded struct in conn and lconn connections. It
 // adds IPVersion, socket options and some helpers to net.UDPConn.
 type nconn struct {

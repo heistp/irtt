@@ -31,6 +31,9 @@ func serverUsage() {
 	printf("-hmac key      add HMAC with key (0x for hex) to all packets, provides:")
 	printf("               dropping of all packets without a correct HMAC")
 	printf("               protection for server against unauthorized discovery and use")
+	printf("-timeout dur   timeout for closing connections if no requests received")
+	printf("               0 means no timeout (not recommended on public servers)")
+	printf("               (default %s, see Duration units below)", DefaultServerTimeout)
 	printf("-pburst #      packet burst allowed before enforcing minimum interval")
 	printf("               (default %d)", DefaultPacketBurst)
 	printf("-fill fill     fill payload with given data (default %s)", DefaultServerFiller.String())
@@ -69,6 +72,7 @@ func runServerCLI(args []string) {
 	var maxLength = fs.Int("l", DefaultMaxLength, "max length")
 	var allowTimestampStr = fs.String("ts", DefaultAllowStamp.String(), "allow timestamp")
 	var hmacStr = fs.String("hmac", defaultHMACKey, "HMAC key")
+	var timeout = fs.Duration("timeout", DefaultServerTimeout, "timeout")
 	var packetBurst = fs.Int("pburst", DefaultPacketBurst, "packet burst")
 	var fillStr = fs.String("fill", DefaultServerFiller.String(), "filler")
 	var ipv4 = fs.Bool("4", false, "IPv4 only")
@@ -114,6 +118,7 @@ func runServerCLI(args []string) {
 	cfg.MinInterval = *minInterval
 	cfg.AllowStamp = allowStamp
 	cfg.HMACKey = hmacKey
+	cfg.Timeout = *timeout
 	cfg.PacketBurst = *packetBurst
 	cfg.MaxLength = *maxLength
 	cfg.Filler = filler

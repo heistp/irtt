@@ -9,6 +9,7 @@ type ServerConfig struct {
 	MaxDuration time.Duration
 	MinInterval time.Duration
 	MaxLength   int
+	Timeout     time.Duration
 	PacketBurst int
 	Filler      Filler
 	AllowStamp  AllowStamp
@@ -28,6 +29,7 @@ func NewServerConfig() *ServerConfig {
 		MaxDuration: DefaultMaxDuration,
 		MinInterval: DefaultMinInterval,
 		MaxLength:   DefaultMaxLength,
+		Timeout:     DefaultServerTimeout,
 		PacketBurst: DefaultPacketBurst,
 		Filler:      DefaultServerFiller,
 		AllowStamp:  DefaultAllowStamp,
