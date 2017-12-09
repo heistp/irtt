@@ -11,12 +11,6 @@ import (
 	"time"
 )
 
-// ignore server restrictions (for testing hard limits)
-const ignoreServerRestrictions = false
-
-// settings for testing
-const clientDropsPercent = 0
-
 // Client is the Client. It must be created with NewClient. It may not be used
 // concurrently.
 type Client struct {
@@ -204,7 +198,7 @@ func (c *Client) checkParameters() (changed bool, err error) {
 	}
 	if c.Duration < c.Supplied.Duration {
 		changed = true
-		c.eventf(ServerRestriction, "server restricted duration from %s to %s",
+		c.eventf(ServerRestriction, "server reduced duration from %s to %s",
 			c.Supplied.Duration, c.Duration)
 	}
 	if c.Duration > c.Supplied.Duration {
@@ -216,19 +210,25 @@ func (c *Client) checkParameters() (changed bool, err error) {
 	}
 	if c.Interval > c.Supplied.Interval {
 		changed = true
-		c.eventf(ServerRestriction, "server restricted interval from %s to %s",
+		c.eventf(ServerRestriction, "server increased interval from %s to %s",
 			c.Supplied.Interval, c.Interval)
 	}
 	if c.Interval < c.Supplied.Interval {
 		changed = true
-		err = Errorf(InvalidServerRestriction,
-			"server tried to change interval from %s to %s",
-			c.Supplied.Interval, c.Interval)
+		if c.Interval < 1*time.Second {
+			err = Errorf(InvalidServerRestriction,
+				"server tried to reduce interval from %s to %s",
+				c.Supplied.Interval, c.Interval)
+			return
+		}
+		c.eventf(ServerRestriction,
+			"server reduced interval from %s to %s to avoid %s timeout",
+			c.Supplied.Interval, c.Interval, c.Interval*maxIntervalTimeoutFactor)
 		return
 	}
 	if c.Length < c.Supplied.Length {
 		changed = true
-		c.eventf(ServerRestriction, "server restricted length from %d to %d",
+		c.eventf(ServerRestriction, "server reduced length from %d to %d",
 			c.Supplied.Length, c.Length)
 	}
 	if c.Length > c.Supplied.Length {

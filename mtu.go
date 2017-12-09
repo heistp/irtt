@@ -5,12 +5,6 @@ import (
 	"net"
 )
 
-// maxMTU is the MTU used if it could not be determined by autodetection.
-const maxMTU = 64 * 1024
-
-// minimum valid MTU per RFC 791
-const minValidMTU = 68
-
 // detectMTU autodetects and returns the MTU either for the interface associated
 // with the specified IP, or if the ip parameter is nil, the max MTU of all
 // interfaces, and if it cannot be determined, a fallback default.

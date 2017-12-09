@@ -61,16 +61,58 @@ var DefaultServerFiller = NewDefaultPatternFiller()
 
 // Server defaults.
 const (
-	DefaultMaxDuration = time.Duration(0)
-	DefaultMinInterval = time.Duration(0)
-	DefaultMaxLength   = 0
-	DefaultPacketBurst = 5
-	DefaultAllowStamp  = DualStamps
-	DefaultAllowDSCP   = true
-	DefaultSetSrcIP    = false
-	DefaultGCMode      = GCOn
-	DefaultConcurrent  = false
+	DefaultMaxDuration   = time.Duration(0)
+	DefaultMinInterval   = time.Duration(0)
+	DefaultMaxLength     = 0
+	DefaultServerTimeout = 1 * time.Minute
+	DefaultPacketBurst   = 5
+	DefaultAllowStamp    = DualStamps
+	DefaultAllowDSCP     = true
+	DefaultSetSrcIP      = false
+	DefaultGCMode        = GCOn
+	DefaultConcurrent    = false
 )
 
 // DefaultBindAddrs are the default bind addresses.
 var DefaultBindAddrs = []string{":2112"}
+
+// server duplicates and drops for testing (0.0-1.0)
+const serverDupsPercent = 0
+const serverDropsPercent = 0
+
+// grace period for connection closure due to timeout
+const timeoutGrace = 5 * time.Second
+
+// factor of timeout used for maximum interval
+const maxIntervalTimeoutFactor = 4
+
+// max duration grace period
+const maxDurationGrace = 2 * time.Second
+
+// ignore server restrictions (for testing hard limits)
+const ignoreServerRestrictions = false
+
+// settings for testing
+const clientDropsPercent = 0
+
+// minOpenTimeout sets the minimum time open() will wait before sending the
+// next packet. This prevents clients from requesting a timeout that sends
+// packets to the server too quickly.
+const minOpenTimeout = 200 * time.Millisecond
+
+// maximum initial length of pattern filler buffer
+const patternMaxInitLen = 64 * 1024
+
+// maxMTU is the MTU used if it could not be determined by autodetection.
+const maxMTU = 64 * 1024
+
+// minimum valid MTU per RFC 791
+const minValidMTU = 68
+
+// number of sconns to check to remove on each add (2 seems to be the least
+// aggresive number where the map size still levels off over time, but I use 5
+// to clean up unused sconns more quickly)
+const checkExpiredCount = 5
+
+// initial capacity for sconns map
+const sconnsInitSize = 32

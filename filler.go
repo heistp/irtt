@@ -16,8 +16,6 @@ type Filler interface {
 	String() string
 }
 
-const patternMaxInitLen = 64 * 1024
-
 // PatternFiller can be used to fill with a repeating byte pattern.
 type PatternFiller struct {
 	Bytes []byte
