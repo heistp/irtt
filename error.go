@@ -21,8 +21,8 @@ const (
 	InvalidFlagBitsSet
 	ShortParamBuffer
 	ParamOverflow
-	UnknownParam
 	InvalidParamValue
+	ProtocolVersionMismatch
 )
 
 // Server error codes.
@@ -84,4 +84,11 @@ func Errorf(code Code, format string, detail ...interface{}) *Error {
 
 func (e *Error) Error() string {
 	return e.Event.String()
+}
+
+func isErrorCode(code Code, err error) (matches bool) {
+	if e, ok := err.(*Error); ok {
+		matches = (e.Code == code)
+	}
+	return
 }

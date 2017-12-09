@@ -995,7 +995,7 @@ the client, and since start of the process for the server
 
 13) Why is the virt size (vsz) memory usage so high in Linux?
 
-    This likely has to do with the way Go allocates memory.  See
+    This likely has to do with the way Go allocates memory. See
     [this article](https://deferpanic.com/blog/understanding-golang-memory-usage/)
     for more information. File an Issue if your resident usage (rss/res) is high
     or you feel that memory consumption is somehow a problem.
@@ -1006,15 +1006,18 @@ the client, and since start of the process for the server
 
 _Concrete tasks that just need doing..._
 
-- Add protocol version number along with client check
 - Add ability for client to request random fill from server
-- Use pflag options or something else GNU compatible
-- Run profiler on client
-- Check or replace session cleanup and connRef mechanisms
 - Add a session timeout param and max interval so client doesn't send to a closed conn
 - Improve client connection closure by:
   - Repeating close packets up to four times until acknowledgement, like open
   - Including received packet stats in the acknowledgement from the server
+- Use pflag options or something else GNU compatible
+- Check or replace session cleanup and connRef mechanisms
+- Check client scheduling logic, skip sleep on misses?
+- Run profiler on client
+
+- Changes to JSON:
+  - add proto_version to params
 
 ### TODO v1.0
 
@@ -1050,6 +1053,7 @@ _Planned for the future..._
 
 _Collection area for undefined or uncertain stuff..._
 
+- Always return instance of irtt.Error? If so, look at exitOnError.
 - Find better model for concurrency (one goroutine per sconn induces latency)
 - Map error codes to exit codes
 - Add seqno to the Max and maybe Min columns in the text output

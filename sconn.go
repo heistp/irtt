@@ -56,13 +56,17 @@ func accept(l *listener, p *packet) (sc *sconn, err error) {
 	sc.restrictParams(params)
 	sc.params = params
 
-	// put in connmgr if close flag not set (assigns ctoken)
-	if p.flags()&flClose == 0 {
-		l.cmgr.put(sc)
-		l.eventf(NewConn, p.raddr, "new connection, token=%016x",
-			sc.ctoken)
-	} else {
+	// determine state of connection
+	if params.ProtoVersion != ProtoVersion {
+		l.eventf(ProtocolVersionMismatch, p.raddr,
+			"close connection, client version %d != server version %d",
+			params.ProtoVersion, ProtoVersion)
+		p.setFlagBits(flClose)
+	} else if p.flags()&flClose != 0 {
 		l.eventf(OpenClose, p.raddr, "open-close connection")
+	} else {
+		l.cmgr.put(sc)
+		l.eventf(NewConn, p.raddr, "new connection, token=%016x", sc.ctoken)
 	}
 
 	// prepare and send open reply
@@ -255,6 +259,9 @@ func (sc *sconn) expired() bool {
 }
 
 func (sc *sconn) restrictParams(p *Params) {
+	if p.ProtoVersion != ProtoVersion {
+		p.ProtoVersion = ProtoVersion
+	}
 	if sc.MaxDuration > 0 && p.Duration > sc.MaxDuration {
 		p.Duration = sc.MaxDuration
 	}
@@ -268,4 +275,5 @@ func (sc *sconn) restrictParams(p *Params) {
 	if !sc.AllowDSCP || !sc.conn.dscpSupport {
 		p.DSCP = 0
 	}
+	return
 }

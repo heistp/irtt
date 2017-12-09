@@ -50,23 +50,11 @@ func (c *Client) Run(ctx context.Context) (r *Result, err error) {
 	// notify about connecting
 	c.eventf(Connecting, "connecting to %s", c.RemoteAddress)
 
-	// check for closed error helper
-	isClosedError := func(e error) (closedError bool) {
-		if ee, ok := e.(*Error); ok {
-			closedError = (ee.Code == ServerClosed)
-		}
-		return
-	}
-
 	// dial server
-	c.conn, err = dial(ctx, c.ClientConfig)
-	if err != nil && (!c.ClientConfig.NoTest || !isClosedError(err)) {
+	if c.conn, err = dial(ctx, c.ClientConfig); err != nil {
 		return
 	}
 	defer c.close()
-
-	// notify about connected
-	c.eventf(Connected, "connection established")
 
 	// check parameter changes
 	var changed bool
@@ -75,6 +63,14 @@ func (c *Client) Run(ctx context.Context) (r *Result, err error) {
 	}
 	if changed && c.StrictParams {
 		err = Errorf(ParamsChanged, "server restricted test parameters")
+		return
+	}
+
+	// notify about connection status
+	if c.conn != nil {
+		c.eventf(Connected, "connection established")
+	} else {
+		c.eventf(ConnectedClosed, "connection accepted and closed")
 		return
 	}
 
@@ -168,7 +164,9 @@ func (c *Client) close() {
 	c.closedM.Lock()
 	defer c.closedM.Unlock()
 	if !c.closed {
-		c.conn.close()
+		if c.conn != nil {
+			c.conn.close()
+		}
 		c.closed = true
 	}
 }
@@ -198,6 +196,12 @@ func (c *Client) remoteAddr() *net.UDPAddr {
 // checkParameters checks any changes after the server returned restricted
 // parameters.
 func (c *Client) checkParameters() (changed bool, err error) {
+	if c.ProtoVersion != ProtoVersion {
+		changed = true
+		err = Errorf(ProtocolVersionMismatch,
+			"client version %d != server version %d", ProtoVersion, c.ProtoVersion)
+		return
+	}
 	if c.Duration < c.Supplied.Duration {
 		changed = true
 		c.eventf(ServerRestriction, "server restricted duration from %s to %s",

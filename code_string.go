@@ -7,17 +7,17 @@ import "fmt"
 const (
 	_Code_name_0 = "OpenTimeoutTooShortInvalidReceivedStatsStringInvalidReceivedStatsIntParamsChangedInvalidServerRestrictionOpenTimeoutServerClosedConnTokenZeroDurationNonPositiveIntervalNonPositiveNoSuchWaiterNoSuchTimerNoSuchFillerNoSuchAveragerInvalidWaitDurationInvalidWaitFactorInvalidWaitStringInvalidSleepFactorUnexpectedSequenceNumberClockMismatchStampAtMismatchShortReplyExpectedReplyFlagTTLErrorDFErrorUnexpectedOpenFlagAllocateResultsPanicInvalidExpAvgAlphaInvalidWinAvgWindow"
 	_Code_name_1 = "AddressMismatchLargeRequestShortIntervalInvalidConnTokenNoSuitableAddressFoundUnexpectedReplyFlagInvalidGCModeStringUnspecifiedWithSpecifiedAddressesNoMatchingInterfacesUpNoMatchingInterfaces"
-	_Code_name_2 = "InvalidParamValueUnknownParamParamOverflowShortParamBufferInvalidFlagBitsSetDFNotSupportedInconsistentClocksNonexclusiveMidpointTStampUnexpectedHMACBadHMACNoHMACBadMagicInvalidClockIntInvalidClockStringInvalidAllowStampStringInvalidStampAtIntInvalidStampAtStringFieldsCapacityTooLargeFieldsLengthTooLargeInvalidDFStringShortWrite"
+	_Code_name_2 = "ProtocolVersionMismatchInvalidParamValueParamOverflowShortParamBufferInvalidFlagBitsSetDFNotSupportedInconsistentClocksNonexclusiveMidpointTStampUnexpectedHMACBadHMACNoHMACBadMagicInvalidClockIntInvalidClockStringInvalidAllowStampStringInvalidStampAtIntInvalidStampAtStringFieldsCapacityTooLargeFieldsLengthTooLargeInvalidDFStringShortWrite"
 	_Code_name_3 = "MultipleAddressesServerStartServerStopListenerStartListenerStopListenerErrorDropNewConnOpenCloseCloseConnNoDSCPSupportExceededDurationNoReceiveDstAddrSupportRemoveNoConn"
-	_Code_name_4 = "ConnectingConnectedWaitForPacketsServerRestrictionNoTest"
+	_Code_name_4 = "ConnectingConnectedWaitForPacketsServerRestrictionNoTestConnectedClosed"
 )
 
 var (
 	_Code_index_0 = [...]uint16{0, 19, 45, 68, 81, 105, 116, 128, 141, 160, 179, 191, 202, 214, 228, 247, 264, 281, 299, 323, 336, 351, 361, 378, 386, 393, 411, 431, 449, 468}
 	_Code_index_1 = [...]uint8{0, 15, 27, 40, 56, 78, 97, 116, 149, 171, 191}
-	_Code_index_2 = [...]uint16{0, 17, 29, 42, 58, 76, 90, 108, 134, 148, 155, 161, 169, 184, 202, 225, 242, 262, 284, 304, 319, 329}
+	_Code_index_2 = [...]uint16{0, 23, 40, 53, 69, 87, 101, 119, 145, 159, 166, 172, 180, 195, 213, 236, 253, 273, 295, 315, 330, 340}
 	_Code_index_3 = [...]uint8{0, 17, 28, 38, 51, 63, 76, 80, 87, 96, 105, 118, 134, 157, 169}
-	_Code_index_4 = [...]uint8{0, 10, 19, 33, 50, 56}
+	_Code_index_4 = [...]uint8{0, 10, 19, 33, 50, 56, 71}
 )
 
 func (i Code) String() string {
@@ -34,7 +34,7 @@ func (i Code) String() string {
 	case 1024 <= i && i <= 1037:
 		i -= 1024
 		return _Code_name_3[_Code_index_3[i]:_Code_index_3[i+1]]
-	case 2048 <= i && i <= 2052:
+	case 2048 <= i && i <= 2053:
 		i -= 2048
 		return _Code_name_4[_Code_index_4[i]:_Code_index_4[i+1]]
 	default:

@@ -122,13 +122,13 @@ type cconn struct {
 	ctoken ctoken
 }
 
-func dial(ctx context.Context, cfg *ClientConfig) (*cconn, error) {
+func dial(ctx context.Context, cfg *ClientConfig) (cc *cconn, err error) {
 	// resolve (could support trying multiple addresses in succession)
 	cfg.LocalAddress = addPort(cfg.LocalAddress, DefaultLocalPort)
 	laddr, err := net.ResolveUDPAddr(cfg.IPVersion.udpNetwork(),
 		cfg.LocalAddress)
 	if err != nil {
-		return nil, err
+		return
 	}
 
 	// add default port, if necessary, and resolve server
@@ -136,14 +136,14 @@ func dial(ctx context.Context, cfg *ClientConfig) (*cconn, error) {
 	raddr, err := net.ResolveUDPAddr(cfg.IPVersion.udpNetwork(),
 		cfg.RemoteAddress)
 	if err != nil {
-		return nil, err
+		return
 	}
 
 	// dial, using explicit network from remote address
 	cfg.IPVersion = IPVersionFromUDPAddr(raddr)
 	conn, err := net.DialUDP(cfg.IPVersion.udpNetwork(), laddr, raddr)
 	if err != nil {
-		return nil, err
+		return
 	}
 
 	// set resolved local and remote addresses back to Config
@@ -153,15 +153,18 @@ func dial(ctx context.Context, cfg *ClientConfig) (*cconn, error) {
 	cfg.RemoteAddress = cfg.RemoteAddr.String()
 
 	// create cconn
-	c := &cconn{nconn: &nconn{}, cfg: cfg}
-	c.init(conn, cfg.IPVersion)
+	cc = &cconn{nconn: &nconn{}, cfg: cfg}
+	cc.init(conn, cfg.IPVersion)
 
 	// open connection to server
-	if err = c.open(ctx); err != nil {
-		return c, err
+	err = cc.open(ctx)
+	if isErrorCode(ServerClosed, err) {
+		cc = nil
+		err = nil
+		return
 	}
 
-	return c, nil
+	return
 }
 
 func (c *cconn) open(ctx context.Context) (err error) {
@@ -208,7 +211,6 @@ func (c *cconn) open(ctx context.Context) (err error) {
 			*params = *sp
 			c.ctoken = orp.ctoken()
 			if orp.flags()&flClose != 0 {
-				rerr = Errorf(ServerClosed, "server closed connection during open")
 				c.close()
 			}
 			return

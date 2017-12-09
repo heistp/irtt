@@ -100,7 +100,7 @@ func clientUsage() {
 	printf("               comma separated list of durations (see Duration units below)")
 	printf("               total wait time will be up to the sum of these Durations")
 	printf("               max packets sent is up to the number of Durations")
-	printf("               minimum open timeout is %s", minOpenTimeout)
+	printf("               minimum timeout duration is %s", minOpenTimeout)
 	printf("-ttl ttl       time to live (default %d, meaning use OS default)", DefaultTTL)
 	printf("-strictparams  exit with nonzero status if server restricts any parameters")
 	printf("-thread        lock sending and receiving goroutines to OS threads (may")
