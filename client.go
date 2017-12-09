@@ -317,7 +317,7 @@ func (c *Client) send(ctx context.Context) error {
 		// precise as possible)
 		seqno++
 		p.setSeqno(seqno)
-		if c.Filler != nil && c.FillAll {
+		if c.Filler != nil && !c.FillOne {
 			err := p.readPayload(c.Filler)
 			if err != nil {
 				return err
