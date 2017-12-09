@@ -33,11 +33,12 @@ func serverUsage() {
 	printf("               protection for server against unauthorized discovery and use")
 	printf("-timeout dur   timeout for closing connections if no requests received")
 	printf("               0 means no timeout (not recommended on public servers)")
+	printf("               max client interval will be restricted to timeout/%d", maxIntervalTimeoutFactor)
 	printf("               (default %s, see Duration units below)", DefaultServerTimeout)
 	printf("-pburst #      packet burst allowed before enforcing minimum interval")
 	printf("               (default %d)", DefaultPacketBurst)
-	printf("-fill fill     fill payload with given data (default %s)", DefaultServerFiller.String())
-	printf("               none: leave payload as all zeroes")
+	printf("-fill fill     payload fill if not requested (default %s)", DefaultServerFiller.String())
+	printf("               none: keep client payload (insecure on public servers)")
 	for _, ffac := range FillerFactories {
 		printf("               %s", ffac.Usage)
 	}

@@ -83,8 +83,7 @@ func clientUsage() {
 	for _, ffac := range FillerFactories {
 		printf("               %s", ffac.Usage)
 	}
-	printf("-fillall       fill all packets instead of repeating the first")
-	printf("               (makes rand unique per packet and pattern continue)")
+	printf("-fillone       fill only once and repeat for all packets")
 	printf("-local addr    local address (default from OS), valid formats:")
 	printf("               :port (all IPv4/IPv6 addresses with port)")
 	printf("               host (IPv4 addr or hostname with dynamic port)")
@@ -147,7 +146,7 @@ func runClientCLI(args []string) {
 	var tcompStr = fs.String("tcomp", DefaultCompTimerAverage.String(),
 		"timer compensation algorithm")
 	var fillStr = fs.String("fill", "none", "fill")
-	var fillAll = fs.Bool("fillall", false, "fill all")
+	var fillOne = fs.Bool("fillone", false, "fill one")
 	var laddrStr = fs.String("local", DefaultLocalAddress, "local address")
 	var hmacStr = fs.String("hmac", defaultHMACKey, "HMAC key")
 	var ipv4 = fs.Bool("4", false, "IPv4 only")
@@ -282,7 +281,7 @@ func runClientCLI(args []string) {
 	cfg.Timer = timer
 	cfg.Waiter = waiter
 	cfg.Filler = filler
-	cfg.FillAll = *fillAll
+	cfg.FillOne = *fillOne
 	cfg.HMACKey = hmacKey
 	cfg.Handler = &clientHandler{*quiet, *reallyQuiet}
 	cfg.ThreadLock = *threadLock

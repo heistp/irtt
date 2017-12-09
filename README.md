@@ -447,6 +447,7 @@ the configuration used for the test
     "remote_address": "127.0.0.1:2112",
     "open_timeouts": "1s,2s,4s,8s",
     "params": {
+        "proto_version": 1,
         "duration": 600000000,
         "interval": 200000000,
         "length": 48,
@@ -462,13 +463,14 @@ the configuration used for the test
     "timer": "comp",
     "waiter": "3x4s",
     "filler": "none",
-    "fill_all": false,
+    "fill_one": false,
     "thread_lock": false,
     "supplied": {
         "local_address": ":0",
         "remote_address": "localhost",
         "open_timeouts": "1s,2s,4s,8s",
         "params": {
+            "proto_version": 1,
             "duration": 600000000,
             "interval": 200000000,
             "length": 0,
@@ -484,7 +486,7 @@ the configuration used for the test
         "timer": "comp",
         "waiter": "3x4s",
         "filler": "none",
-        "fill_all": false,
+        "fill_one": false,
         "thread_lock": false
     }
 },
@@ -494,6 +496,7 @@ the configuration used for the test
 - `remote_address` the remote address (IP:port) for the server
 - `open_timeouts` a list of timeout durations used after an open packet is sent
 - `params` are the parameters that were negotiated with the server, including:
+  - `proto_version` protocol version number
   - `duration` duration of the test, in nanoseconds
   - `interval` send interval, in nanoseconds
   - `length` packet length
@@ -513,7 +516,8 @@ the configuration used for the test
   (irtt client -wait parameter)
 - `filler` the packet filler used: none, rand or pattern (irtt client -fill
 	parameter)
-- `fill_all` whether to fill all packets (irtt client -fillall parameter)
+- `fill_one` whether to fill only once and repeat for all packets
+  (irtt client -fillone parameter)
 - `thread_lock` whether to lock packet handling goroutines to OS threads
 - `supplied` a nested `config` object with the configuration as
   originally supplied to the API or `irtt` command. The supplied configuration can
@@ -1006,22 +1010,31 @@ the client, and since start of the process for the server
     for more information. File an Issue if your resident usage (rss/res) is high
     or you feel that memory consumption is somehow a problem.
 
+15) Why can't the client connect to the server and in the server logs I see
+    `[Drop] [UnknownParam] unknown negotiation param (0x8 = 0)`?
+
+    You're probably using an old version of the server with a newer client. Make
+    sure both are up to date. Going forward, the protocol is versioned
+    (independently from IRTT in general), and is checked when the client
+    connects to the server. For now, the protocol versions must match exactly.
+
 ## TODO and Roadmap
 
 ### TODO v0.9
 
 _Concrete tasks that just need doing..._
 
-- Add ability for client to request no, pattern or random fills from server, and
-  for server to restrict it (default random only)
+- Add ability for client to request fills from server, and
+  for server to restrict it (default rand only)
 - Improve client connection closure by:
   - Repeating close packets up to four times until acknowledgement, like open
   - Including received packet stats in the acknowledgement from the server
 - Use pflag options or something else GNU compatible
 - Check or replace session cleanup and connRef mechanisms
 - Run profiler on client
-- Document changes to JSON:
-  - add proto_version to params
+- Changes:
+  - Protocol version, and proto_version in params
+  - FillAll to FillOne
 
 ### TODO v1.0
 
@@ -1046,7 +1059,7 @@ _Planned for the future..._
   - Use Go profiling, scheduler tracing, strace and sar
   - Do more thorough tests of `chrt -r 99`, `-thread` and `-gc`
   - Find or file issue with Go team over scheduler performance
-  - Prototype doing all thread scheduling for Linux in C
+  - Prototype doing thread scheduling or socket i/o for Linux in C
 - Add different server authentication modes:
 	- none (no conn token in header, for minimum packet sizes during local use)
 	- token (what we have today, 64-bit token in header)

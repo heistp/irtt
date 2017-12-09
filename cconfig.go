@@ -21,7 +21,7 @@ type ClientConfig struct {
 	Timer        Timer
 	Waiter       Waiter
 	Filler       Filler
-	FillAll      bool
+	FillOne      bool
 	HMACKey      []byte
 	Handler      ClientHandler
 	ThreadLock   bool
@@ -82,7 +82,7 @@ func (c *ClientConfig) MarshalJSON() ([]byte, error) {
 		Timer         string        `json:"timer"`
 		Waiter        string        `json:"waiter"`
 		Filler        string        `json:"filler"`
-		FillAll       bool          `json:"fill_all"`
+		FillOne       bool          `json:"fill_one"`
 		ThreadLock    bool          `json:"thread_lock"`
 		Supplied      *ClientConfig `json:"supplied,omitempty"`
 	}{
@@ -97,7 +97,7 @@ func (c *ClientConfig) MarshalJSON() ([]byte, error) {
 		Timer:         c.Timer.String(),
 		Waiter:        c.Waiter.String(),
 		Filler:        fstr,
-		FillAll:       c.FillAll,
+		FillOne:       c.FillOne,
 		ThreadLock:    c.ThreadLock,
 		Supplied:      c.Supplied,
 	}
