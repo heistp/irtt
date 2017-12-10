@@ -70,6 +70,7 @@ const (
 	InvalidReceivedStatsInt
 	InvalidReceivedStatsString
 	OpenTimeoutTooShort
+	ServerFillTooLong
 )
 
 // Error is an IRTT error.

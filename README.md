@@ -454,7 +454,8 @@ the configuration used for the test
         "received_stats": "both",
         "stamp_at": "both",
         "clock": "both",
-        "dscp": 0
+        "dscp": 0,
+        "server_fill": ""
     },
     "strict": false,
     "ip_version": "IPv4",
@@ -477,7 +478,8 @@ the configuration used for the test
             "received_stats": "both",
             "stamp_at": "both",
             "clock": "both",
-            "dscp": 0
+            "dscp": 0,
+            "server_fill": ""
         },
         "strict": false,
         "ip_version": "IPv4+6",
@@ -507,6 +509,7 @@ the configuration used for the test
   - `clock` clock selection parameter (wall or monotonic, `--clock` flag for irtt client)
   - `dscp` the [DSCP](https://en.wikipedia.org/wiki/Differentiated_services)
 		value
+  - `server_fill` the requested server fill (`--sfill` flag for irtt client)
 - `strict` if true, test is aborted if server restricts parameters
 - `ip_version` the IP version used (IPv4 or IPv6)
 - `df` the do-not-fragment setting (0 == OS default, 1 == false, 2 == true)
@@ -1024,17 +1027,13 @@ the client, and since start of the process for the server
 
 _Concrete tasks that just need doing..._
 
-- Add ability for client to request fills from server, and
-  for server to restrict it (default rand only)
-  - server: --allow-fill none,rand,pattern
-  - client: --server-fill
 - Improve client connection closure by:
   - Repeating close packets up to four times until acknowledgement, like open
   - Including received packet stats in the acknowledgement from the server
-- Run profiler on client
-- Changes:
+- Document changes:
   - All long options take -- and must use = with values
   - Protocol version, and proto_version in params
+  - Add server_fill to params (may want to use --sfill)
   - Remove -fillall (now --fill-one)
   - -rs -> -s
   - -strictparams -> --strict (strict_params -> strict)
@@ -1042,6 +1041,7 @@ _Concrete tasks that just need doing..._
   - -nodscp -> --no-dscp
   - -setsrcip -> --set-src-ip
   - -qq -> -Q
+- Run profiler on client
 
 ### TODO v1.0
 

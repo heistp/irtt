@@ -253,6 +253,12 @@ func (c *Client) checkParameters() (changed bool, err error) {
 		c.eventf(ServerRestriction,
 			"server doesn't support DSCP, falling back to best effort")
 	}
+	if c.ServerFill != c.Supplied.ServerFill {
+		changed = true
+		c.eventf(ServerRestriction,
+			"server restricted fill from %s to %s", c.Supplied.ServerFill,
+			c.ServerFill)
+	}
 	return
 }
 

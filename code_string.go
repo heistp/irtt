@@ -5,25 +5,25 @@ package irtt
 import "fmt"
 
 const (
-	_Code_name_0 = "OpenTimeoutTooShortInvalidReceivedStatsStringInvalidReceivedStatsIntParamsChangedInvalidServerRestrictionOpenTimeoutServerClosedConnTokenZeroDurationNonPositiveIntervalNonPositiveNoSuchWaiterNoSuchTimerNoSuchFillerNoSuchAveragerInvalidWaitDurationInvalidWaitFactorInvalidWaitStringInvalidSleepFactorUnexpectedSequenceNumberClockMismatchStampAtMismatchShortReplyExpectedReplyFlagTTLErrorDFErrorUnexpectedOpenFlagAllocateResultsPanicInvalidExpAvgAlphaInvalidWinAvgWindow"
+	_Code_name_0 = "ServerFillTooLongOpenTimeoutTooShortInvalidReceivedStatsStringInvalidReceivedStatsIntParamsChangedInvalidServerRestrictionOpenTimeoutServerClosedConnTokenZeroDurationNonPositiveIntervalNonPositiveNoSuchWaiterNoSuchTimerNoSuchFillerNoSuchAveragerInvalidWaitDurationInvalidWaitFactorInvalidWaitStringInvalidSleepFactorUnexpectedSequenceNumberClockMismatchStampAtMismatchShortReplyExpectedReplyFlagTTLErrorDFErrorUnexpectedOpenFlagAllocateResultsPanicInvalidExpAvgAlphaInvalidWinAvgWindow"
 	_Code_name_1 = "AddressMismatchLargeRequestShortIntervalInvalidConnTokenNoSuitableAddressFoundUnexpectedReplyFlagInvalidGCModeStringUnspecifiedWithSpecifiedAddressesNoMatchingInterfacesUpNoMatchingInterfaces"
 	_Code_name_2 = "ProtocolVersionMismatchInvalidParamValueParamOverflowShortParamBufferInvalidFlagBitsSetDFNotSupportedInconsistentClocksNonexclusiveMidpointTStampUnexpectedHMACBadHMACNoHMACBadMagicInvalidClockIntInvalidClockStringInvalidAllowStampStringInvalidStampAtIntInvalidStampAtStringFieldsCapacityTooLargeFieldsLengthTooLargeInvalidDFStringShortWrite"
-	_Code_name_3 = "MultipleAddressesServerStartServerStopListenerStartListenerStopListenerErrorDropNewConnOpenCloseCloseConnNoDSCPSupportExceededDurationNoReceiveDstAddrSupportRemoveNoConn"
+	_Code_name_3 = "MultipleAddressesServerStartServerStopListenerStartListenerStopListenerErrorDropNewConnOpenCloseCloseConnNoDSCPSupportExceededDurationNoReceiveDstAddrSupportRemoveNoConnInvalidServerFill"
 	_Code_name_4 = "ConnectingConnectedWaitForPacketsServerRestrictionNoTestConnectedClosed"
 )
 
 var (
-	_Code_index_0 = [...]uint16{0, 19, 45, 68, 81, 105, 116, 128, 141, 160, 179, 191, 202, 214, 228, 247, 264, 281, 299, 323, 336, 351, 361, 378, 386, 393, 411, 431, 449, 468}
+	_Code_index_0 = [...]uint16{0, 17, 36, 62, 85, 98, 122, 133, 145, 158, 177, 196, 208, 219, 231, 245, 264, 281, 298, 316, 340, 353, 368, 378, 395, 403, 410, 428, 448, 466, 485}
 	_Code_index_1 = [...]uint8{0, 15, 27, 40, 56, 78, 97, 116, 149, 171, 191}
 	_Code_index_2 = [...]uint16{0, 23, 40, 53, 69, 87, 101, 119, 145, 159, 166, 172, 180, 195, 213, 236, 253, 273, 295, 315, 330, 340}
-	_Code_index_3 = [...]uint8{0, 17, 28, 38, 51, 63, 76, 80, 87, 96, 105, 118, 134, 157, 169}
+	_Code_index_3 = [...]uint8{0, 17, 28, 38, 51, 63, 76, 80, 87, 96, 105, 118, 134, 157, 169, 186}
 	_Code_index_4 = [...]uint8{0, 10, 19, 33, 50, 56, 71}
 )
 
 func (i Code) String() string {
 	switch {
-	case -2076 <= i && i <= -2048:
-		i -= -2076
+	case -2077 <= i && i <= -2048:
+		i -= -2077
 		return _Code_name_0[_Code_index_0[i]:_Code_index_0[i+1]]
 	case -1033 <= i && i <= -1024:
 		i -= -1033
@@ -31,7 +31,7 @@ func (i Code) String() string {
 	case -21 <= i && i <= -1:
 		i -= -21
 		return _Code_name_2[_Code_index_2[i]:_Code_index_2[i+1]]
-	case 1024 <= i && i <= 1037:
+	case 1024 <= i && i <= 1038:
 		i -= 1024
 		return _Code_name_3[_Code_index_3[i]:_Code_index_3[i+1]]
 	case 2048 <= i && i <= 2053:

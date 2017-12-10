@@ -12,6 +12,7 @@ type ServerConfig struct {
 	Timeout     time.Duration
 	PacketBurst int
 	Filler      Filler
+	AllowFills  []string
 	AllowStamp  AllowStamp
 	AllowDSCP   bool
 	TTL         int
@@ -32,6 +33,7 @@ func NewServerConfig() *ServerConfig {
 		Timeout:     DefaultServerTimeout,
 		PacketBurst: DefaultPacketBurst,
 		Filler:      DefaultServerFiller,
+		AllowFills:  DefaultAllowFills,
 		AllowStamp:  DefaultAllowStamp,
 		AllowDSCP:   DefaultAllowDSCP,
 		TTL:         DefaultTTL,

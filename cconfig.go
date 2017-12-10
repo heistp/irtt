@@ -60,6 +60,11 @@ func (c *ClientConfig) validate() error {
 	if c.Duration <= 0 {
 		return Errorf(DurationNonPositive, "duration (%s) must be > 0", c.Duration)
 	}
+	if len(c.ServerFill) > maxServerFillLen {
+		return Errorf(ServerFillTooLong,
+			"server fill string (%s) must be less than %d characters",
+			c.ServerFill, maxServerFillLen)
+	}
 	return validateInterval(c.Interval)
 }
 
@@ -83,6 +88,7 @@ func (c *ClientConfig) MarshalJSON() ([]byte, error) {
 		Waiter        string        `json:"waiter"`
 		Filler        string        `json:"filler"`
 		FillOne       bool          `json:"fill_one"`
+		ServerFill    string        `json:"server_fill"`
 		ThreadLock    bool          `json:"thread_lock"`
 		Supplied      *ClientConfig `json:"supplied,omitempty"`
 	}{
@@ -98,6 +104,7 @@ func (c *ClientConfig) MarshalJSON() ([]byte, error) {
 		Waiter:        c.Waiter.String(),
 		Filler:        fstr,
 		FillOne:       c.FillOne,
+		ServerFill:    c.ServerFill,
 		ThreadLock:    c.ThreadLock,
 		Supplied:      c.Supplied,
 	}

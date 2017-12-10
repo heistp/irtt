@@ -43,6 +43,11 @@ func serverUsage() {
 	for _, ffac := range FillerFactories {
 		printf("               %s", ffac.Usage)
 	}
+	printf("--allow-fills= comma separated patterns of fill requests to allow (default %s)", strings.Join(DefaultAllowFills, ","))
+	printf("  fills        see options for --fill")
+	printf("               allowing non-random fills not secure on public servers")
+	printf("               use --allow-fills=\"\" to disallow all fill requests")
+	printf("               note: patterns may contain * for matching")
 	printf("--tstamp=modes timestamp modes to allow (default %s)", DefaultAllowStamp)
 	printf("               none: don't allow timestamps")
 	printf("               single: allow a single timestamp (send, receive or midpoint)")
@@ -78,7 +83,8 @@ func runServerCLI(args []string) {
 	var hmacStr = fs.String("hmac", defaultHMACKey, "HMAC key")
 	var timeout = fs.Duration("timeout", DefaultServerTimeout, "timeout")
 	var packetBurst = fs.Int("pburst", DefaultPacketBurst, "packet burst")
-	var fillStr = fs.String("fill", DefaultServerFiller.String(), "filler")
+	var fillStr = fs.String("fill", DefaultServerFiller.String(), "fill")
+	var allowFillsStr = fs.String("allow-fills", strings.Join(DefaultAllowFills, ","), "sfill")
 	var ipv4 = fs.BoolP("4", "4", false, "IPv4 only")
 	var ipv6 = fs.BoolP("6", "6", false, "IPv6 only")
 	var ttl = fs.Int("ttl", DefaultTTL, "IP time to live")
@@ -133,6 +139,7 @@ func runServerCLI(args []string) {
 	cfg.PacketBurst = *packetBurst
 	cfg.MaxLength = *maxLength
 	cfg.Filler = filler
+	cfg.AllowFills = strings.Split(*allowFillsStr, ",")
 	cfg.AllowDSCP = !*noDSCP
 	cfg.TTL = *ttl
 	cfg.Handler = &serverHandler{}

@@ -76,6 +76,9 @@ const (
 // DefaultBindAddrs are the default bind addresses.
 var DefaultBindAddrs = []string{":2112"}
 
+// DefaultAllowFills are the default allowed fill prefixes.
+var DefaultAllowFills = []string{"rand"}
+
 // server duplicates and drops for testing (0.0-1.0)
 const serverDupsPercent = 0
 const serverDropsPercent = 0
@@ -86,7 +89,7 @@ const timeoutGrace = 5 * time.Second
 // factor of timeout used for maximum interval
 const maxIntervalTimeoutFactor = 4
 
-// max duration grace period
+// max test duration grace period
 const maxDurationGrace = 2 * time.Second
 
 // ignore server restrictions (for testing hard limits)
@@ -101,7 +104,7 @@ const clientDropsPercent = 0
 const minOpenTimeout = 200 * time.Millisecond
 
 // maximum initial length of pattern filler buffer
-const patternMaxInitLen = 64 * 1024
+const patternMaxInitLen = 4 * 1024
 
 // maxMTU is the MTU used if it could not be determined by autodetection.
 const maxMTU = 64 * 1024
@@ -116,3 +119,6 @@ const checkExpiredCount = 5
 
 // initial capacity for sconns map
 const sconnsInitSize = 32
+
+// maximum length of server fill string
+const maxServerFillLen = 32

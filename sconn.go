@@ -12,6 +12,7 @@ type sconn struct {
 	ctoken         ctoken
 	raddr          *net.UDPAddr
 	params         *Params
+	filler         Filler
 	created        time.Time
 	firstUsed      time.Time
 	lastUsed       time.Time
@@ -27,6 +28,7 @@ func newSconn(l *listener, raddr *net.UDPAddr) *sconn {
 	return &sconn{
 		listener:     l,
 		raddr:        raddr,
+		filler:       l.Filler,
 		created:      time.Now(),
 		lastSeqno:    InvalidSeqno,
 		packetBucket: float64(l.PacketBurst),
@@ -45,6 +47,19 @@ func accept(l *listener, p *packet) (sc *sconn, err error) {
 	}
 	sc.restrictParams(params)
 	sc.params = params
+
+	// set filler
+	if len(sc.params.ServerFill) > 0 &&
+		sc.params.ServerFill != DefaultServerFiller.String() {
+		sc.filler, err = NewFiller(sc.params.ServerFill)
+		if err != nil {
+			l.eventf(InvalidServerFill, p.raddr,
+				"invalid server fill %s requested, defaulting to %s (%s)",
+				sc.params.ServerFill, DefaultServerFiller.String(), err.Error())
+			sc.filler = l.Filler
+			sc.params.ServerFill = DefaultServerFiller.String()
+		}
+	}
 
 	// determine state of connection
 	if params.ProtoVersion != ProtoVersion {
@@ -219,8 +234,8 @@ func (sc *sconn) serveEcho(p *packet) (closed bool, err error) {
 	p.setLen(sc.params.Length)
 
 	// fill payload
-	if sc.Filler != nil {
-		if err = p.readPayload(sc.Filler); err != nil {
+	if sc.filler != nil {
+		if err = p.readPayload(sc.filler); err != nil {
 			return
 		}
 	}
@@ -271,6 +286,9 @@ func (sc *sconn) restrictParams(p *Params) {
 	p.StampAt = sc.AllowStamp.Restrict(p.StampAt)
 	if !sc.AllowDSCP || !sc.conn.dscpSupport {
 		p.DSCP = 0
+	}
+	if len(p.ServerFill) > 0 && !globAny(sc.AllowFills, p.ServerFill) {
+		p.ServerFill = DefaultServerFiller.String()
 	}
 	return
 }
