@@ -170,7 +170,7 @@ likely to be a practical number for most hardware at this time. That is why
 In order to determine per-packet differentiation between upstream and downstream
 loss, a 64-bit "received window" may be returned with each packet that contains
 the receipt status of the previous 64 packets. This can be enabled with either
-`-rs window/both` with the irtt client or `ReceivedStatsWindow/ReceivedStatsBoth`
+`--stats=window/both` with the irtt client or `ReceivedStatsWindow/ReceivedStatsBoth`
 with the API. Its limited width and simple bitmap format lead to some
 caveats:
 
@@ -201,7 +201,7 @@ long sequences of lost packets, but high loss or high numbers of late packets
 typically indicate more severe network conditions that should be corrected first
 anyway, perhaps before per-packet results matter. Note that in case of very high
 packet loss, the **total** number of packets received by the server but not
-returned to the client (which can be obtained using `-rs count/both` or
+returned to the client (which can be obtained using `-stats=count/both` or
 `ReceivedStatsCount/ReceivedStatsBoth`) will still be correct, which will still
 provide an accurate _average_ loss percentage in each direction over the course
 of the test.
@@ -228,11 +228,11 @@ But Go also has benefits that are useful for this application:
 ### Known Issues
 
 - Windows is unable to set DSCP values for IPv6.
-- Windows is unable to set the source IP address, so `-setsrcip` may not be used
+- Windows is unable to set the source IP address, so `--set-src-ip` may not be used
   on the server.
 - The server doesn't run well on 32-bit Windows platforms. When connecting with
   a client, you may see `Terminated due to receive error...`. To work around
-  this, disable dual timestamps from the client by including `-ts midpoint`.
+  this, disable dual timestamps from the client by including `--tstamp=midpoint`.
   This appears to be a bug in either Go's 32-bit compiler or runtime for
   Windows.
 
@@ -286,7 +286,7 @@ G.711 VoIP conversation by using an interval of 20ms and randomly filled
 payload of 172 bytes (160 bytes voice data plus 12 byte RTP header):
 
 ```
-% irtt client -i 20ms -l 172 -d 1m -fill rand -fillall -q 192.168.100.10
+% irtt client -i 20ms -l 172 -d 1m --fill=rand -q 192.168.100.10
 [Connecting] connecting to 192.168.100.10
 [Connected] connected to 192.168.100.10:2112
 
@@ -456,7 +456,7 @@ the configuration used for the test
         "clock": "both",
         "dscp": 0
     },
-    "strict_params": false,
+    "strict": false,
     "ip_version": "IPv4",
     "df": 0,
     "ttl": 0,
@@ -479,7 +479,7 @@ the configuration used for the test
             "clock": "both",
             "dscp": 0
         },
-        "strict_params": false,
+        "strict": false,
         "ip_version": "IPv4+6",
         "df": 0,
         "ttl": 0,
@@ -501,23 +501,23 @@ the configuration used for the test
   - `interval` send interval, in nanoseconds
   - `length` packet length
   - `received_stats` statistics for packets received by server (none, count,
-    window or both, -rs flag for irtt client)
+    window or both, `--stats` flag for irtt client)
   - `stamp_at` timestamp selection parameter (none, send, receive, both or
-		midpoint, -ts flag for irtt client)
-  - `clock` clock selection parameter (wall or monotonic, -clock flag for irtt client)
+		midpoint, `--tstamp` flag for irtt client)
+  - `clock` clock selection parameter (wall or monotonic, `--clock` flag for irtt client)
   - `dscp` the [DSCP](https://en.wikipedia.org/wiki/Differentiated_services)
 		value
-- `strict_params` if true, test is aborted if server restricts parameters
+- `strict` if true, test is aborted if server restricts parameters
 - `ip_version` the IP version used (IPv4 or IPv6)
 - `df` the do-not-fragment setting (0 == OS default, 1 == false, 2 == true)
 - `ttl` the IP [time-to-live](https://en.wikipedia.org/wiki/Time_to_live) value
 - `timer` the timer used: simple, comp, hybrid or busy (irtt client -timer parameter)
 - `waiter` the waiter used: fixed duration, multiple of RTT or multiple of max RTT
-  (irtt client -wait parameter)
-- `filler` the packet filler used: none, rand or pattern (irtt client -fill
-	parameter)
+  (irtt client `--wait` flag)
+- `filler` the packet filler used: none, rand or pattern (irtt client `--fill`
+	flag)
 - `fill_one` whether to fill only once and repeat for all packets
-  (irtt client -fillone parameter)
+  (irtt client `--fill-one` parameter)
 - `thread_lock` whether to lock packet handling goroutines to OS threads
 - `supplied` a nested `config` object with the configuration as
   originally supplied to the API or `irtt` command. The supplied configuration can
@@ -673,7 +673,7 @@ The regular attributes in `stats` are as follows:
    _(only available if server timestamps are enabled)_
 - `server_packets_received` the number of packets received by the server,
   including duplicates (always present, but only valid if the `ReceivedStats`
-  parameter includes `ReceivedStatsCount`, or the -rs parameter to the irtt
+  parameter includes `ReceivedStatsCount`, or the `--stats` parameter to the irtt
   client is `count` or `both`)
 - `bytes_sent` the number of UDP payload bytes sent during the test
 - `bytes_received` the number of UDP payload bytes received during the test
@@ -826,7 +826,7 @@ the client, and since start of the process for the server
 - `lost` the lost status of the packet, which can be one of `false`, `true`,
   `true_down` or `true_up`. The `true_down` and `true_up` values are only
   available if the `ReceivedStats` parameter includes `ReceivedStatsWindow`
-  (irtt client -rs parameter). Even then, if it could not be determined whether
+  (irtt client `--stats` flag). Even then, if it could not be determined whether
   the packet was lost upstream or downstream, the value `true` is used.
 - `timestamps` the client and server timestamps
   - `client` the client send and receive wall and monotonic timestamps
@@ -834,13 +834,13 @@ the client, and since start of the process for the server
   - `server` the server send and receive wall and monotonic timestamps _(both
 		`send` and `receive` values not present if `lost` is true), and
 		additionally:_
-    - `send` values are not present if the StampAt (irtt client -ts parameter) does not
-      include send timestamps
-    - `receive` values are not present if the StampAt (irtt client -ts parameter) does not
-      include receive timestamps
-    - `wall` values are not present if the Clock (irtt client -clock parameter) does
+    - `send` values are not present if the StampAt (irtt client `--tstamp` parameter)
+      does not include send timestamps
+    - `receive` values are not present if the StampAt (irtt client `--tstamp` parameter)
+      does not include receive timestamps
+    - `wall` values are not present if the Clock (irtt client `--clock` parameter) does
       not include wall values or server timestamps are not enabled
-    - `monotonic` values are not present if the Clock (irtt client -clock parameter)
+    - `monotonic` values are not present if the Clock (irtt client `--clock` parameter)
       does not include monotonic values or server timestamps are not enabled
 - `delay` an object containing the delay values
   - `receive` the one-way receive delay, in nanoseconds _(present only if
@@ -942,15 +942,15 @@ the client, and since start of the process for the server
    3) There is high packet loss. By default, up to four packets are sent when
       the client tries to connect to the server, using timeouts of 1, 2, 4 and 8
       seconds. If all of these are lost, the client won't connect to the server.
-      In environments with known high packet loss, the `-timeouts` parameter may
+      In environments with known high packet loss, the `--timeouts` parameter may
       be used to send more packets with the chosen timeouts before abandoning
       the connection.
-   4) The server has an HMAC key set with `-hmac` and the client either has
+   4) The server has an HMAC key set with `--hmac` and the client either has
       not specified a key or it's incorrect. Make sure the client has the
-      correct HMAC key, also specified with the `-hmac` parameter.
+      correct HMAC key, also specified with the `--hmac` flag.
    5) You're trying to connect to a listener that's listening on an unspecified
       IP address, and return packets are not routing properly, which can happen in
-      some network configurations. Try running the server with the `-setsrcip`
+      some network configurations. Try running the server with the `--set-src-ip`
       parameter, which sets the source address on all reply packets from listeners
       on unspecified IP addresses. This is not done by default in order to avoid
       the additional per-packet heap allocations required by the
@@ -1026,15 +1026,22 @@ _Concrete tasks that just need doing..._
 
 - Add ability for client to request fills from server, and
   for server to restrict it (default rand only)
+  - server: --allow-fill none,rand,pattern
+  - client: --server-fill
 - Improve client connection closure by:
   - Repeating close packets up to four times until acknowledgement, like open
   - Including received packet stats in the acknowledgement from the server
-- Use pflag options or something else GNU compatible
-- Check or replace session cleanup and connRef mechanisms
 - Run profiler on client
 - Changes:
+  - All long options take -- and must use = with values
   - Protocol version, and proto_version in params
-  - FillAll to FillOne
+  - Remove -fillall (now --fill-one)
+  - -rs -> -s
+  - -strictparams -> --strict (strict_params -> strict)
+  - -ts -> --tstamp
+  - -nodscp -> --no-dscp
+  - -setsrcip -> --set-src-ip
+  - -qq -> -Q
 
 ### TODO v1.0
 
@@ -1042,7 +1049,8 @@ _Concrete tasks that just need doing..._
 - Refactor packet manipulation to improve readability and prevent multiple validations
 - Improve robustness and security of public servers:
 	- Add bitrate limiting
-	- Limit open requests to prevent the equivalent of a "syn flood"
+	- Limit open requests rate and coordinate with session cleanup
+  - Make connref mechanism robust to listener failure
 	- Add per-IP limiting
 - Write a SmokePing probe
 
@@ -1057,7 +1065,7 @@ _Planned for the future..._
   - Determine if asymmetric send schedules (between client and server) required
 - Improve induced latency and jitter:
   - Use Go profiling, scheduler tracing, strace and sar
-  - Do more thorough tests of `chrt -r 99`, `-thread` and `-gc`
+  - Do more thorough tests of `chrt -r 99`, `--thread` and `--gc`
   - Find or file issue with Go team over scheduler performance
   - Prototype doing thread scheduling or socket i/o for Linux in C
 - Add different server authentication modes:

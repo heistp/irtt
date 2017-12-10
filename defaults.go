@@ -22,7 +22,7 @@ const (
 	DefaultStampAt                 = AtBoth
 	DefaultClock                   = BothClocks
 	DefaultDSCP                    = 0
-	DefaultStrictParams            = false
+	DefaultStrict                  = false
 	DefaultLocalAddress            = ":0"
 	DefaultLocalPort               = "0"
 	DefaultDF                      = DFDefault

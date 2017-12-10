@@ -55,7 +55,7 @@ func (c *Client) Run(ctx context.Context) (r *Result, err error) {
 	if changed, err = c.checkParameters(); err != nil {
 		return
 	}
-	if changed && c.StrictParams {
+	if changed && c.Strict {
 		err = Errorf(ParamsChanged, "server restricted test parameters")
 		return
 	}

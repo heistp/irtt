@@ -1,11 +1,12 @@
 package irtt
 
 import (
-	"flag"
 	"os"
 	"os/signal"
 	"strings"
 	"syscall"
+
+	flag "github.com/ogier/pflag"
 )
 
 func serverUsage() {
@@ -28,34 +29,36 @@ func serverUsage() {
 	printf("               (default %s, see Duration units below)", DefaultMinInterval)
 	printf("-l length      max packet length (default %d), or 0 for no maximum", DefaultMaxLength)
 	printf("               numbers too small will cause test packets to be dropped")
-	printf("-hmac key      add HMAC with key (0x for hex) to all packets, provides:")
+	printf("--hmac=key     add HMAC with key (0x for hex) to all packets, provides:")
 	printf("               dropping of all packets without a correct HMAC")
 	printf("               protection for server against unauthorized discovery and use")
-	printf("-timeout dur   timeout for closing connections if no requests received")
+	printf("--timeout=dur  timeout for closing connections if no requests received")
 	printf("               0 means no timeout (not recommended on public servers)")
 	printf("               max client interval will be restricted to timeout/%d", maxIntervalTimeoutFactor)
 	printf("               (default %s, see Duration units below)", DefaultServerTimeout)
-	printf("-pburst #      packet burst allowed before enforcing minimum interval")
+	printf("--pburst=#     packet burst allowed before enforcing minimum interval")
 	printf("               (default %d)", DefaultPacketBurst)
-	printf("-fill fill     payload fill if not requested (default %s)", DefaultServerFiller.String())
+	printf("--fill=fill    payload fill if not requested (default %s)", DefaultServerFiller.String())
 	printf("               none: keep client payload (insecure on public servers)")
 	for _, ffac := range FillerFactories {
 		printf("               %s", ffac.Usage)
 	}
-	printf("-ts tsmode     timestamp modes to allow (default %s)", DefaultAllowStamp)
+	printf("--tstamp=modes timestamp modes to allow (default %s)", DefaultAllowStamp)
 	printf("               none: don't allow timestamps")
 	printf("               single: allow a single timestamp (send, receive or midpoint)")
 	printf("               dual: allow dual timestamps")
-	printf("-nodscp        don't allow setting dscp (default %t)", !DefaultAllowDSCP)
-	printf("-setsrcip      set source IP address on all outgoing packets from listeners")
+	printf("--no-dscp      don't allow setting dscp (default %t)", !DefaultAllowDSCP)
+	printf("--set-src-ip   set source IP address on all outgoing packets from listeners")
 	printf("               on unspecified IP addresses (use for more reliable reply")
 	printf("               routing, but increases per-packet heap allocations)")
-	printf("-gc mode       sets garbage collection mode (default %s)", DefaultGCMode)
+	printf("--gc=mode      sets garbage collection mode (default %s)", DefaultGCMode)
 	printf("               on: garbage collector always on")
 	printf("               off: garbage collector always off")
 	printf("               idle: garbage collector enabled only when idle")
-	printf("-thread        lock request handling goroutines to OS threads (may reduce")
+	printf("--thread       lock request handling goroutines to OS threads (may reduce")
 	printf("               mean latency, but may also add outliers)")
+	printf("-h             show help")
+	printf("-v             show version")
 	printf("")
 	durationUsage()
 }
@@ -67,27 +70,34 @@ func runServerCLI(args []string) {
 	fs.Usage = func() {
 		usageAndExit(serverUsage, exitCodeBadCommandLine)
 	}
-	var baddrsStr = fs.String("b", strings.Join(DefaultBindAddrs, ","), "bind addresses")
-	var maxDuration = fs.Duration("d", DefaultMaxDuration, "max duration")
-	var minInterval = fs.Duration("i", DefaultMinInterval, "min interval")
-	var maxLength = fs.Int("l", DefaultMaxLength, "max length")
-	var allowTimestampStr = fs.String("ts", DefaultAllowStamp.String(), "allow timestamp")
+	var baddrsStr = fs.StringP("b", "b", strings.Join(DefaultBindAddrs, ","), "bind addresses")
+	var maxDuration = fs.DurationP("d", "d", DefaultMaxDuration, "max duration")
+	var minInterval = fs.DurationP("i", "i", DefaultMinInterval, "min interval")
+	var maxLength = fs.IntP("l", "l", DefaultMaxLength, "max length")
+	var allowTimestampStr = fs.String("tstamp", DefaultAllowStamp.String(), "allow timestamp")
 	var hmacStr = fs.String("hmac", defaultHMACKey, "HMAC key")
 	var timeout = fs.Duration("timeout", DefaultServerTimeout, "timeout")
 	var packetBurst = fs.Int("pburst", DefaultPacketBurst, "packet burst")
 	var fillStr = fs.String("fill", DefaultServerFiller.String(), "filler")
-	var ipv4 = fs.Bool("4", false, "IPv4 only")
-	var ipv6 = fs.Bool("6", false, "IPv6 only")
+	var ipv4 = fs.BoolP("4", "4", false, "IPv4 only")
+	var ipv6 = fs.BoolP("6", "6", false, "IPv6 only")
 	var ttl = fs.Int("ttl", DefaultTTL, "IP time to live")
-	var noDSCP = fs.Bool("nodscp", !DefaultAllowDSCP, "no DSCP")
-	var setSrcIP = fs.Bool("setsrcip", DefaultSetSrcIP, "set source IP")
+	var noDSCP = fs.Bool("no-dscp", !DefaultAllowDSCP, "no DSCP")
+	var setSrcIP = fs.Bool("set-src-ip", DefaultSetSrcIP, "set source IP")
 	var gcModeStr = fs.String("gc", DefaultGCMode.String(), "gc mode")
 	var lockOSThread = fs.Bool("thread", DefaultThreadLock, "thread")
+	var version = fs.BoolP("version", "v", false, "version")
 	fs.Parse(args)
 
 	// start profiling, if enabled in build
 	if profileEnabled {
 		defer startProfile("./server.pprof").Stop()
+	}
+
+	// version
+	if *version {
+		runVersion(args)
+		os.Exit(0)
 	}
 
 	// determine IP version
