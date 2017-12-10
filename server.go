@@ -379,9 +379,7 @@ func (cm *connmgr) get(ct ctoken) (sc *sconn) {
 		return
 	}
 	if sc.expired() {
-		delete(cm.sconns, ct)
-		cm.ref(false)
-		sc = nil
+		cm.delete(ct)
 	}
 	return
 }
@@ -389,24 +387,22 @@ func (cm *connmgr) get(ct ctoken) (sc *sconn) {
 func (cm *connmgr) remove(ct ctoken) (sc *sconn) {
 	var ok bool
 	if sc, ok = cm.sconns[ct]; ok {
-		delete(cm.sconns, ct)
-		cm.ref(false)
+		cm.delete(ct)
 	}
 	return
 }
 
 // removeSomeExpired checks checkExpiredCount sconns for expiration and removes
-// them if expired. Yes, I know, I'm depending on Go's random map iteration,
-// which per the language spec, I should not depend on. That said, this makes
-// for a highly CPU efficient way to eventually clean up expired sconns, and
-// because the Go team very intentionally made map order traversal random for a
-// good reason, I don't think that's going to change any time soon.
+// them if expired. Yes, I know, I'm depending on Go's random map iteration
+// start point, which per the language spec, I should not depend on. That said,
+// this makes for a highly CPU efficient way to eventually clean up expired
+// sconns, and because the Go team very intentionally made map order traversal
+// random for a good reason, I don't think that's going to change any time soon.
 func (cm *connmgr) removeSomeExpired() {
 	i := 0
 	for ct, sc := range cm.sconns {
 		if sc.expired() {
-			delete(cm.sconns, ct)
-			cm.ref(false)
+			cm.delete(ct)
 		}
 		if i++; i >= checkExpiredCount {
 			break
@@ -425,4 +421,9 @@ func (cm *connmgr) newCtoken() ctoken {
 		}
 	}
 	return ct
+}
+
+func (cm *connmgr) delete(ct ctoken) {
+	delete(cm.sconns, ct)
+	cm.ref(false)
 }

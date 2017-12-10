@@ -4,7 +4,6 @@ import (
 	"compress/gzip"
 	"context"
 	"encoding/json"
-	"flag"
 	"fmt"
 	"io"
 	"os"
@@ -14,6 +13,8 @@ import (
 	"syscall"
 	"text/tabwriter"
 	"time"
+
+	flag "github.com/ogier/pflag"
 )
 
 func clientUsage() {
@@ -29,40 +30,40 @@ func clientUsage() {
 	printf("               increased as necessary for irtt headers, common values:")
 	printf("               1472 (max unfragmented size of IPv4 datagram for 1500 byte MTU)")
 	printf("               1452 (max unfragmented size of IPv6 datagram for 1500 byte MTU)")
-	printf("-n             no test, connect to the server and validate test parameters")
-	printf("               but don't run the test")
-	printf("-rs stats      server stats on received packets (default %s)", DefaultReceivedStats.String())
-	printf("               none: no server stats on received packets")
-	printf("               count: total count of received packets")
-	printf("               window: receipt status of last 64 packets with each reply")
-	printf("               both: both count and window")
-	printf("-ts mode       server timestamp mode (default %s)", DefaultStampAt.String())
-	printf("               none: request no timestamps")
-	printf("               send: request timestamp at server send")
-	printf("               receive: request timestamp at server receive")
-	printf("               both: request both send and receive timestamps")
-	printf("               midpoint: request midpoint timestamp (send/receive avg)")
-	printf("-clock clock   clock/s used for server timestamps (default %s)", DefaultClock)
-	printf("               wall: wall clock only")
-	printf("               monotonic: monotonic clock only")
-	printf("               both: both clocks")
 	printf("-o file        write JSON output to file (use '-' for stdout)")
 	printf("               if file has no extension, .json.gz is added, output is gzipped")
 	printf("               if extension is .json.gz, output is gzipped")
 	printf("               if extension is .json, output is not gzipped")
 	printf("               output to stdout is not gzipped, pipe to gzip if needed")
 	printf("-q             quiet, suppress per-packet output")
-	printf("-qq            really quiet, suppress all output")
-	printf("-dscp dscp     dscp value (default %s, 0x prefix for hex), common values:", strconv.Itoa(DefaultDSCP))
+	printf("-Q             really quiet, suppress all output")
+	printf("-n             no test, connect to the server and validate test parameters")
+	printf("               but don't run the test")
+	printf("--stats=stats  server stats on received packets (default %s)", DefaultReceivedStats.String())
+	printf("               none: no server stats on received packets")
+	printf("               count: total count of received packets")
+	printf("               window: receipt status of last 64 packets with each reply")
+	printf("               both: both count and window")
+	printf("--tstamp=mode  server timestamp mode (default %s)", DefaultStampAt.String())
+	printf("               none: request no timestamps")
+	printf("               send: request timestamp at server send")
+	printf("               receive: request timestamp at server receive")
+	printf("               both: request both send and receive timestamps")
+	printf("               midpoint: request midpoint timestamp (send/receive avg)")
+	printf("--clock=clock  clock/s used for server timestamps (default %s)", DefaultClock)
+	printf("               wall: wall clock only")
+	printf("               monotonic: monotonic clock only")
+	printf("               both: both clocks")
+	printf("--dscp=dscp    dscp value (default %s, 0x prefix for hex), common values:", strconv.Itoa(DefaultDSCP))
 	printf("               0 (Best effort)")
 	printf("               8 (Bulk)")
 	printf("               40 (CS5)")
 	printf("               46 (Expedited forwarding)")
-	printf("-df string     setting for do not fragment (DF) bit in all packets:")
+	printf("--df=string    setting for do not fragment (DF) bit in all packets:")
 	printf("               default: OS default")
 	printf("               false: DF bit not set")
 	printf("               true: DF bit set")
-	printf("-wait wait     wait time at end of test for unreceived replies (default %s)", DefaultWait.String())
+	printf("--wait=wait    wait time at end of test for unreceived replies (default %s)", DefaultWait.String())
 	printf("               - Valid formats -")
 	for _, wfac := range WaiterFactories {
 		printf("               %s", wfac.Usage)
@@ -70,40 +71,45 @@ func clientUsage() {
 	printf("               - Examples -")
 	printf("               3x4s: 3 times max RTT, or 4 seconds if no response")
 	printf("               1500ms: fixed 1500 milliseconds")
-	printf("-timer timer   timer for waiting to send packets (default %s)", DefaultTimer.String())
+	printf("--timer=timer  timer for waiting to send packets (default %s)", DefaultTimer.String())
 	for _, tfac := range TimerFactories {
 		printf("               %s", tfac.Usage)
 	}
-	printf("-tcomp alg     comp timer averaging algorithm (default %s)", DefaultCompTimerAverage.String())
+	printf("--tcomp=alg    comp timer averaging algorithm (default %s)", DefaultCompTimerAverage.String())
 	for _, afac := range AveragerFactories {
 		printf("               %s", afac.Usage)
 	}
-	printf("-fill fill     fill payload with given data (default none)")
+	printf("--fill=fill    fill payload with given data (default none)")
 	printf("               none: leave payload as all zeroes")
 	for _, ffac := range FillerFactories {
 		printf("               %s", ffac.Usage)
 	}
-	printf("-fillone       fill only once and repeat for all packets")
-	printf("-local addr    local address (default from OS), valid formats:")
+	printf("--fill-one     fill only once and repeat for all packets")
+	printf("--sfill=fill   request server fill (default same as -fill)")
+	printf("               same options as for -fill")
+	printf("               server must support and allow this fill with --allow-fill")
+	printf("--local=addr   local address (default from OS), valid formats:")
 	printf("               :port (all IPv4/IPv6 addresses with port)")
 	printf("               host (IPv4 addr or hostname with dynamic port)")
 	printf("               host:port (IPv4 addr or hostname with port)")
 	printf("               [ipv6-host%%zone] (IPv6 addr or hostname with dynamic port)")
 	printf("               [ipv6-host%%zone]:port (IPv6 addr or hostname with port)")
-	printf("-hmac key      add HMAC with key (0x for hex) to all packets, provides:")
+	printf("--hmac=key     add HMAC with key (0x for hex) to all packets, provides:")
 	printf("               dropping of all packets without a correct HMAC")
 	printf("               protection for server against unauthorized discovery and use")
 	printf("-4             IPv4 only")
 	printf("-6             IPv6 only")
-	printf("-timeouts durs timeouts used when connecting to server (default %s)", DefaultOpenTimeouts.String())
+	printf("--timeouts=drs timeouts used when connecting to server (default %s)", DefaultOpenTimeouts.String())
 	printf("               comma separated list of durations (see Duration units below)")
 	printf("               total wait time will be up to the sum of these Durations")
 	printf("               max packets sent is up to the number of Durations")
 	printf("               minimum timeout duration is %s", minOpenTimeout)
-	printf("-ttl ttl       time to live (default %d, meaning use OS default)", DefaultTTL)
-	printf("-strictparams  exit with nonzero status if server restricts any parameters")
-	printf("-thread        lock sending and receiving goroutines to OS threads (may")
+	printf("--ttl=ttl      time to live (default %d, meaning use OS default)", DefaultTTL)
+	printf("--strict       exit with nonzero status if server restricts any parameters")
+	printf("--thread       lock sending and receiving goroutines to OS threads (may")
 	printf("               reduce mean latency, but may also add outliers)")
+	printf("-h             show help")
+	printf("-v             show version")
 	printf("")
 	durationUsage()
 }
@@ -129,16 +135,16 @@ func runClientCLI(args []string) {
 	fs.Usage = func() {
 		usageAndExit(clientUsage, exitCodeBadCommandLine)
 	}
-	var durationStr = fs.String("d", DefaultDuration.String(), "length of time to run test")
-	var intervalStr = fs.String("i", DefaultInterval.String(), "send interval")
-	var length = fs.Int("l", DefaultLength, "packet length")
-	var noTest = fs.Bool("n", false, "no test")
-	var rsStr = fs.String("rs", DefaultReceivedStats.String(), "received stats")
-	var tsatStr = fs.String("ts", DefaultStampAt.String(), "stamp at")
+	var durationStr = fs.StringP("d", "d", DefaultDuration.String(), "total time to send")
+	var intervalStr = fs.StringP("i", "i", DefaultInterval.String(), "send interval")
+	var length = fs.IntP("l", "l", DefaultLength, "packet length")
+	var noTest = fs.BoolP("n", "n", false, "no test")
+	var rsStr = fs.String("stats", DefaultReceivedStats.String(), "received stats")
+	var tsatStr = fs.String("tstamp", DefaultStampAt.String(), "stamp at")
 	var clockStr = fs.String("clock", DefaultClock.String(), "clock")
-	var outputStr = fs.String("o", "", "output file")
-	var quiet = fs.Bool("q", defaultQuiet, "quiet")
-	var reallyQuiet = fs.Bool("qq", defaultReallyQuiet, "really quiet")
+	var outputStr = fs.StringP("o", "o", "", "output file")
+	var quiet = fs.BoolP("q", "q", defaultQuiet, "quiet")
+	var reallyQuiet = fs.BoolP("Q", "Q", defaultReallyQuiet, "really quiet")
 	var dscpStr = fs.String("dscp", strconv.Itoa(DefaultDSCP), "dscp value")
 	var dfStr = fs.String("df", DefaultDF.String(), "do not fragment")
 	var waitStr = fs.String("wait", DefaultWait.String(), "wait")
@@ -146,20 +152,28 @@ func runClientCLI(args []string) {
 	var tcompStr = fs.String("tcomp", DefaultCompTimerAverage.String(),
 		"timer compensation algorithm")
 	var fillStr = fs.String("fill", "none", "fill")
-	var fillOne = fs.Bool("fillone", false, "fill one")
+	var fillOne = fs.Bool("fill-one", false, "fill one")
+	var sfillStr = fs.String("sfill", "", "sfill")
 	var laddrStr = fs.String("local", DefaultLocalAddress, "local address")
 	var hmacStr = fs.String("hmac", defaultHMACKey, "HMAC key")
-	var ipv4 = fs.Bool("4", false, "IPv4 only")
-	var ipv6 = fs.Bool("6", false, "IPv6 only")
+	var ipv4 = fs.BoolP("4", "4", false, "IPv4 only")
+	var ipv6 = fs.BoolP("6", "6", false, "IPv6 only")
 	var timeoutsStr = fs.String("timeouts", DefaultOpenTimeouts.String(), "open timeouts")
 	var ttl = fs.Int("ttl", DefaultTTL, "IP time to live")
-	var strictParams = fs.Bool("strictparams", false, "strict parameters")
+	var strict = fs.Bool("strict", false, "strict")
 	var threadLock = fs.Bool("thread", DefaultThreadLock, "thread")
+	var version = fs.BoolP("version", "v", false, "version")
 	err := fs.Parse(args)
 
 	// start profiling, if enabled in build
 	if profileEnabled {
 		defer startProfile("./client.pprof").Stop()
+	}
+
+	// version
+	if *version {
+		runVersion(args)
+		os.Exit(0)
 	}
 
 	// parse duration
@@ -215,6 +229,11 @@ func runClientCLI(args []string) {
 	filler, err := NewFiller(*fillStr)
 	exitOnError(err, exitCodeBadCommandLine)
 
+	// default sfill
+	if *sfillStr == "" {
+		*sfillStr = *fillStr
+	}
+
 	// parse open timeouts
 	timeouts, err := ParseDurations(*timeoutsStr)
 	if err != nil {
@@ -236,7 +255,7 @@ func runClientCLI(args []string) {
 	raddrStr := fs.Args()[0]
 
 	// send regular output to stderr if json going to stdout
-	if *outputStr == "stdout" {
+	if *outputStr == "-" {
 		printTo = os.Stderr
 	}
 
@@ -274,7 +293,7 @@ func runClientCLI(args []string) {
 	cfg.StampAt = at
 	cfg.Clock = clock
 	cfg.DSCP = int(dscp)
-	cfg.StrictParams = *strictParams
+	cfg.Strict = *strict
 	cfg.IPVersion = ipVer
 	cfg.DF = df
 	cfg.TTL = int(*ttl)

@@ -14,18 +14,18 @@ type ClientConfig struct {
 	OpenTimeouts  Durations
 	NoTest        bool
 	Params
-	StrictParams bool
-	IPVersion    IPVersion
-	DF           DF
-	TTL          int
-	Timer        Timer
-	Waiter       Waiter
-	Filler       Filler
-	FillOne      bool
-	HMACKey      []byte
-	Handler      ClientHandler
-	ThreadLock   bool
-	Supplied     *ClientConfig
+	Strict     bool
+	IPVersion  IPVersion
+	DF         DF
+	TTL        int
+	Timer      Timer
+	Waiter     Waiter
+	Filler     Filler
+	FillOne    bool
+	HMACKey    []byte
+	Handler    ClientHandler
+	ThreadLock bool
+	Supplied   *ClientConfig
 }
 
 // NewClientConfig returns a new ClientConfig with the default settings.
@@ -42,13 +42,13 @@ func NewClientConfig() *ClientConfig {
 			Clock:        DefaultClock,
 			DSCP:         DefaultDSCP,
 		},
-		StrictParams: DefaultStrictParams,
-		IPVersion:    DefaultIPVersion,
-		DF:           DefaultDF,
-		TTL:          DefaultTTL,
-		Timer:        DefaultTimer,
-		Waiter:       DefaultWait,
-		ThreadLock:   DefaultThreadLock,
+		Strict:     DefaultStrict,
+		IPVersion:  DefaultIPVersion,
+		DF:         DefaultDF,
+		TTL:        DefaultTTL,
+		Timer:      DefaultTimer,
+		Waiter:     DefaultWait,
+		ThreadLock: DefaultThreadLock,
 	}
 }
 
@@ -75,7 +75,7 @@ func (c *ClientConfig) MarshalJSON() ([]byte, error) {
 		RemoteAddress string `json:"remote_address"`
 		OpenTimeouts  string `json:"open_timeouts"`
 		Params        `json:"params"`
-		StrictParams  bool          `json:"strict_params"`
+		Strict        bool          `json:"strict"`
 		IPVersion     IPVersion     `json:"ip_version"`
 		DF            DF            `json:"df"`
 		TTL           int           `json:"ttl"`
@@ -90,7 +90,7 @@ func (c *ClientConfig) MarshalJSON() ([]byte, error) {
 		RemoteAddress: c.RemoteAddress,
 		OpenTimeouts:  c.OpenTimeouts.String(),
 		Params:        c.Params,
-		StrictParams:  c.StrictParams,
+		Strict:        c.Strict,
 		IPVersion:     c.IPVersion,
 		DF:            c.DF,
 		TTL:           c.TTL,
