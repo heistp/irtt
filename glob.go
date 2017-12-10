@@ -1,8 +1,19 @@
 package irtt
 
-import "strings"
+import (
+	"strings"
+)
 
 const globChar = "*"
+
+func globAny(patterns []string, subj string) bool {
+	for _, p := range patterns {
+		if glob(p, subj) {
+			return true
+		}
+	}
+	return false
+}
 
 func glob(pattern, subj string) bool {
 	if pattern == "" {

@@ -26,6 +26,7 @@ const (
 	ExceededDuration
 	NoReceiveDstAddrSupport
 	RemoveNoConn
+	InvalidServerFill
 )
 
 // Client event codes.

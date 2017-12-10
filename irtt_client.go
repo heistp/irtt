@@ -85,9 +85,9 @@ func clientUsage() {
 		printf("               %s", ffac.Usage)
 	}
 	printf("--fill-one     fill only once and repeat for all packets")
-	printf("--sfill=fill   request server fill (default same as -fill)")
-	printf("               same options as for -fill")
-	printf("               server must support and allow this fill with --allow-fill")
+	printf("--sfill=fill   request server fill (default not specified)")
+	printf("               see options for --fill")
+	printf("               server must support and allow this fill with --allow-fills")
 	printf("--local=addr   local address (default from OS), valid formats:")
 	printf("               :port (all IPv4/IPv6 addresses with port)")
 	printf("               host (IPv4 addr or hostname with dynamic port)")
@@ -229,11 +229,6 @@ func runClientCLI(args []string) {
 	filler, err := NewFiller(*fillStr)
 	exitOnError(err, exitCodeBadCommandLine)
 
-	// default sfill
-	if *sfillStr == "" {
-		*sfillStr = *fillStr
-	}
-
 	// parse open timeouts
 	timeouts, err := ParseDurations(*timeoutsStr)
 	if err != nil {
@@ -293,6 +288,7 @@ func runClientCLI(args []string) {
 	cfg.StampAt = at
 	cfg.Clock = clock
 	cfg.DSCP = int(dscp)
+	cfg.ServerFill = *sfillStr
 	cfg.Strict = *strict
 	cfg.IPVersion = ipVer
 	cfg.DF = df
