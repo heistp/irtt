@@ -1061,6 +1061,8 @@ from the untagged 0.1 development version:
   - Default minimum interval is now 10ms (`-i 10ms`).
   - Default maximum duration is now 90s (`-d 90s`), which still accommodates
     default flent tests.
+- The following client defaults changed:
+  - Test duration from `1h` to `1m`.
 
 ## TODO and Roadmap
 
