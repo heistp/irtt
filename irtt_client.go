@@ -19,10 +19,10 @@ import (
 
 func clientUsage() {
 	setBufio()
-	printf("Usage: client [options] host|host:port")
+	printf("Usage: client [flags] host|host:port (see Host formats below)")
 	printf("")
-	printf("Options:")
-	printf("--------")
+	printf("Flags:")
+	printf("------")
 	printf("")
 	printf("-d duration    total time to send (default %s, see Duration units below)", DefaultDuration)
 	printf("-i interval    send interval (default %s, see Duration units below)", DefaultInterval)
@@ -90,10 +90,8 @@ func clientUsage() {
 	printf("               server must support and allow this fill with --allow-fills")
 	printf("--local=addr   local address (default from OS), valid formats:")
 	printf("               :port (all IPv4/IPv6 addresses with port)")
-	printf("               host (IPv4 addr or hostname with dynamic port)")
-	printf("               host:port (IPv4 addr or hostname with port)")
-	printf("               [ipv6-host%%zone] (IPv6 addr or hostname with dynamic port)")
-	printf("               [ipv6-host%%zone]:port (IPv6 addr or hostname with port)")
+	printf("               host (host with dynamic port, see Host formats below)")
+	printf("               host:port (host with specified port, see Host formats below)")
 	printf("--hmac=key     add HMAC with key (0x for hex) to all packets, provides:")
 	printf("               dropping of all packets without a correct HMAC")
 	printf("               protection for server against unauthorized discovery and use")
@@ -111,7 +109,24 @@ func clientUsage() {
 	printf("-h             show help")
 	printf("-v             show version")
 	printf("")
+	hostUsage()
+	printf("")
 	durationUsage()
+}
+
+func hostUsage() {
+	printf("Host formats:")
+	printf("-------------")
+	printf("")
+	printf("Hosts may be either hostnames (for IPv4 or IPv6) or IP addresses. IPv6")
+	printf("addresses must be surrounded by brackets and may include a zone after the %%")
+	printf("character. Examples:")
+	printf("")
+	printf("IPv4 IP: 192.168.1.10")
+	printf("IPv6 IP: [fe80::426c:8fff:fe13:9feb%%en0]")
+	printf("IPv4/6 hostname: localhost")
+	printf("")
+	printf("Note: IPv6 addresses must be quoted in most shells.")
 }
 
 func durationUsage() {
