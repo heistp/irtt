@@ -15,8 +15,8 @@ const (
 
 // Client defaults.
 const (
-	DefaultDuration                = time.Duration(1) * time.Hour
-	DefaultInterval                = time.Duration(1) * time.Second
+	DefaultDuration                = 1 * time.Minute
+	DefaultInterval                = 1 * time.Second
 	DefaultLength                  = 0
 	DefaultReceivedStats           = ReceivedStatsBoth
 	DefaultStampAt                 = AtBoth
@@ -61,8 +61,8 @@ var DefaultServerFiller = NewDefaultPatternFiller()
 
 // Server defaults.
 const (
-	DefaultMaxDuration   = time.Duration(0)
-	DefaultMinInterval   = time.Duration(0)
+	DefaultMaxDuration   = 90 * time.Second
+	DefaultMinInterval   = 10 * time.Millisecond
 	DefaultMaxLength     = 0
 	DefaultServerTimeout = 1 * time.Minute
 	DefaultPacketBurst   = 5
@@ -70,7 +70,6 @@ const (
 	DefaultAllowDSCP     = true
 	DefaultSetSrcIP      = false
 	DefaultGCMode        = GCOn
-	DefaultConcurrent    = false
 )
 
 // DefaultBindAddrs are the default bind addresses.

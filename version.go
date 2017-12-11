@@ -1,7 +1,7 @@
 package irtt
 
 // Version is the version number (replaced during build).
-var Version = "0.1"
+var Version = "0.9-prerelease"
 
 // ProtoVersion is the protocol version number, which must match between client
 // and server.
