@@ -43,8 +43,9 @@ submitting a new bug or feature request.
     1. [Packet Format](#packet-format)
     2. [Security](#security)
 6. [Frequently Asked Questions](#frequently-asked-questions)
-7. [TODO and Roadmap](#todo-and-roadmap)
-8. [Thanks](#thanks)
+7. [Releases](#releases)
+8. [TODO and Roadmap](#todo-and-roadmap)
+9. [Thanks](#thanks)
 
 ## Introduction
 
@@ -1016,40 +1017,70 @@ the client, and since start of the process for the server
 15) Why can't the client connect to the server and in the server logs I see
     `[Drop] [UnknownParam] unknown negotiation param (0x8 = 0)`?
 
-    You're probably using an old version of the server with a newer client. Make
-    sure both are up to date. Going forward, the protocol is versioned
-    (independently from IRTT in general), and is checked when the client
-    connects to the server. For now, the protocol versions must match exactly.
+    You're probably using a 0.1 development version of the server with a newer
+    client. Make sure both are up to date. Going forward, the protocol is
+    versioned (independently from IRTT in general), and is checked when the
+    client connects to the server. For now, the protocol versions must match
+    exactly.
+
+## Releases
+
+### Version 0.9
+
+Version 0.9 will be the first tagged release of IRTT. Following are the changes
+from the untagged 0.1 development version:
+
+- Command line option changes:
+  - Due to adoption of the [pflag](https://github.com/ogier/pflag) package, all long
+    options now start with -- and must use = with values (e.g. `--fill=rand`).
+    After the subcommand, flags and arguments may now appear in any order.
+  - `irtt client` changes:
+    - `-rs` is renamed to `--stats`
+    - `-strictparams` is renamed to `--strict`, and `strict_params` to `strict` in
+      the JSON
+    - `-ts` is renamed to `--tstamp`
+    - `-qq` is renamed to `-Q`
+    - `-fillall` is removed and is now the default. `--fill-one` may be used as
+      an optimization.
+  - `irtt server` changes:
+    - `-nodscp` is renamed to `--no-dscp`
+    - `-setsrcip` is renamed to `--set-src-ip`
+- The communication protocol has changed, so clients and servers must both be
+  updated, otherwise you may find yourself reading FAQ #15. The handshake now
+  includes a protocol version, which may change independently of the release
+  version. For now, the protocol version between client and server must match
+  exactly or the client will refuse to connect.
+- Server fills are now supported, and may be restricted on the server. See
+  `--sfill` for the client and `--allow-fills` on the server. As an example, one
+  can do `irtt client --fill=rand --sfill=rand -l 172 server` for random
+  payloads in both directions. The server default is `--allow-fills=rand` so
+  that arbitrary data cannot be relayed between two hosts. `server_fill` now
+  appears under `params` in the JSON.
+- The server defaults are now more appropriate for a public server. This
+  includes:
+  - Default minimum interval is now 10ms (`-i 10ms`).
+  - Default maximum duration is now 90s (`-d 90s`), which still accommodates
+    default flent tests.
 
 ## TODO and Roadmap
 
 ### TODO v0.9
 
-_Concrete tasks that just need doing..._
-
-- Improve client connection closure by:
-  - Repeating close packets up to four times until acknowledgement, like open
-  - Including received packet stats in the acknowledgement from the server
-- Document changes:
-  - All long options take -- and must use = with values
-  - Protocol version, and proto_version in params
-  - Add server_fill to params (may want to use --sfill)
-  - Remove -fillall (now --fill-one)
-  - -rs -> -s
-  - -strictparams -> --strict (strict_params -> strict)
-  - -ts -> --tstamp
-  - -nodscp -> --no-dscp
-  - -setsrcip -> --set-src-ip
-  - -qq -> -Q
-- Run profiler on client
+- Full testing
+- Client CPU and heap profiling
 
 ### TODO v1.0
 
-- Add client flag to skip sleep and catch up after timer misses
 - Refactor packet manipulation to improve readability and prevent multiple validations
+- Improve open/close process:
+  - Make timeout support calculation on exponential backoff, like 4x15s
+  - Repeat close packets until acknowledgement, like open
+  - Include final stats in the close acknowledgement from the server
 - Improve robustness and security of public servers:
 	- Add bitrate limiting
-	- Limit open requests rate and coordinate with session cleanup
+	- Limit open requests rate and coordinate with sconn cleanup
+  - Add separate, shorter timeout for open
+  - Specify close timeout as param from client, which may be restricted
   - Make connref mechanism robust to listener failure
 	- Add per-IP limiting
 - Write a SmokePing probe
@@ -1079,9 +1110,10 @@ _Planned for the future..._
 
 _Collection area for undefined or uncertain stuff..._
 
+- Add client flag to skip sleep and catch up after timer misses
 - Always return instance of irtt.Error? If so, look at exitOnError.
 - Find better model for concurrency (one goroutine per sconn induces latency)
-- Map error codes to exit codes
+- Use error code (if available) as exit code
 - Add seqno to the Max and maybe Min columns in the text output
 - Prototype TCP throughput test and compare straight Go vs iperf/netperf
 - Add a subcommand to the CLI to convert JSON to CSV

@@ -39,13 +39,13 @@ func serverUsage() {
 	printf("--pburst=#     packet burst allowed before enforcing minimum interval")
 	printf("               (default %d)", DefaultPacketBurst)
 	printf("--fill=fill    payload fill if not requested (default %s)", DefaultServerFiller.String())
-	printf("               none: keep client payload (insecure on public servers)")
+	printf("               none: echo client payload (insecure on public servers)")
 	for _, ffac := range FillerFactories {
 		printf("               %s", ffac.Usage)
 	}
 	printf("--allow-fills= comma separated patterns of fill requests to allow (default %s)", strings.Join(DefaultAllowFills, ","))
 	printf("  fills        see options for --fill")
-	printf("               allowing non-random fills not secure on public servers")
+	printf("               allowing non-random fills insecure on public servers")
 	printf("               use --allow-fills=\"\" to disallow all fill requests")
 	printf("               note: patterns may contain * for matching")
 	printf("--tstamp=modes timestamp modes to allow (default %s)", DefaultAllowStamp)
