@@ -408,14 +408,34 @@ management, and at this time IRTT makes no use of Go's
 
 ### JSON Format
 
-IRTT's JSON output format consists of four top-level objects. These are documented
+IRTT's JSON output format consists of five top-level objects. These are documented
 through the examples below. All attributes are present unless otherwise noted in
 _italics._
 
-1. [system_info](#system_info)
-2. [config](#config)
-3. [stats](#stats)
-4. [round_trips](#round_trips)
+1. [version](#version)
+2. [system_info](#system_info)
+3. [config](#config)
+4. [stats](#stats)
+5. [round_trips](#round_trips)
+
+#### version
+
+version information
+
+```
+"version": {
+    "irtt": "0.9",
+    "build_date": "2017-12-12T19:33:21Z",
+    "protocol": 1,
+    "json_format": 1
+},
+```
+
+- `irtt` the IRTT version number
+- `build_date` the date IRTT was built, in
+  [ISO 8601](https://en.wikipedia.org/wiki/ISO_8601) date and time format
+- `protocol` the protocol version number (increments mean incompatible changes)
+- `json_format` the JSON format number (increments mean incompatible changes)
 
 #### system_info
 
@@ -458,7 +478,7 @@ the configuration used for the test
         "dscp": 0,
         "server_fill": ""
     },
-    "strict": false,
+    "loose": false,
     "ip_version": "IPv4",
     "df": 0,
     "ttl": 0,
@@ -482,7 +502,7 @@ the configuration used for the test
             "dscp": 0,
             "server_fill": ""
         },
-        "strict": false,
+        "loose": false,
         "ip_version": "IPv4+6",
         "df": 0,
         "ttl": 0,
@@ -511,7 +531,8 @@ the configuration used for the test
   - `dscp` the [DSCP](https://en.wikipedia.org/wiki/Differentiated_services)
 		value
   - `server_fill` the requested server fill (`--sfill` flag for irtt client)
-- `strict` if true, test is aborted if server restricts parameters
+- `loose` if true, client accepts and uses restricted server parameters, with a
+  warning
 - `ip_version` the IP version used (IPv4 or IPv6)
 - `df` the do-not-fragment setting (0 == OS default, 1 == false, 2 == true)
 - `ttl` the IP [time-to-live](https://en.wikipedia.org/wiki/Time_to_live) value
@@ -1036,12 +1057,12 @@ from the untagged 0.1 development version:
     After the subcommand, flags and arguments may now appear in any order.
   - `irtt client` changes:
     - `-rs` is renamed to `--stats`
-    - `-strictparams` is renamed to `--strict`, and `strict_params` to `strict` in
-      the JSON
+    - `-strictparams` is removed and is now the default. `--loose` may be used
+      instead to accept and use server restricted parameters, with a warning.
     - `-ts` is renamed to `--tstamp`
     - `-qq` is renamed to `-Q`
     - `-fillall` is removed and is now the default. `--fill-one` may be used as
-      an optimization.
+      a small optimization, but should rarely be needed.
   - `irtt server` changes:
     - `-nodscp` is renamed to `--no-dscp`
     - `-setsrcip` is renamed to `--set-src-ip`
@@ -1056,19 +1077,16 @@ from the untagged 0.1 development version:
   payloads in both directions. The server default is `--allow-fills=rand` so
   that arbitrary data cannot be relayed between two hosts. `server_fill` now
   appears under `params` in the JSON.
-- The server defaults are now more appropriate for a public server. This
-  includes:
-  - Default minimum interval is now 10ms (`-i 10ms`).
-  - Default maximum duration is now 90s (`-d 90s`), which still accommodates
-    default flent tests.
-- The following client defaults changed:
-  - Test duration from `1h` to `1m`.
+- Version information has been added to the JSON output.
+- The default server minimum interval is now `10ms`.
+- The default client duration has been changed from `1h` to `1m`.
 
 ## TODO and Roadmap
 
 ### TODO v0.9
 
 - Full testing
+- Doc improvements
 - Client CPU and heap profiling
 
 ### TODO v1.0

@@ -14,7 +14,7 @@ type ClientConfig struct {
 	OpenTimeouts  Durations
 	NoTest        bool
 	Params
-	Strict     bool
+	Loose      bool
 	IPVersion  IPVersion
 	DF         DF
 	TTL        int
@@ -34,15 +34,15 @@ func NewClientConfig() *ClientConfig {
 		LocalAddress: DefaultLocalAddress,
 		OpenTimeouts: DefaultOpenTimeouts,
 		Params: Params{
-			ProtoVersion: ProtoVersion,
-			Duration:     DefaultDuration,
-			Interval:     DefaultInterval,
-			Length:       DefaultLength,
-			StampAt:      DefaultStampAt,
-			Clock:        DefaultClock,
-			DSCP:         DefaultDSCP,
+			ProtocolVersion: ProtocolVersion,
+			Duration:        DefaultDuration,
+			Interval:        DefaultInterval,
+			Length:          DefaultLength,
+			StampAt:         DefaultStampAt,
+			Clock:           DefaultClock,
+			DSCP:            DefaultDSCP,
 		},
-		Strict:     DefaultStrict,
+		Loose:      DefaultLoose,
 		IPVersion:  DefaultIPVersion,
 		DF:         DefaultDF,
 		TTL:        DefaultTTL,
@@ -80,7 +80,7 @@ func (c *ClientConfig) MarshalJSON() ([]byte, error) {
 		RemoteAddress string `json:"remote_address"`
 		OpenTimeouts  string `json:"open_timeouts"`
 		Params        `json:"params"`
-		Strict        bool          `json:"strict"`
+		Loose         bool          `json:"loose"`
 		IPVersion     IPVersion     `json:"ip_version"`
 		DF            DF            `json:"df"`
 		TTL           int           `json:"ttl"`
@@ -96,7 +96,7 @@ func (c *ClientConfig) MarshalJSON() ([]byte, error) {
 		RemoteAddress: c.RemoteAddress,
 		OpenTimeouts:  c.OpenTimeouts.String(),
 		Params:        c.Params,
-		Strict:        c.Strict,
+		Loose:         c.Loose,
 		IPVersion:     c.IPVersion,
 		DF:            c.DF,
 		TTL:           c.TTL,

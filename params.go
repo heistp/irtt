@@ -10,7 +10,7 @@ type paramType int
 const paramsMaxLen = 128
 
 const (
-	pProtoVersion = iota + 1
+	pProtocolVersion = iota + 1
 	pDuration
 	pInterval
 	pLength
@@ -23,15 +23,15 @@ const (
 
 // Params are the test parameters sent to and received from the server.
 type Params struct {
-	ProtoVersion  int           `json:"proto_version"`
-	Duration      time.Duration `json:"duration"`
-	Interval      time.Duration `json:"interval"`
-	Length        int           `json:"length"`
-	ReceivedStats ReceivedStats `json:"received_stats"`
-	StampAt       StampAt       `json:"stamp_at"`
-	Clock         Clock         `json:"clock"`
-	DSCP          int           `json:"dscp"`
-	ServerFill    string        `json:"server_fill"`
+	ProtocolVersion int           `json:"proto_version"`
+	Duration        time.Duration `json:"duration"`
+	Interval        time.Duration `json:"interval"`
+	Length          int           `json:"length"`
+	ReceivedStats   ReceivedStats `json:"received_stats"`
+	StampAt         StampAt       `json:"stamp_at"`
+	Clock           Clock         `json:"clock"`
+	DSCP            int           `json:"dscp"`
+	ServerFill      string        `json:"server_fill"`
 }
 
 func parseParams(b []byte) (*Params, error) {
@@ -49,9 +49,9 @@ func parseParams(b []byte) (*Params, error) {
 func (p *Params) bytes() []byte {
 	b := make([]byte, paramsMaxLen)
 	pos := 0
-	if p.ProtoVersion != 0 {
-		pos += binary.PutUvarint(b[pos:], pProtoVersion)
-		pos += binary.PutVarint(b[pos:], int64(p.ProtoVersion))
+	if p.ProtocolVersion != 0 {
+		pos += binary.PutUvarint(b[pos:], pProtocolVersion)
+		pos += binary.PutVarint(b[pos:], int64(p.ProtocolVersion))
 	}
 	if p.Duration != 0 {
 		pos += binary.PutUvarint(b[pos:], pDuration)
@@ -109,8 +109,8 @@ func (p *Params) readParam(b []byte) (pos int, err error) {
 			return
 		}
 		switch t {
-		case pProtoVersion:
-			p.ProtoVersion = int(v)
+		case pProtocolVersion:
+			p.ProtocolVersion = int(v)
 		case pDuration:
 			p.Duration = time.Duration(v)
 			if p.Duration <= 0 {

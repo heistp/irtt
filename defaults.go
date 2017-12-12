@@ -22,7 +22,7 @@ const (
 	DefaultStampAt                 = AtBoth
 	DefaultClock                   = BothClocks
 	DefaultDSCP                    = 0
-	DefaultStrict                  = false
+	DefaultLoose                   = false
 	DefaultLocalAddress            = ":0"
 	DefaultLocalPort               = "0"
 	DefaultDF                      = DFDefault
@@ -61,7 +61,7 @@ var DefaultServerFiller = NewDefaultPatternFiller()
 
 // Server defaults.
 const (
-	DefaultMaxDuration   = 90 * time.Second
+	DefaultMaxDuration   = time.Duration(0)
 	DefaultMinInterval   = 10 * time.Millisecond
 	DefaultMaxLength     = 0
 	DefaultServerTimeout = 1 * time.Minute
@@ -121,3 +121,7 @@ const sconnsInitSize = 32
 
 // maximum length of server fill string
 const maxServerFillLen = 32
+
+// minRestrictedInterval is the minimum restricted interval that the client will
+// accept from the server.
+const minRestrictedInterval = 1 * time.Second
