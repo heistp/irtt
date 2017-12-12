@@ -62,10 +62,10 @@ func accept(l *listener, p *packet) (sc *sconn, err error) {
 	}
 
 	// determine state of connection
-	if params.ProtoVersion != ProtoVersion {
+	if params.ProtocolVersion != ProtocolVersion {
 		l.eventf(ProtocolVersionMismatch, p.raddr,
 			"close connection, client version %d != server version %d",
-			params.ProtoVersion, ProtoVersion)
+			params.ProtocolVersion, ProtocolVersion)
 		p.setFlagBits(flClose)
 	} else if p.flags()&flClose != 0 {
 		l.eventf(OpenClose, p.raddr, "open-close connection")
@@ -268,8 +268,8 @@ func (sc *sconn) expired() bool {
 }
 
 func (sc *sconn) restrictParams(p *Params) {
-	if p.ProtoVersion != ProtoVersion {
-		p.ProtoVersion = ProtoVersion
+	if p.ProtocolVersion != ProtocolVersion {
+		p.ProtocolVersion = ProtocolVersion
 	}
 	if sc.MaxDuration > 0 && p.Duration > sc.MaxDuration {
 		p.Duration = sc.MaxDuration

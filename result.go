@@ -9,18 +9,25 @@ import (
 
 // Result is returned from Run.
 type Result struct {
-	SystemInfo *SystemInfo   `json:"system_info"`
-	Config     *ClientConfig `json:"config"`
-	SendErr    error         `json:"send_err,omitempty"`
-	ReceiveErr error         `json:"receive_err,omitempty"`
-	*Stats     `json:"stats"`
-	RoundTrips []RoundTrip `json:"round_trips"`
+	VersionInfo *VersionInfo  `json:"version"`
+	SystemInfo  *SystemInfo   `json:"system_info"`
+	Config      *ClientConfig `json:"config"`
+	SendErr     error         `json:"send_err,omitempty"`
+	ReceiveErr  error         `json:"receive_err,omitempty"`
+	*Stats      `json:"stats"`
+	RoundTrips  []RoundTrip `json:"round_trips"`
 }
 
 func newResult(rec *Recorder, cfg *ClientConfig, serr error, rerr error) *Result {
 	stats := &Stats{Recorder: rec}
-	r := &Result{Stats: stats, Config: cfg, SystemInfo: NewSystemInfo(),
-		SendErr: serr, ReceiveErr: rerr}
+	r := &Result{
+		VersionInfo: NewVersionInfo(),
+		SystemInfo:  NewSystemInfo(),
+		Config:      cfg,
+		SendErr:     serr,
+		ReceiveErr:  rerr,
+		Stats:       stats,
+	}
 
 	// calculate total duration
 	r.Duration = time.Since(r.Start)

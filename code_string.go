@@ -5,7 +5,7 @@ package irtt
 import "fmt"
 
 const (
-	_Code_name_0 = "ServerFillTooLongOpenTimeoutTooShortInvalidReceivedStatsStringInvalidReceivedStatsIntParamsChangedInvalidServerRestrictionOpenTimeoutServerClosedConnTokenZeroDurationNonPositiveIntervalNonPositiveNoSuchWaiterNoSuchTimerNoSuchFillerNoSuchAveragerInvalidWaitDurationInvalidWaitFactorInvalidWaitStringInvalidSleepFactorUnexpectedSequenceNumberClockMismatchStampAtMismatchShortReplyExpectedReplyFlagTTLErrorDFErrorUnexpectedOpenFlagAllocateResultsPanicInvalidExpAvgAlphaInvalidWinAvgWindow"
+	_Code_name_0 = "ServerFillTooLongOpenTimeoutTooShortInvalidReceivedStatsStringInvalidReceivedStatsIntInvalidServerRestrictionOpenTimeoutServerClosedConnTokenZeroDurationNonPositiveIntervalNonPositiveNoSuchWaiterNoSuchTimerNoSuchFillerNoSuchAveragerInvalidWaitDurationInvalidWaitFactorInvalidWaitStringInvalidSleepFactorUnexpectedSequenceNumberClockMismatchStampAtMismatchShortReplyExpectedReplyFlagTTLErrorDFErrorUnexpectedOpenFlagAllocateResultsPanicInvalidExpAvgAlphaInvalidWinAvgWindow"
 	_Code_name_1 = "AddressMismatchLargeRequestShortIntervalInvalidConnTokenNoSuitableAddressFoundUnexpectedReplyFlagInvalidGCModeStringUnspecifiedWithSpecifiedAddressesNoMatchingInterfacesUpNoMatchingInterfaces"
 	_Code_name_2 = "ProtocolVersionMismatchInvalidParamValueParamOverflowShortParamBufferInvalidFlagBitsSetDFNotSupportedInconsistentClocksNonexclusiveMidpointTStampUnexpectedHMACBadHMACNoHMACBadMagicInvalidClockIntInvalidClockStringInvalidAllowStampStringInvalidStampAtIntInvalidStampAtStringFieldsCapacityTooLargeFieldsLengthTooLargeInvalidDFStringShortWrite"
 	_Code_name_3 = "MultipleAddressesServerStartServerStopListenerStartListenerStopListenerErrorDropNewConnOpenCloseCloseConnNoDSCPSupportExceededDurationNoReceiveDstAddrSupportRemoveNoConnInvalidServerFill"
@@ -13,7 +13,7 @@ const (
 )
 
 var (
-	_Code_index_0 = [...]uint16{0, 17, 36, 62, 85, 98, 122, 133, 145, 158, 177, 196, 208, 219, 231, 245, 264, 281, 298, 316, 340, 353, 368, 378, 395, 403, 410, 428, 448, 466, 485}
+	_Code_index_0 = [...]uint16{0, 17, 36, 62, 85, 109, 120, 132, 145, 164, 183, 195, 206, 218, 232, 251, 268, 285, 303, 327, 340, 355, 365, 382, 390, 397, 415, 435, 453, 472}
 	_Code_index_1 = [...]uint8{0, 15, 27, 40, 56, 78, 97, 116, 149, 171, 191}
 	_Code_index_2 = [...]uint16{0, 23, 40, 53, 69, 87, 101, 119, 145, 159, 166, 172, 180, 195, 213, 236, 253, 273, 295, 315, 330, 340}
 	_Code_index_3 = [...]uint8{0, 17, 28, 38, 51, 63, 76, 80, 87, 96, 105, 118, 134, 157, 169, 186}
@@ -22,8 +22,8 @@ var (
 
 func (i Code) String() string {
 	switch {
-	case -2077 <= i && i <= -2048:
-		i -= -2077
+	case -2076 <= i && i <= -2048:
+		i -= -2076
 		return _Code_name_0[_Code_index_0[i]:_Code_index_0[i+1]]
 	case -1033 <= i && i <= -1024:
 		i -= -1033

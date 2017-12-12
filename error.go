@@ -66,7 +66,6 @@ const (
 	ServerClosed
 	OpenTimeout
 	InvalidServerRestriction
-	ParamsChanged
 	InvalidReceivedStatsInt
 	InvalidReceivedStatsString
 	OpenTimeoutTooShort

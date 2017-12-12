@@ -51,12 +51,7 @@ func (c *Client) Run(ctx context.Context) (r *Result, err error) {
 	defer c.close()
 
 	// check parameter changes
-	var changed bool
-	if changed, err = c.checkParameters(); err != nil {
-		return
-	}
-	if changed && c.Strict {
-		err = Errorf(ParamsChanged, "server restricted test parameters")
+	if err = c.checkParameters(); err != nil {
 		return
 	}
 
@@ -189,75 +184,94 @@ func (c *Client) remoteAddr() *net.UDPAddr {
 
 // checkParameters checks any changes after the server returned restricted
 // parameters.
-func (c *Client) checkParameters() (changed bool, err error) {
-	if c.ProtoVersion != ProtoVersion {
-		changed = true
+func (c *Client) checkParameters() (err error) {
+	paramEvent := func(code Code, format string, detail ...interface{}) {
+		if c.Loose {
+			c.eventf(code, format, detail...)
+		} else {
+			err = Errorf(code, format, detail...)
+		}
+	}
+
+	if c.ProtocolVersion != ProtocolVersion {
 		err = Errorf(ProtocolVersionMismatch,
-			"client version %d != server version %d", ProtoVersion, c.ProtoVersion)
+			"client version %d != server version %d", ProtocolVersion, c.ProtocolVersion)
 		return
 	}
 	if c.Duration < c.Supplied.Duration {
-		changed = true
-		c.eventf(ServerRestriction, "server reduced duration from %s to %s",
+		paramEvent(ServerRestriction, "server reduced duration from %s to %s",
 			c.Supplied.Duration, c.Duration)
+		if err != nil {
+			return
+		}
 	}
 	if c.Duration > c.Supplied.Duration {
-		changed = true
 		err = Errorf(InvalidServerRestriction,
 			"server tried to change duration from %s to %s",
 			c.Supplied.Duration, c.Duration)
 		return
 	}
 	if c.Interval > c.Supplied.Interval {
-		changed = true
-		c.eventf(ServerRestriction, "server increased interval from %s to %s",
+		paramEvent(ServerRestriction, "server increased interval from %s to %s",
 			c.Supplied.Interval, c.Interval)
-	}
-	if c.Interval < c.Supplied.Interval {
-		changed = true
-		if c.Interval < 1*time.Second {
-			err = Errorf(InvalidServerRestriction,
-				"server tried to reduce interval from %s to %s",
-				c.Supplied.Interval, c.Interval)
+		if err != nil {
 			return
 		}
-		c.eventf(ServerRestriction,
+	}
+	if c.Interval < c.Supplied.Interval {
+		if c.Interval < minRestrictedInterval {
+			err = Errorf(InvalidServerRestriction,
+				"server tried to reduce interval to < %s, from %s to %s",
+				minRestrictedInterval, c.Supplied.Interval, c.Interval)
+			return
+		}
+		paramEvent(ServerRestriction,
 			"server reduced interval from %s to %s to avoid %s timeout",
 			c.Supplied.Interval, c.Interval, c.Interval*maxIntervalTimeoutFactor)
-		return
+		if err != nil {
+			return
+		}
 	}
 	if c.Length < c.Supplied.Length {
-		changed = true
-		c.eventf(ServerRestriction, "server reduced length from %d to %d",
+		paramEvent(ServerRestriction, "server reduced length from %d to %d",
 			c.Supplied.Length, c.Length)
+		if err != nil {
+			return
+		}
 	}
 	if c.Length > c.Supplied.Length {
-		changed = true
 		err = Errorf(InvalidServerRestriction,
-			"server tried to change length from %d to %d",
+			"server tried to increase length from %d to %d",
 			c.Supplied.Length, c.Length)
 		return
 	}
 	if c.StampAt != c.Supplied.StampAt {
-		changed = true
-		c.eventf(ServerRestriction, "server restricted timestamps from %s to %s",
+		paramEvent(ServerRestriction, "server restricted timestamps from %s to %s",
 			c.Supplied.StampAt, c.StampAt)
+		if err != nil {
+			return
+		}
 	}
 	if c.Clock != c.Supplied.Clock {
-		changed = true
-		c.eventf(ServerRestriction, "server restricted clocks from %s to %s",
+		paramEvent(ServerRestriction, "server restricted clocks from %s to %s",
 			c.Supplied.Clock, c.Clock)
+		if err != nil {
+			return
+		}
 	}
 	if c.DSCP != c.Supplied.DSCP {
-		changed = true
-		c.eventf(ServerRestriction,
-			"server doesn't support DSCP, falling back to best effort")
+		paramEvent(ServerRestriction, "server doesn't support DSCP")
+		if err != nil {
+			return
+		}
 	}
 	if c.ServerFill != c.Supplied.ServerFill {
-		changed = true
-		c.eventf(ServerRestriction,
+		paramEvent(ServerRestriction,
 			"server restricted fill from %s to %s", c.Supplied.ServerFill,
 			c.ServerFill)
+		if err != nil {
+			return
+		}
 	}
 	return
 }

@@ -103,7 +103,8 @@ func clientUsage() {
 	printf("               max packets sent is up to the number of Durations")
 	printf("               minimum timeout duration is %s", minOpenTimeout)
 	printf("--ttl=ttl      time to live (default %d, meaning use OS default)", DefaultTTL)
-	printf("--strict       exit with nonzero status if server restricts any parameters")
+	printf("--loose        accept and use any server restricted test parameters instead")
+	printf("               of exiting with nonzero status")
 	printf("--thread       lock sending and receiving goroutines to OS threads (may")
 	printf("               reduce mean latency, but may also add outliers)")
 	printf("-h             show help")
@@ -175,7 +176,7 @@ func runClientCLI(args []string) {
 	var ipv6 = fs.BoolP("6", "6", false, "IPv6 only")
 	var timeoutsStr = fs.String("timeouts", DefaultOpenTimeouts.String(), "open timeouts")
 	var ttl = fs.Int("ttl", DefaultTTL, "IP time to live")
-	var strict = fs.Bool("strict", false, "strict")
+	var loose = fs.Bool("loose", DefaultLoose, "loose")
 	var threadLock = fs.Bool("thread", DefaultThreadLock, "thread")
 	var version = fs.BoolP("version", "v", false, "version")
 	err := fs.Parse(args)
@@ -304,7 +305,7 @@ func runClientCLI(args []string) {
 	cfg.Clock = clock
 	cfg.DSCP = int(dscp)
 	cfg.ServerFill = *sfillStr
-	cfg.Strict = *strict
+	cfg.Loose = *loose
 	cfg.IPVersion = ipVer
 	cfg.DF = df
 	cfg.TTL = int(*ttl)
