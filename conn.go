@@ -185,7 +185,7 @@ func (c *cconn) open(ctx context.Context) (err error) {
 		orp := newPacket(0, maxHeaderLen, c.cfg.HMACKey)
 
 		for {
-			if rerr = c.receive(orp); rerr != nil {
+			if rerr = c.receive(orp); rerr != nil && !isErrorCode(ServerClosed, rerr) {
 				return
 			}
 			if orp.flags()&flOpen == 0 {

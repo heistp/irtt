@@ -37,7 +37,7 @@ func clientUsage() {
 	printf("               if extension is .json, output is not gzipped")
 	printf("               output to stdout is not gzipped, pipe to gzip if needed")
 	printf("-q             quiet, suppress per-packet output")
-	printf("-Q             really quiet, suppress all output")
+	printf("-Q             really quiet, suppress all output except errors to stderr")
 	printf("-n             no test, connect to the server and validate test parameters")
 	printf("               but don't run the test")
 	printf("--stats=stats  server stats on received packets (default %s)", DefaultReceivedStats.String())
