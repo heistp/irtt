@@ -33,6 +33,7 @@ func clientUsage() {
 	printf("-o file        write JSON output to file (use '-' for stdout)")
 	printf("               if file has no extension, .json.gz is added, output is gzipped")
 	printf("               if extension is .json.gz, output is gzipped")
+	printf("               if extension is .gz, it's changed to .json.gz, output is gzipped")
 	printf("               if extension is .json, output is not gzipped")
 	printf("               output to stdout is not gzipped, pipe to gzip if needed")
 	printf("-q             quiet, suppress per-packet output")
@@ -431,7 +432,11 @@ func writeResultJSON(r *Result, output string, cancelled bool) error {
 		if strings.HasSuffix(output, ".json") {
 			gz = false
 		} else if !strings.HasSuffix(output, ".json.gz") {
-			output = output + ".json.gz"
+			if strings.HasSuffix(output, ".gz") {
+				output = output[:len(output)-3] + ".json.gz"
+			} else {
+				output = output + ".json.gz"
+			}
 		}
 		of, err := os.Create(output)
 		if err != nil {
