@@ -1092,6 +1092,7 @@ from the untagged 0.1 development version:
 ### TODO v0.9
 
 - Doc improvements
+- Build a debian package
 
 ### TODO v1.0
 
