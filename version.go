@@ -1,7 +1,7 @@
 package irtt
 
 // Version is the IRTT version number (replaced during build).
-var Version = "0.9-beta"
+var Version = "0.9"
 
 // BuildDate is the build date (replaced during build).
 var BuildDate = "unavailable"
