@@ -895,10 +895,10 @@ the client, and since start of the process for the server
 1) Why not just use ping?
 
    Ping may be the preferred tool when measuring minimum latency, or for other
-   reasons. IRTT's reported latency is likely to be somewhat higher and more
-   variable than the results reported by ping, due to Go's scheduling
-   variability and system call overhead. That said, there are advantages that
-   IRTT has over ping when minimum RTT is not what you're measuring:
+   reasons. IRTT's reported mean RTT is likely to be around 0.1-0.2 ms higher
+   and a bit more variable than the results reported by ping, due to Go's system
+   call overhead and scheduling variability. That said, there are advantages
+   that IRTT has over ping when minimum RTT is not what you're measuring:
 
 	 - Some device vendors prioritize ICMP, so ping may not be an accurate measure
 		 of user-perceived latency.
@@ -1073,7 +1073,7 @@ from the untagged 0.1 development version:
     - `-nodscp` is renamed to `--no-dscp`
     - `-setsrcip` is renamed to `--set-src-ip`
 - The communication protocol has changed, so clients and servers must both be
-  updated, otherwise you may find yourself reading FAQ #15. The handshake now
+  updated, otherwise you may find yourself reading FAQ #16. The handshake now
   includes a protocol version, which may change independently of the release
   version. For now, the protocol version between client and server must match
   exactly or the client will refuse to connect.
