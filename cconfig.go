@@ -26,6 +26,7 @@ type ClientConfig struct {
 	Handler    ClientHandler
 	ThreadLock bool
 	Supplied   *ClientConfig
+	TOS        int
 }
 
 // NewClientConfig returns a new ClientConfig with the default settings.
@@ -49,6 +50,7 @@ func NewClientConfig() *ClientConfig {
 		Timer:      DefaultTimer,
 		Waiter:     DefaultWait,
 		ThreadLock: DefaultThreadLock,
+		TOS:        DefaultTOS,
 	}
 }
 
@@ -91,6 +93,7 @@ func (c *ClientConfig) MarshalJSON() ([]byte, error) {
 		ServerFill    string        `json:"server_fill"`
 		ThreadLock    bool          `json:"thread_lock"`
 		Supplied      *ClientConfig `json:"supplied,omitempty"`
+		TOS           int           `json:"tos"`
 	}{
 		LocalAddress:  c.LocalAddress,
 		RemoteAddress: c.RemoteAddress,
@@ -107,6 +110,7 @@ func (c *ClientConfig) MarshalJSON() ([]byte, error) {
 		ServerFill:    c.ServerFill,
 		ThreadLock:    c.ThreadLock,
 		Supplied:      c.Supplied,
+		TOS:           c.TOS,
 	}
 	return json.Marshal(j)
 }

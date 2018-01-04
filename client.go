@@ -98,6 +98,14 @@ func (c *Client) Run(ctx context.Context) (r *Result, err error) {
 		}
 	}
 
+	// set TOS
+	if c.TOS != DefaultTOS {
+		if terr := c.conn.setTOS(c.TOS); terr != nil {
+			err = Errorf(TTLError, "unable to set TOS %d (%s)", c.TOS, terr)
+			return
+		}
+	}
+
 	// create recorder
 	if c.rec, err = newRecorder(pcount(c.Duration, c.Interval), c.Handler); err != nil {
 		return
