@@ -23,6 +23,7 @@ type nconn struct {
 	dscpError   error
 	dscpSupport bool
 	ttl         int
+	tos         int
 	df          DF
 }
 
@@ -71,6 +72,21 @@ func (n *nconn) setTTL(ttl int) (err error) {
 	}
 	if err == nil {
 		n.ttl = ttl
+	}
+	return
+}
+
+func (n *nconn) setTOS(tos int) (err error) {
+	if n.tos == tos {
+		return
+	}
+	if n.ip4conn != nil {
+		err = n.ip4conn.SetTOS(tos)
+	} else {
+		err = n.ip6conn.SetTrafficClass(tos)
+	}
+	if err == nil {
+		n.tos = tos
 	}
 	return
 }

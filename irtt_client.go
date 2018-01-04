@@ -107,6 +107,7 @@ func clientUsage() {
 	printf("--loose        accept and use any server restricted test parameters instead")
 	printf("               of exiting with nonzero status")
 	printf("--thread       lock sending and receiving goroutines to OS threads")
+	printf("--tos=tos      packet tos (1-255)")
 	printf("-h             show help")
 	printf("-v             show version")
 	printf("")
@@ -178,6 +179,7 @@ func runClientCLI(args []string) {
 	var ttl = fs.Int("ttl", DefaultTTL, "IP time to live")
 	var loose = fs.Bool("loose", DefaultLoose, "loose")
 	var threadLock = fs.Bool("thread", DefaultThreadLock, "thread")
+	var tos = fs.Int("tos", DefaultTOS, "Packet TOS")
 	var version = fs.BoolP("version", "v", false, "version")
 	err := fs.Parse(args)
 
@@ -316,6 +318,7 @@ func runClientCLI(args []string) {
 	cfg.HMACKey = hmacKey
 	cfg.Handler = &clientHandler{*quiet, *reallyQuiet}
 	cfg.ThreadLock = *threadLock
+	cfg.TOS = int(*tos)
 
 	// run test
 	c := NewClient(cfg)
