@@ -2,7 +2,7 @@
 
 package irtt
 
-import "fmt"
+import "strconv"
 
 const (
 	_Code_name_0 = "ServerFillTooLongOpenTimeoutTooShortInvalidReceivedStatsStringInvalidReceivedStatsIntInvalidServerRestrictionOpenTimeoutServerClosedConnTokenZeroDurationNonPositiveIntervalNonPositiveNoSuchWaiterNoSuchTimerNoSuchFillerNoSuchAveragerInvalidWaitDurationInvalidWaitFactorInvalidWaitStringInvalidSleepFactorUnexpectedSequenceNumberClockMismatchStampAtMismatchShortReplyExpectedReplyFlagTTLErrorDFErrorUnexpectedOpenFlagAllocateResultsPanicInvalidExpAvgAlphaInvalidWinAvgWindow"
@@ -38,6 +38,6 @@ func (i Code) String() string {
 		i -= 2048
 		return _Code_name_4[_Code_index_4[i]:_Code_index_4[i+1]]
 	default:
-		return fmt.Sprintf("Code(%d)", i)
+		return "Code(" + strconv.FormatInt(int64(i), 10) + ")"
 	}
 }
