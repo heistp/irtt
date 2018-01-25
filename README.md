@@ -1086,6 +1086,8 @@ from the untagged 0.1 development version:
 - Version information has been added to the JSON output.
 - The default server minimum interval is now `10ms`.
 - The default client duration has been changed from `1h` to `1m`.
+- Some author info was changed in the commit history, so the rewritten history
+  must be fetched in all forks and any changes rebased.
 
 ## TODO and Roadmap
 
