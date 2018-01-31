@@ -1073,10 +1073,9 @@ from the untagged 0.1 development version:
     - `-nodscp` is renamed to `--no-dscp`
     - `-setsrcip` is renamed to `--set-src-ip`
 - The communication protocol has changed, so clients and servers must both be
-  updated, otherwise you may find yourself reading FAQ #16. The handshake now
-  includes a protocol version, which may change independently of the release
-  version. For now, the protocol version between client and server must match
-  exactly or the client will refuse to connect.
+  updated. The handshake now includes a protocol version, which may change
+  independently of the release version. For now, the protocol version between
+  client and server must match exactly or the client will refuse to connect.
 - Server fills are now supported, and may be restricted on the server. See
   `--sfill` for the client and `--allow-fills` on the server. As an example, one
   can do `irtt client --fill=rand --sfill=rand -l 172 server` for random
