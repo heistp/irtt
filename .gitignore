@@ -12,6 +12,9 @@ server.pprof
 # Private directory
 private
 
+# Debian package files
+debian
+
 # JSON output files
 *.json
 *.json.gz
