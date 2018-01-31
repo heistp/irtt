@@ -13,7 +13,7 @@ server.pprof
 private
 
 # Debian package files
-debian
+dpkg
 
 # JSON output files
 *.json
