@@ -1,18 +1,22 @@
 #!/bin/sh
 
 action="build"
-pkgbase="github.com/peteheist/irtt"
-pkgs="$pkgbase/cmd/irtt"
+pkg="github.com/peteheist/irtt/cmd/irtt"
 ldflags="-X github.com/peteheist/irtt.Version=0.9-git-$(git describe --always --long --dirty) -X github.com/peteheist/irtt.BuildDate=$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
 linkshared=""
 tags=""
 race=""
 env=""
 
+# interpret keywords
 for a in $*; do
 	case "$a" in
 		"install") action="install"
 		ldflags="$ldflags -s -w"
+		;;
+		"nobuild") nobuild="1"
+		;;
+		"man") man="1"
 		;;
 		"min") ldflags="$ldflags -s -w"
 		;;
@@ -46,8 +50,15 @@ for a in $*; do
 	esac
 done
 
-go generate
+# build source
+if [ -z "$nobuild" ]; then
+	go generate
+	eval $env go $action -tags \'$tags\' $race -ldflags=\'$ldflags\' $linkshared $pkg
+fi
 
-for p in $pkgs; do
-	eval $env go $action -tags \'$tags\' $race -ldflags=\'$ldflags\' $linkshared $p
-done
+# generate man pages
+if [ -n "$man" ]; then
+	md2man-roff man/irtt.md > man/irtt.1
+	md2man-roff man/irtt-client.md > man/irtt-client.1
+	md2man-roff man/irtt-server.md > man/irtt-server.1
+fi

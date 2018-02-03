@@ -1,0 +1,54 @@
+.TH IRTT\-SERVER 1 "February 3, 2018" "IRTT 0.9" "Isochronous Round\-Trip Time Manual"
+.SH NAME
+.PP
+irtt\-server \- Isochronous Round\-Trip Time Server
+.SH SYNOPSIS
+.PP
+\fB\fCfoo\fR [\fB\fC\-bar\fR] [\fB\fC\-c\fR \fIconfig\-file\fP] \fIfile\fP ...
+.SH DESCRIPTION
+.PP
+\fB\fCfoo\fR frobnicates the bar library by tweaking internal symbol tables. By
+default it parses all baz segments and rearranges them in reverse order by
+time for the 
+.BR xyzzy (1) 
+linker to find them. The symdef entry is then compressed
+using the WBG (Whiz\-Bang\-Gizmo) algorithm. All files are processed in the
+order specified.
+.TS
+allbox;
+cb cb
+l l
+l l
+.
+First Header	Second Header
+Content Cell	Content Cell
+Content Cell that's wider	Content Cell
+.TE
+.SH OPTIONS
+.TP
+\fB\fC\-b\fR
+Do not write "busy" to stdout while processing.
+.TP
+\fB\fC\-c\fR \fIconfig\-file\fP
+Use the alternate system wide \fIconfig\-file\fP instead of \fI/etc/foo.conf\fP\&. This
+overrides any \fB\fCFOOCONF\fR environment variable.
+.TP
+\fB\fC\-a\fR
+In addition to the baz segments, also parse the blurfl headers.
+.TP
+\fB\fC\-r\fR
+Recursive mode. Operates as fast as lightning at the expense of a megabyte
+of virtual memory.
+.SH BUGS
+.PP
+The command name should have been chosen more carefully to reflect its
+purpose.
+.SH AUTHOR
+.PP
+Pete Heist \[la]pete@eventide.io\[ra]
+.SH SEE ALSO
+.PP
+.BR irtt (1), 
+.BR irtt-client (1)
+.PP
+IRTT GitHub repository \[la]https://github.com/peteheist/irtt/\[ra]
