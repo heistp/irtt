@@ -2,7 +2,7 @@
 
 action="build"
 pkg="github.com/peteheist/irtt/cmd/irtt"
-ldflags="-X github.com/peteheist/irtt.Version=0.9-git-$(git describe --always --long --dirty) -X github.com/peteheist/irtt.BuildDate=$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
+ldflags="-X github.com/peteheist/irtt.Version=0.9-git-$(git describe --always --long --dirty)"
 linkshared=""
 tags=""
 race=""

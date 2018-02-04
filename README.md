@@ -424,15 +424,12 @@ version information
 ```
 "version": {
     "irtt": "0.9",
-    "build_date": "2017-12-12T19:33:21Z",
     "protocol": 1,
     "json_format": 1
 },
 ```
 
 - `irtt` the IRTT version number
-- `build_date` the date IRTT was built, in
-  [ISO 8601](https://en.wikipedia.org/wiki/ISO_8601) date and time format
 - `protocol` the protocol version number (increments mean incompatible changes)
 - `json_format` the JSON format number (increments mean incompatible changes)
 
