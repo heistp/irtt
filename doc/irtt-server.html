@@ -27,6 +27,7 @@
   		max-width: 768px;
   		padding-left: 2em;
   		padding-right: 2em;
+  		color: #24292e;
   	}
   	
   	table th {
@@ -62,7 +63,7 @@
 <h1 id="synopsis">SYNOPSIS</h1>
 <p>irtt server [<em>args</em>]</p>
 <h1 id="description">DESCRIPTION</h1>
-<p><em>irtt server</em> is the server for irtt(1).</p>
+<p><em>irtt server</em> is the server for <a href="irtt.html">irtt(1)</a>.</p>
 <h1 id="options">OPTIONS</h1>
 <dl>
 <dt>-b <em>addresses</em></dt>
@@ -277,6 +278,19 @@
 </tr>
 </tbody>
 </table>
+<h1 id="security">SECURITY</h1>
+<p>Running an IRTT server that’s open to the outside world requires some additional attention. For starters, irtt server’s command line flags should be used to, at a minimum:</p>
+<ul>
+<li>Restrict the duration (<em>-d</em>), interval (<em>-i</em>) and length (<em>-l</em>) of tests, particularly for public servers</li>
+<li>Set an HMAC key (<em>--hmac</em>) for private servers to prevent unauthorized discovery and use</li>
+</ul>
+<p>In addition, there are various systemd(1) options available for securing services. The irtt.service file included with the distribution sets many commonly used options, but should not be considered exhaustive.</p>
+<p>To secure a server for public use, additional steps may be taken that are outside of the scope of this documentation, including but not limited to:</p>
+<ul>
+<li>Setting up an iptables firewall (only UDP port 2112 must be open)</li>
+<li>Setting up a chroot jail</li>
+</ul>
+<p>It should be noted that there are no known security vulnerabilities in the Go language at this time, and the steps above, in particular the chroot jail, may or may not serve to enhance security in any way. Go-based servers are generally regarded as safe because of Go’s high-level language constructs for memory management, and at this time IRTT makes no use of Go’s <a href="https://golang.org/pkg/unsafe/">unsafe</a> package.</p>
 <h1 id="exit-status">EXIT STATUS</h1>
 <p><em>irtt server</em> exits with one of the following status codes:</p>
 <table class="pure-table pure-table-striped">
@@ -318,7 +332,7 @@
 </dd>
 </dl>
 <h1 id="see-also">SEE ALSO</h1>
-<p>irtt(1), irtt-client(1)</p>
+<p><a href="irtt.html">irtt(1)</a>, <a href="irtt-client.html">irtt-client(1)</a></p>
 <p><a href="https://github.com/peteheist/irtt/">IRTT GitHub repository</a></p>
 </body>
 </html>

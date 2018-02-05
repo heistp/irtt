@@ -12,7 +12,7 @@ irtt client [*args*]
 
 # DESCRIPTION
 
-*irtt client* is the client for irtt(1).
+*irtt client* is the client for [irtt(1)](irtt.html).
 
 # OPTIONS
 
@@ -715,6 +715,19 @@ Code | Meaning
 2    | Command line error
 3    | Two interrupt signals received
 
+# WARNINGS
+
+It is possible with the irtt client to dramatically harm network performance
+by using intervals that are too low, particularly in combination with large
+packet lengths. Careful consideration should be given before using
+sub-millisecond intervals, not only because of the impact on the network, but
+also because:
+
+- Timer accuracy at sub-millisecond intervals may begin to suffer without
+  the use of a custom kernel or the busy timer (which pins the CPU)
+- Memory consumption for results storage and system CPU time both rise rapidly
+- The granularity of the results reported may very well not be required
+
 # EXAMPLES
 
 $ irtt client localhost
@@ -741,6 +754,6 @@ $ irtt client \--hmac=secret -d 10s "[2001:db8:8f::2/32]:64381"
 
 # SEE ALSO
 
-irtt(1), irtt-server(1)
+[irtt(1)](irtt.html), [irtt-server(1)](irtt-server.html)
 
 [IRTT GitHub repository](https://github.com/peteheist/irtt/)

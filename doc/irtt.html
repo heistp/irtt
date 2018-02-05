@@ -27,6 +27,7 @@
   		max-width: 768px;
   		padding-left: 2em;
   		padding-right: 2em;
+  		color: #24292e;
   	}
   	
   	table th {
@@ -87,13 +88,12 @@
 </dl>
 <h1 id="example">EXAMPLE</h1>
 <p>After installing IRTT, start a server:</p>
-<pre><code>% irtt server
+<pre><code>$ irtt server
 IRTT server starting...
 [ListenerStart] starting IPv6 listener on [::]:2112
 [ListenerStart] starting IPv4 listener on 0.0.0.0:2112</code></pre>
 <p>While that’s running, run a client. If no options are supplied, it will send a request once per second, like ping. Here we simulate a one minute G.711 VoIP conversation by using an interval of 20ms and randomly filled payloads of 172 bytes:</p>
-<pre><code>% irtt client -i 20ms -l 172 -d 1m \
-    --fill=rand --sfill=rand -q 192.168.100.10
+<pre><code>$ irtt client -i 20ms -l 172 -d 1m --fill=rand --sfill=rand -q 192.168.100.10
 [Connecting] connecting to 192.168.100.10
 [Connected] connected to 192.168.100.10:2112
 
@@ -127,7 +127,8 @@ IRTT server starting...
 </ul>
 <h1 id="limitations">LIMITATIONS</h1>
 <blockquote>
-<p>“It is the limitations of software that give it life.” -Me, justifying my limitations</p>
+<p>“It is the limitations of software that give it life.”</p>
+<p>-Me, justifying my limitations</p>
 </blockquote>
 <h2 id="isochronous-fixed-period-send-schedule">Isochronous (fixed period) send schedule</h2>
 <p>Currently, IRTT only sends packets on a fixed period, foregoing the ability to simulate arbitrary traffic. Accepting this limitation offers some benefits:</p>
@@ -168,15 +169,26 @@ IRTT server starting...
 <li>Sending confirmation of window receipt from the client to the server and re-sending unreceived windows</li>
 </ul>
 <p>However, the current strategy means that a good approximation of per-packet loss results can be obtained with only 8 additional bytes in each packet. It also requires very little computational time on the server, and almost all computation on the client occurs during results generation, after the test is complete. It isn’t as accurate with late (out-of-order) upstream packets or with long sequences of lost packets, but high loss or high numbers of late packets typically indicate more severe network conditions that should be corrected first anyway, perhaps before per-packet results matter. Note that in case of very high packet loss, the <strong>total</strong> number of packets received by the server but not returned to the client (which can be obtained using <code>--stats=count</code>) will still be correct, which will still provide an accurate <strong>average</strong> loss percentage in each direction over the course of the test.</p>
-<h1 id="notes">NOTES</h1>
-<p>Latency is an under-appreciated metric in network and application performance. There is a certain hard to quantify but visceral “latency stress” that comes from waiting in expectation after a web page click, straining through a delayed and garbled VoIP conversation, or losing at your favorite online game (unless you like “lag” as an excuse). As of this writing, many broadband connections are well past the point of diminishing returns when it comes to throughput, yet that’s what we continue to take as the primary measure of Internet performance. This is analogous to ordinary car buyers making top speed their first priority.</p>
+<h2 id="use-of-go">Use of Go</h2>
+<p>IRTT is written in Go. That carries with it a few disadvantages:</p>
+<ul>
+<li>Non-negligible system call overhead</li>
+<li>Larger executable size than with C</li>
+<li>Somewhat slower execution speed than C (although <a href="https://benchmarksgame.alioth.debian.org/u64q/compare.php?lang=go&amp;lang2=gcc">not that much slower</a>)</li>
+</ul>
+<p>However, Go also has characteristics that make it a good fit for this application:</p>
+<ul>
+<li>Go’s target is network and server applications, with a focus on simplicity, reliability and efficiency, which is appropriate for IRTT</li>
+<li>Memory footprint tends to be significantly lower than with some interpreted languages</li>
+<li>It’s easy to support a broad array of hardware and OS combinations</li>
+</ul>
 <h1 id="see-also">SEE ALSO</h1>
-<p>irtt-client(1), irtt-server(1)</p>
+<p><a href="irtt-client.html">irtt-client(1)</a>, <a href="irtt-server.html">irtt-server(1)</a></p>
 <p><a href="https://github.com/peteheist/irtt/">IRTT GitHub repository</a></p>
 <h1 id="author">AUTHOR</h1>
 <p>Pete Heist <a href="mailto:pete@eventide.io">pete@eventide.io</a></p>
 <p>Many thanks to both Toke Høiland-Jørgensen and Dave Täht from the <a href="https://www.bufferbloat.net/">Bufferbloat project</a> for their valuable advice. Any problems in design or implementation are entirely my own.</p>
 <h1 id="history">HISTORY</h1>
-<p>IRTT was originally written to improve the latency and packet loss measurements for the excellent <a href="https://flent.org">Flent</a> tool. Flent was developed by and for the <a href="https://www.bufferbloat.net/projects/">Bufferbloat</a> project, which aims to reduce “chaotic and laggy network performance,” making this project valuable for anyone who values their time and sanity while using the Internet.</p>
+<p>IRTT was originally written to improve the latency and packet loss measurements for the excellent <a href="https://flent.org">Flent</a> tool. Flent was developed by and for the <a href="https://www.bufferbloat.net/projects/">Bufferbloat</a> project, which aims to reduce “chaotic and laggy network performance,” making this project valuable to anyone who values their time and sanity while using the Internet.</p>
 </body>
 </html>

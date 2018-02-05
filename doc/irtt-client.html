@@ -27,6 +27,7 @@
   		max-width: 768px;
   		padding-left: 2em;
   		padding-right: 2em;
+  		color: #24292e;
   	}
   	
   	table th {
@@ -62,7 +63,7 @@
 <h1 id="synopsis">SYNOPSIS</h1>
 <p>irtt client [<em>args</em>]</p>
 <h1 id="description">DESCRIPTION</h1>
-<p><em>irtt client</em> is the client for irtt(1).</p>
+<p><em>irtt client</em> is the client for <a href="irtt.html">irtt(1)</a>.</p>
 <h1 id="options">OPTIONS</h1>
 <dl>
 <dt>-d <em>duration</em></dt>
@@ -928,6 +929,13 @@
 </tr>
 </tbody>
 </table>
+<h1 id="warnings">WARNINGS</h1>
+<p>It is possible with the irtt client to dramatically harm network performance by using intervals that are too low, particularly in combination with large packet lengths. Careful consideration should be given before using sub-millisecond intervals, not only because of the impact on the network, but also because:</p>
+<ul>
+<li>Timer accuracy at sub-millisecond intervals may begin to suffer without the use of a custom kernel or the busy timer (which pins the CPU)</li>
+<li>Memory consumption for results storage and system CPU time both rise rapidly</li>
+<li>The granularity of the results reported may very well not be required</li>
+</ul>
 <h1 id="examples">EXAMPLES</h1>
 <dl>
 <dt>$ irtt client localhost</dt>
@@ -947,7 +955,7 @@
 </dd>
 </dl>
 <h1 id="see-also">SEE ALSO</h1>
-<p>irtt(1), irtt-server(1)</p>
+<p><a href="irtt.html">irtt(1)</a>, <a href="irtt-server.html">irtt-server(1)</a></p>
 <p><a href="https://github.com/peteheist/irtt/">IRTT GitHub repository</a></p>
 </body>
 </html>

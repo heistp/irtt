@@ -11,7 +11,7 @@ irtt\-client \- Isochronous Round\-Trip Time Client
 irtt client [\f[I]args\f[]]
 .SH DESCRIPTION
 .PP
-\f[I]irtt client\f[] is the client for irtt(1).
+\f[I]irtt client\f[] is the client for irtt(1) (irtt.html).
 .SH OPTIONS
 .TP
 .B \-d \f[I]duration\f[]
@@ -1251,6 +1251,22 @@ T}@T{
 Two interrupt signals received
 T}
 .TE
+.SH WARNINGS
+.PP
+It is possible with the irtt client to dramatically harm network
+performance by using intervals that are too low, particularly in
+combination with large packet lengths.
+Careful consideration should be given before using sub\-millisecond
+intervals, not only because of the impact on the network, but also
+because:
+.IP \[bu] 2
+Timer accuracy at sub\-millisecond intervals may begin to suffer without
+the use of a custom kernel or the busy timer (which pins the CPU)
+.IP \[bu] 2
+Memory consumption for results storage and system CPU time both rise
+rapidly
+.IP \[bu] 2
+The granularity of the results reported may very well not be required
 .SH EXAMPLES
 .TP
 .B $ irtt client localhost
@@ -1287,6 +1303,6 @@ Adds an HMAC to each packet with the key \f[I]secret\f[].
 .RE
 .SH SEE ALSO
 .PP
-irtt(1), irtt\-server(1)
+irtt(1) (irtt.html), irtt\-server(1) (irtt-server.html)
 .PP
 IRTT GitHub repository (https://github.com/peteheist/irtt/)

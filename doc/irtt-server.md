@@ -12,7 +12,7 @@ irtt server [*args*]
 
 # DESCRIPTION
 
-*irtt server* is the server for irtt(1).
+*irtt server* is the server for [irtt(1)](irtt.html).
 
 # OPTIONS
 
@@ -136,6 +136,34 @@ s      | seconds
 ms     | milliseconds
 ns     | nanoseconds
 
+# SECURITY
+
+Running an IRTT server that's open to the outside world requires some additional
+attention. For starters, irtt server's command line flags should be used to, at
+a minimum:
+
+- Restrict the duration (*-d*), interval (*-i*) and length (*-l*) of tests,
+  particularly for public servers
+- Set an HMAC key (*\--hmac*) for private servers to prevent unauthorized
+  discovery and use
+
+In addition, there are various systemd(1) options available for securing
+services. The irtt.service file included with the distribution sets many
+commonly used options, but should not be considered exhaustive.
+
+To secure a server for public use, additional steps may be taken that are
+outside of the scope of this documentation, including but not limited to:
+
+- Setting up an iptables firewall (only UDP port 2112 must be open)
+- Setting up a chroot jail
+
+It should be noted that there are no known security vulnerabilities in the Go
+language at this time, and the steps above, in particular the chroot jail, may
+or may not serve to enhance security in any way. Go-based servers are generally
+regarded as safe because of Go's high-level language constructs for memory
+management, and at this time IRTT makes no use of Go's
+[unsafe](https://golang.org/pkg/unsafe/) package.
+
 # EXIT STATUS
 
 *irtt server* exits with one of the following status codes:
@@ -165,6 +193,6 @@ $ irtt server -b 192.168.100.11:64381 \--hmac=secret
 
 # SEE ALSO
 
-irtt(1), irtt-client(1)
+[irtt(1)](irtt.html), [irtt-client(1)](irtt-client.html)
 
 [IRTT GitHub repository](https://github.com/peteheist/irtt/)

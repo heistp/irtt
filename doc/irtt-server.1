@@ -11,7 +11,7 @@ irtt\-server \- Isochronous Round\-Trip Time Server
 irtt server [\f[I]args\f[]]
 .SH DESCRIPTION
 .PP
-\f[I]irtt server\f[] is the server for irtt(1).
+\f[I]irtt server\f[] is the server for irtt(1) (irtt.html).
 .SH OPTIONS
 .TP
 .B \-b \f[I]addresses\f[]
@@ -309,6 +309,39 @@ T}@T{
 nanoseconds
 T}
 .TE
+.SH SECURITY
+.PP
+Running an IRTT server that's open to the outside world requires some
+additional attention.
+For starters, irtt server's command line flags should be used to, at a
+minimum:
+.IP \[bu] 2
+Restrict the duration (\f[I]\-d\f[]), interval (\f[I]\-i\f[]) and length
+(\f[I]\-l\f[]) of tests, particularly for public servers
+.IP \[bu] 2
+Set an HMAC key (\f[I]\-\-hmac\f[]) for private servers to prevent
+unauthorized discovery and use
+.PP
+In addition, there are various systemd(1) options available for securing
+services.
+The irtt.service file included with the distribution sets many commonly
+used options, but should not be considered exhaustive.
+.PP
+To secure a server for public use, additional steps may be taken that
+are outside of the scope of this documentation, including but not
+limited to:
+.IP \[bu] 2
+Setting up an iptables firewall (only UDP port 2112 must be open)
+.IP \[bu] 2
+Setting up a chroot jail
+.PP
+It should be noted that there are no known security vulnerabilities in
+the Go language at this time, and the steps above, in particular the
+chroot jail, may or may not serve to enhance security in any way.
+Go\-based servers are generally regarded as safe because of Go's
+high\-level language constructs for memory management, and at this time
+IRTT makes no use of Go's unsafe (https://golang.org/pkg/unsafe/)
+package.
 .SH EXIT STATUS
 .PP
 \f[I]irtt server\f[] exits with one of the following status codes:
@@ -367,6 +400,6 @@ otherwise packets are dropped.
 .RE
 .SH SEE ALSO
 .PP
-irtt(1), irtt\-client(1)
+irtt(1) (irtt.html), irtt\-client(1) (irtt-client.html)
 .PP
 IRTT GitHub repository (https://github.com/peteheist/irtt/)

@@ -26,7 +26,7 @@ for a in $*; do
 		;;
 		"nobuild") nobuild="1"
 		;;
-		"doc") doc="1"
+		"nodoc") nodoc="1"
 		;;
 		"min") ldflags="$ldflags -s -w"
 		;;
@@ -67,7 +67,7 @@ if [ -z "$nobuild" ]; then
 fi
 
 # generate docs
-if [ -n "$doc" ]; then
+if [ -z "$nodoc" ]; then
 	for f in irtt irtt-client irtt-server; do
 		pandoc -s -t man doc/$f.md -o doc/$f.1
 		pandoc -t html -H doc/head.html doc/$f.md | html_filter > doc/$f.html

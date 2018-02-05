@@ -42,7 +42,7 @@ packets sent on a fixed period, and produces both text and JSON output.
 After installing IRTT, start a server:
 
 ```
-% irtt server
+$ irtt server
 IRTT server starting...
 [ListenerStart] starting IPv6 listener on [::]:2112
 [ListenerStart] starting IPv4 listener on 0.0.0.0:2112
@@ -54,8 +54,7 @@ G.711 VoIP conversation by using an interval of 20ms and randomly filled
 payloads of 172 bytes:
 
 ```
-% irtt client -i 20ms -l 172 -d 1m \
-    --fill=rand --sfill=rand -q 192.168.100.10
+$ irtt client -i 20ms -l 172 -d 1m --fill=rand --sfill=rand -q 192.168.100.10
 [Connecting] connecting to 192.168.100.10
 [Connected] connected to 192.168.100.10:2112
 
@@ -99,7 +98,9 @@ send delay and IPDV.
 
 # LIMITATIONS
 
-> "It is the limitations of software that give it life." -Me, justifying my limitations
+> "It is the limitations of software that give it life."
+>
+> -Me, justifying my limitations
 
 ## Isochronous (fixed period) send schedule
 
@@ -192,20 +193,26 @@ returned to the client (which can be obtained using `--stats=count`) will still
 be correct, which will still provide an accurate **average** loss percentage in
 each direction over the course of the test.
 
-# NOTES
+## Use of Go
 
-Latency is an under-appreciated metric in network and application performance.
-There is a certain hard to quantify but visceral "latency stress" that comes
-from waiting in expectation after a web page click, straining through a delayed
-and garbled VoIP conversation, or losing at your favorite online game (unless
-you like "lag" as an excuse). As of this writing, many broadband connections are
-well past the point of diminishing returns when it comes to throughput, yet
-that's what we continue to take as the primary measure of Internet performance.
-This is analogous to ordinary car buyers making top speed their first priority.
+IRTT is written in Go. That carries with it:
+
+- Non-negligible system call overhead
+- A larger executable size than with C
+- Somewhat slower execution speed than C (although [not that much slower](https://benchmarksgame.alioth.debian.org/u64q/compare.php?lang=go&lang2=gcc))
+
+However, Go also has characteristics that make it a good fit for this
+application:
+
+- Go's target is network and server applications, with a focus on simplicity,
+	reliability and efficiency, which is appropriate for IRTT
+- Memory footprint tends to be significantly lower than with some interpreted
+	languages
+- It's easy to support a broad array of hardware and OS combinations
 
 # SEE ALSO
 
-irtt-client(1), irtt-server(1)
+[irtt-client(1)](irtt-client.html), [irtt-server(1)](irtt-server.html)
 
 [IRTT GitHub repository](https://github.com/peteheist/irtt/)
 
@@ -223,4 +230,4 @@ IRTT was originally written to improve the latency and packet loss measurements
 for the excellent [Flent](https://flent.org) tool. Flent was developed by and
 for the [Bufferbloat](https://www.bufferbloat.net/projects/) project, which aims
 to reduce "chaotic and laggy network performance," making this project valuable
-for anyone who values their time and sanity while using the Internet.
+to anyone who values their time and sanity while using the Internet.
