@@ -1,10 +1,11 @@
-IRTT-CLIENT 1 "February 3, 2018" "IRTT 0.9" "Isochronous Round-Trip Time Manual"
-================================================================================
+% IRTT-SERVER(1) Isochronous Round-Trip Time Manual
+% Pete Heist
+% February 3, 2018
 
 NAME
 ----
 
-irtt-client - Isochronous Round-Trip Time client
+irtt-server - Isochronous Round-Trip Time Server
 
 SYNOPSIS
 --------
@@ -56,5 +57,6 @@ Pete Heist <pete@eventide.io>
 SEE ALSO
 --------
 
-irtt(1), irtt-server(1)
+irtt(1), irtt-client(1)
+
 [IRTT GitHub repository](https://github.com/peteheist/irtt/)

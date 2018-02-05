@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <meta name="author" content="" />
+  <meta name="dcterms.date" content="2018-02-04" />
+  <title>IRTT-CLIENT(1) v0.9 | IRTT Manual</title>
+  <style type="text/css">
+      code{white-space: pre-wrap;}
+      span.smallcaps{font-variant: small-caps;}
+      span.underline{text-decoration: underline;}
+      div.column{display: inline-block; vertical-align: top; width: 50%;}
+  </style>
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+  <meta name=viewport content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://unpkg.com/purecss@1.0.0/build/pure-min.css"
+  	integrity="sha384-nn4HPE8lTHyVtfCBi5yW9d20FjT8BJwUXyWZT9InLYax14RDjBj46LmSztkmNP9w"
+  	crossorigin="anonymous">
+  <style>
+  	body {
+  		margin-left: auto;
+  		margin-right: auto;
+  		max-width: 768px;
+  		padding-left: 2em;
+  		padding-right: 2em;
+  	}
+  	
+  	table th {
+  		text-align: left;
+  	}
+  	
+  	dt {
+  		font-weight: bold;
+  	}
+  	
+  	dd {
+  		padding-bottom: 1em;
+  		padding-top: 1em;
+  	}
+  	
+  	dd p:first-child {
+  		margin-top: 0;
+  	}
+  </style>
+</head>
+<body>
+<header>
+<h1 class="title">IRTT-CLIENT(1) v0.9 | IRTT Manual</h1>
+<p class="author"></p>
+<p class="date">February 4, 2018</p>
+</header>
+<h1 id="name">NAME</h1>
+<p>irtt-client - Isochronous Round-Trip Time Client</p>
+<h1 id="synopsis">SYNOPSIS</h1>
+<p>irtt client [<em>args</em>]</p>
+<h1 id="description">DESCRIPTION</h1>
+<p>IRTT measures round-trip time and other latency related metrics using UDP packets sent on a fixed period, and produces both text and JSON output.</p>
+<h1 id="options">OPTIONS</h1>
+<dl>
+<dt>-d <em>duration</em></dt>
+<dd>Total time to send (default 1m0s, see Duration units below)
+</dd>
+<dt>-i <em>interval</em></dt>
+<dd>Send interval (default 1s, see Duration units below)
+</dd>
+<dt>-l <em>length</em></dt>
+<dd><p>Length of packet (default 0, increased as necessary for required headers), common values:</p>
+<ul>
+<li>1472 (max unfragmented size of IPv4 datagram for 1500 byte MTU)</li>
+<li>1452 (max unfragmented size of IPv6 datagram for 1500 byte MTU)</li>
+</ul>
+</dd>
+<dt>-o <em>file</em></dt>
+<dd><p>Write JSON output to file (use ‘-’ for stdout). The extension used for <em>file</em> controls the gzip behavior as follows (output to stdout is not gzipped):</p>
+<table class="pure-table pure-table-striped">
+<thead>
+<tr class="header">
+<th>Extension</th>
+<th>Behavior</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>none</td>
+<td>extension .json.gz is added, output is gzipped</td>
+</tr>
+<tr class="even">
+<td>.json.gz</td>
+<td>output is gzipped</td>
+</tr>
+<tr class="odd">
+<td>.gz</td>
+<td>output is gzipped, extension changed to .json.gz</td>
+</tr>
+<tr class="even">
+<td>.json</td>
+<td>output is not gzipped</td>
+</tr>
+</tbody>
+</table>
+</dd>
+<dt>-q</dt>
+<dd>Quiet, suppress per-packet output
+</dd>
+<dt>-Q</dt>
+<dd>Really quiet, suppress all output except errors to stderr
+</dd>
+<dt>-n</dt>
+<dd>No test, connect to the server and validate test parameters but don’t run the test
+</dd>
+<dt>--stats=<em>stats</em></dt>
+<dd><p>Server stats on received packets (default <em>both</em>). Possible values:</p>
+<table class="pure-table pure-table-striped">
+<thead>
+<tr class="header">
+<th>Value</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><em>none</em></td>
+<td>no server stats on received packets</td>
+</tr>
+<tr class="even">
+<td><em>count</em></td>
+<td>total count of received packets</td>
+</tr>
+<tr class="odd">
+<td><em>window</em></td>
+<td>receipt status of last 64 packets with each reply</td>
+</tr>
+<tr class="even">
+<td><em>both</em></td>
+<td>both count and window</td>
+</tr>
+</tbody>
+</table>
+</dd>
+<dt>--tstamp=<em>mode</em></dt>
+<dd><p>Server timestamp mode (default <em>both</em>). Possible values:</p>
+<table class="pure-table pure-table-striped">
+<thead>
+<tr class="header">
+<th>Value</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><em>none</em></td>
+<td>request no timestamps</td>
+</tr>
+<tr class="even">
+<td><em>send</em></td>
+<td>request timestamp at server send</td>
+</tr>
+<tr class="odd">
+<td><em>receive</em></td>
+<td>request timestamp at server receive</td>
+</tr>
+<tr class="even">
+<td><em>both</em></td>
+<td>request both send and receive timestamps</td>
+</tr>
+<tr class="odd">
+<td><em>midpoint</em></td>
+<td>request midpoint timestamp (send/receive avg)</td>
+</tr>
+</tbody>
+</table>
+</dd>
+<dt>--clock=<em>clock</em></dt>
+<dd><p>Clock/s used for server timestamps (default <em>both</em>). Possible values:</p>
+<table class="pure-table pure-table-striped">
+<thead>
+<tr class="header">
+<th>Value</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><em>wall</em></td>
+<td>wall clock only</td>
+</tr>
+<tr class="even">
+<td><em>monotonic</em></td>
+<td>monotonic clock only</td>
+</tr>
+<tr class="odd">
+<td><em>both</em></td>
+<td>both clocks</td>
+</tr>
+</tbody>
+</table>
+</dd>
+<dt>--dscp=<em>dscp</em></dt>
+<dd><p>DSCP (ToS) value (default 0, 0x prefix for hex). Common values:</p>
+<table class="pure-table pure-table-striped">
+<thead>
+<tr class="header">
+<th>Value</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>0</td>
+<td>Best effort</td>
+</tr>
+<tr class="even">
+<td>8</td>
+<td>CS1- Bulk</td>
+</tr>
+<tr class="odd">
+<td>40</td>
+<td>CS5- Video</td>
+</tr>
+<tr class="even">
+<td>46</td>
+<td>EF- Expedited forwarding</td>
+</tr>
+</tbody>
+</table>
+<p><a href="https://www.tucny.com/Home/dscp-tos">DSCP &amp; ToS</a></p>
+</dd>
+<dt>--df=<em>DF</em></dt>
+<dd><p>Setting for do not fragment (DF) bit in all packets. Possible values:</p>
+<table class="pure-table pure-table-striped">
+<thead>
+<tr class="header">
+<th>Value</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><em>default</em></td>
+<td>OS default</td>
+</tr>
+<tr class="even">
+<td><em>false</em></td>
+<td>DF bit not set</td>
+</tr>
+<tr class="odd">
+<td><em>true</em></td>
+<td>DF bit set</td>
+</tr>
+</tbody>
+</table>
+</dd>
+<dt>--wait=<em>wait</em></dt>
+<dd><p>Wait time at end of test for unreceived replies (default 3x4s). Possible values:</p>
+<table class="pure-table pure-table-striped">
+<thead>
+<tr class="header">
+<th>Format</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>#<em>x</em>duration</td>
+<td># times max RTT, or duration if no response</td>
+</tr>
+<tr class="even">
+<td>#<em>r</em>duration</td>
+<td># times RTT, or duration if no response</td>
+</tr>
+<tr class="odd">
+<td>duration</td>
+<td>fixed duration (see Duration units below)</td>
+</tr>
+</tbody>
+</table>
+<p>Examples:</p>
+<table class="pure-table pure-table-striped">
+<thead>
+<tr class="header">
+<th>Example</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>3x4s</td>
+<td>3 times max RTT, or 4 seconds if no response</td>
+</tr>
+<tr class="even">
+<td>1500ms</td>
+<td>fixed 1500 milliseconds</td>
+</tr>
+</tbody>
+</table>
+</dd>
+<dt>--timer=<em>timer</em></dt>
+<dd><p>Timer for waiting to send packets (default comp). Possible values:</p>
+<table class="pure-table pure-table-striped">
+<thead>
+<tr class="header">
+<th>Value</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><em>simple</em></td>
+<td>Go’s standard time.Timer</td>
+</tr>
+<tr class="even">
+<td><em>comp</em></td>
+<td>Simple timer with error compensation (see -tcomp)</td>
+</tr>
+<tr class="odd">
+<td><em>hybrid:</em>#</td>
+<td>Hybrid comp/busy timer with sleep factor (default 0.95)</td>
+</tr>
+<tr class="even">
+<td><em>busy</em></td>
+<td>busy wait loop (high precision and CPU, blasphemy)</td>
+</tr>
+</tbody>
+</table>
+</dd>
+<dt>--tcomp=<em>alg</em></dt>
+<dd><p>Comp timer averaging algorithm (default exp:0.10). Possible values:</p>
+<table class="pure-table pure-table-striped">
+<thead>
+<tr class="header">
+<th>Value</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><em>avg</em></td>
+<td>Cumulative average error</td>
+</tr>
+<tr class="even">
+<td><em>win:</em>#</td>
+<td>Moving average error with window # (default 5)</td>
+</tr>
+<tr class="odd">
+<td><em>exp:</em>#</td>
+<td>Exponential average with alpha # (default 0.10)</td>
+</tr>
+</tbody>
+</table>
+</dd>
+<dt>--fill=<em>fill</em></dt>
+<dd><p>Fill payload with given data (default none). Possible values:</p>
+<table class="pure-table pure-table-striped">
+<thead>
+<tr class="header">
+<th>Value</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><em>none</em></td>
+<td>Leave payload as all zeroes</td>
+</tr>
+<tr class="even">
+<td><em>rand</em></td>
+<td>Use random bytes from Go’s math.rand</td>
+</tr>
+<tr class="odd">
+<td><em>pattern:</em>XX</td>
+<td>Use repeating pattern of hex (default 69727474)</td>
+</tr>
+</tbody>
+</table>
+</dd>
+<dt>--fill-one</dt>
+<dd>Fill only once and repeat for all packets
+</dd>
+<dt>--sfill=fill</dt>
+<dd>Request server fill (default not specified). See values for –fill. Server must support and allow this fill with –allow-fills.
+</dd>
+<dt>--local=addr</dt>
+<dd><p>Local address (default from OS). Possible values:</p>
+<table class="pure-table pure-table-striped">
+<thead>
+<tr class="header">
+<th>Value</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><em>:port</em></td>
+<td>Unspecified address (all IPv4/IPv6 addresses) with port</td>
+</tr>
+<tr class="even">
+<td><em>host</em></td>
+<td>Host with dynamic port, see Host formats below</td>
+</tr>
+<tr class="odd">
+<td><em>host:port</em></td>
+<td>Host with specified port, see Host formats below</td>
+</tr>
+</tbody>
+</table>
+</dd>
+<dt>--hmac=key</dt>
+<dd><p>Add HMAC with key (0x for hex) to all packets, provides:</p>
+<ul>
+<li>Dropping of all packets without a correct HMAC</li>
+<li>Protection for server against unauthorized discovery and use</li>
+</ul>
+</dd>
+<dt>-4</dt>
+<dd>IPv4 only
+</dd>
+<dt>-6</dt>
+<dd>IPv6 only
+</dd>
+<dt>--timeouts=<em>durations</em></dt>
+<dd>Timeouts used when connecting to server (default 1s,2s,4s,8s). Comma separated list of durations (see Duration units below). Total wait time will be up to the sum of these Durations. Max packets sent is up to the number of Durations. Minimum timeout duration is 200ms.
+</dd>
+<dt>--ttl=<em>ttl</em></dt>
+<dd>Time to live (default 0, meaning use OS default)
+</dd>
+<dt>--loose</dt>
+<dd>Accept and use any server restricted test parameters instead of exiting with nonzero status.
+</dd>
+<dt>--thread</dt>
+<dd>Lock sending and receiving goroutines to OS threads
+</dd>
+<dt>-h</dt>
+<dd>Show help
+</dd>
+<dt>-v</dt>
+<dd>Show version
+</dd>
+</dl>
+<h2 id="host-formats">Host formats</h2>
+<p>Hosts may be either hostnames (for IPv4 or IPv6) or IP addresses. IPv6 addresses must be surrounded by brackets and may include a zone after the % character. Examples:</p>
+<table class="pure-table pure-table-striped">
+<thead>
+<tr class="header">
+<th>Type</th>
+<th>Example</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>IPv4 IP</td>
+<td>192.168.1.10</td>
+</tr>
+<tr class="even">
+<td>IPv6 IP</td>
+<td>[fe80::426c:8fff:fe13:9feb%en0]</td>
+</tr>
+<tr class="odd">
+<td>IPv4/6 hostname</td>
+<td>localhost</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Note:</strong> IPv6 addresses must be quoted in most shells.</p>
+<h2 id="duration-units">Duration units</h2>
+<p>Durations are a sequence of decimal numbers, each with optional fraction, and unit suffix, such as: “300ms”, “1m30s” or “2.5m”. Sanity not enforced.</p>
+<table class="pure-table pure-table-striped">
+<thead>
+<tr class="header">
+<th>Suffix</th>
+<th>Unit</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>h</td>
+<td>hours</td>
+</tr>
+<tr class="even">
+<td>m</td>
+<td>minutes</td>
+</tr>
+<tr class="odd">
+<td>s</td>
+<td>seconds</td>
+</tr>
+<tr class="even">
+<td>ms</td>
+<td>milliseconds</td>
+</tr>
+<tr class="odd">
+<td>ns</td>
+<td>nanoseconds</td>
+</tr>
+</tbody>
+</table>
+<h1 id="output">OUTPUT</h1>
+<h1 id="return-value">RETURN VALUE</h1>
+<h1 id="examples">EXAMPLES</h1>
+<h1 id="see-also">SEE ALSO</h1>
+<p>irtt(1), irtt-server(1)</p>
+<p><a href="https://github.com/peteheist/irtt/">IRTT GitHub repository</a></p>
+</body>
+</html>

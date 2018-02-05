@@ -1102,8 +1102,6 @@ from the untagged 0.1 development version:
   - Make connref mechanism robust to listener failure
 	- Add per-IP limiting
 - Write a SmokePing probe
-- Doc improvements
-  - Add more info (maybe DSCP table link, https://www.tucny.com/Home/dscp-tos) to --dscp
 
 ### Roadmap
 

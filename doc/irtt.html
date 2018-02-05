@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <meta name="author" content="" />
+  <meta name="dcterms.date" content="2018-02-04" />
+  <title>IRTT(1) v0.9 | IRTT Manual</title>
+  <style type="text/css">
+      code{white-space: pre-wrap;}
+      span.smallcaps{font-variant: small-caps;}
+      span.underline{text-decoration: underline;}
+      div.column{display: inline-block; vertical-align: top; width: 50%;}
+  </style>
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+  <meta name=viewport content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://unpkg.com/purecss@1.0.0/build/pure-min.css"
+  	integrity="sha384-nn4HPE8lTHyVtfCBi5yW9d20FjT8BJwUXyWZT9InLYax14RDjBj46LmSztkmNP9w"
+  	crossorigin="anonymous">
+  <style>
+  	body {
+  		margin-left: auto;
+  		margin-right: auto;
+  		max-width: 768px;
+  		padding-left: 2em;
+  		padding-right: 2em;
+  	}
+  	
+  	table th {
+  		text-align: left;
+  	}
+  	
+  	dt {
+  		font-weight: bold;
+  	}
+  	
+  	dd {
+  		padding-bottom: 1em;
+  		padding-top: 1em;
+  	}
+  	
+  	dd p:first-child {
+  		margin-top: 0;
+  	}
+  </style>
+</head>
+<body>
+<header>
+<h1 class="title">IRTT(1) v0.9 | IRTT Manual</h1>
+<p class="author"></p>
+<p class="date">February 4, 2018</p>
+</header>
+<h1 id="name">NAME</h1>
+<p>irtt - Isochronous Round-Trip Time</p>
+<h1 id="synopsis">SYNOPSIS</h1>
+<p>irtt <em>command</em> [<em>args</em>]</p>
+<p>irtt help <em>command</em></p>
+<h1 id="description">DESCRIPTION</h1>
+<p>IRTT measures round-trip time and other latency related metrics using UDP packets sent on a fixed period, and produces both text and JSON output.</p>
+<h1 id="commands">COMMANDS</h1>
+<dl>
+<dt><em>client</em></dt>
+<dd>runs the client
+</dd>
+<dt><em>server</em></dt>
+<dd>runs the server
+</dd>
+<dt><em>bench</em></dt>
+<dd>runs HMAC and fill benchmarks
+</dd>
+<dt><em>clock</em></dt>
+<dd>runs wall vs monotonic clock test
+</dd>
+<dt><em>sleep</em></dt>
+<dd>runs sleep accuracy test
+</dd>
+<dt><em>version</em></dt>
+<dd>shows the version
+</dd>
+</dl>
+<h1 id="example">EXAMPLE</h1>
+<p>After installing IRTT, start a server:</p>
+<pre><code>% irtt server
+IRTT server starting...
+[ListenerStart] starting IPv6 listener on [::]:2112
+[ListenerStart] starting IPv4 listener on 0.0.0.0:2112</code></pre>
+<p>While that’s running, run a client. If no options are supplied, it will send a request once per second, like ping. Here we simulate a one minute G.711 VoIP conversation by using an interval of 20ms and randomly filled payloads of 172 bytes:</p>
+<pre><code>% irtt client -i 20ms -l 172 -d 1m \
+    --fill=rand --sfill=rand -q 192.168.100.10
+[Connecting] connecting to 192.168.100.10
+[Connected] connected to 192.168.100.10:2112
+
+                         Min     Mean   Median      Max  Stddev
+                         ---     ----   ------      ---  ------
+                RTT  11.93ms  20.88ms   19.2ms  80.49ms  7.02ms
+         send delay   4.99ms  12.21ms  10.83ms  50.45ms  5.73ms
+      receive delay   6.38ms   8.66ms   7.86ms  69.11ms  2.89ms
+                                                               
+      IPDV (jitter)    782ns   4.53ms   3.39ms  64.66ms   4.2ms
+          send IPDV    256ns   3.99ms   2.98ms  35.28ms  3.69ms
+       receive IPDV    896ns   1.78ms    966µs  62.28ms  2.86ms
+                                                               
+     send call time   56.5µs   82.8µs           18.99ms   348µs
+        timer error       0s   21.7µs           19.05ms   356µs
+  server proc. time   23.9µs   26.9µs             141µs  11.2µs
+
+                duration: 1m0s (wait 241.5ms)
+   packets sent/received: 2996/2979 (0.57% loss)
+ server packets received: 2980/2996 (0.53%/0.03% loss up/down)
+     bytes sent/received: 515312/512388
+       send/receive rate: 68.7 Kbps / 68.4 Kbps
+           packet length: 172 bytes
+             timer stats: 4/3000 (0.13%) missed, 0.11% error</code></pre>
+<p>In the results above, the client and server are located at two different sites, around 50km from one another, each of which connects to the Internet via point-to-point WiFi. The client is 3km NLOS through trees located near its transmitter, which is likely the reason for the higher upstream packet loss, mean send delay and IPDV.</p>
+<h1 id="bugs">BUGS</h1>
+<ul>
+<li>Windows is unable to set DSCP values for IPv6.</li>
+<li>Windows is unable to set the source IP address, so <code>--set-src-ip</code> may not be used on the server.</li>
+<li>The server doesn’t run well on 32-bit Windows platforms. When connecting with a client, you may see <code>Terminated due to receive error</code>. To work around this, disable dual timestamps from the client by including <code>--tstamp=midpoint</code>.</li>
+</ul>
+<h1 id="limitations">LIMITATIONS</h1>
+<p>“It is the limitations of software that give it life.” -Me, justifying my limitations</p>
+<h2 id="isochronous-fixed-period-send-schedule">Isochronous (fixed period) send schedule</h2>
+<p>Currently, IRTT only sends packets on a fixed period, foregoing the ability to simulate arbitrary traffic. Accepting this limitation offers some benefits:</p>
+<ul>
+<li>It’s easy to implement</li>
+<li>It’s easy to calculate how many packets and how much data will be sent in a given time</li>
+<li>It simplifies timer error compensation</li>
+</ul>
+<p>Also, isochronous packets are commonly seen in VoIP, games and some streaming media, so it already simulates an array of common types of traffic.</p>
+<h2 id="fixed-packet-lengths-for-a-given-test">Fixed packet lengths for a given test</h2>
+<p>Packet lengths are fixed for the duration of the test. While this may not be an accurate simulation of some types of traffic, it means that IPDV measurements are accurate, where they wouldn’t be in any other case.</p>
+<h2 id="stateful-protocol">Stateful protocol</h2>
+<p>There are numerous benefits to stateless protocols, particularly for developers and data centers, including simplified server design, horizontal scalabity, and easily implemented zero-downtime restarts. However, in this case, a stateful protocol provides important benefits to the user, including:</p>
+<ul>
+<li>Smaller packet sizes (a design goal) as context does not need to be included in every request</li>
+<li>More accurate measurement of upstream vs downstream packet loss (this gets worse in a stateless protocol as RTT approaches the test duration, complicating interplanetary tests!)</li>
+<li>More accurate rate and test duration limiting on the server</li>
+</ul>
+<h2 id="in-memory-results-storage">In-memory results storage</h2>
+<p>Results for each round-trip are stored in memory as the test is being run. Each result takes 72 bytes in memory (8 64-bit timestamps and a 64-bit server received packet window), so this limits the effective duration of the test, especially at very small send intervals. However, the advantages are:</p>
+<ul>
+<li>It’s easier to perform statistical analysis (like calculation of the median) on fixed arrays than on running data values</li>
+<li>We don’t need to either send client timestamps to the server, or maintain a local running window of sent packet info, because they’re all in memory, no matter when server replies come back</li>
+<li>Not accessing the disk during the test to write test output prevents inadvertently affecting the results</li>
+<li>It simplifies the API</li>
+</ul>
+<p>As a consequence of storing results in memory, packet sequence numbers are fixed at 32-bits. If all 2^32 sequence numbers were used, the results would require over 300 Gb of virtual memory to record while the test is running. That is why 64-bit sequence numbers are currently unnecessary.</p>
+<h2 id="bit-received-window">64-bit received window</h2>
+<p>In order to determine per-packet differentiation between upstream and downstream loss, a 64-bit “received window” may be returned with each packet that contains the receipt status of the previous 64 packets. This can be enabled using <code>--stats=window/both</code> with the irtt client. Its limited width and simple bitmap format lead to some caveats:</p>
+<ul>
+<li>Per-packet differentiation is not available (for any intervening packets) if greater than 64 packets are lost in succession. These packets will be marked with the generic <code>Lost</code>.</li>
+<li>While any packet marked <code>LostDown</code> is guaranteed to be marked properly, there is no confirmation of receipt of the receive window from the client to the server, so packets may sometimes be erroneously marked <code>LostUp</code>, for example, if they arrive late to the server and slide out of the received window before they can be confirmed to the client, or if the received window is lost on its way to the client and not amended by a later packet’s received window.</li>
+</ul>
+<p>There are many ways that this simple approach could be improved, such as by:</p>
+<ul>
+<li>Allowing a wider window</li>
+<li>Encoding receipt seqnos in a more intelligent way to allow a wider seqno range</li>
+<li>Sending confirmation of window receipt from the client to the server and re-sending unreceived windows</li>
+</ul>
+<p>However, the current strategy means that a good approximation of per-packet loss results can be obtained with only 8 additional bytes in each packet. It also requires very little computational time on the server, and almost all computation on the client occurs during results generation, after the test is complete. It isn’t as accurate with late (out-of-order) upstream packets or with long sequences of lost packets, but high loss or high numbers of late packets typically indicate more severe network conditions that should be corrected first anyway, perhaps before per-packet results matter. Note that in case of very high packet loss, the <strong>total</strong> number of packets received by the server but not returned to the client (which can be obtained using <code>--stats=count</code>) will still be correct, which will still provide an accurate <strong>average</strong> loss percentage in each direction over the course of the test.</p>
+<h1 id="notes">NOTES</h1>
+<p>Latency is an under-appreciated metric in network and application performance. There is a certain hard to quantify but visceral “latency stress” that comes from waiting in expectation after a web page click, straining through a delayed and garbled VoIP conversation, or losing at your favorite online game (unless you like “lag” as an excuse). As of this writing, many broadband connections are well past the point of diminishing returns when it comes to throughput, yet that’s what we continue to take as the primary measure of Internet performance. This is analogous to car buyers making top speed their first priority.</p>
+<h1 id="see-also">SEE ALSO</h1>
+<p>irtt-client(1), irtt-server(1)</p>
+<p><a href="https://github.com/peteheist/irtt/">IRTT GitHub repository</a></p>
+<h1 id="author">AUTHOR</h1>
+<p>Pete Heist <a href="mailto:pete@eventide.io">pete@eventide.io</a></p>
+<p>Many thanks to both Toke Høiland-Jørgensen and Dave Täht from the <a href="https://www.bufferbloat.net/">Bufferbloat project</a> for their valuable advice. Any problems in design or implementation are entirely my own.</p>
+<h1 id="history">HISTORY</h1>
+<p>IRTT was originally written to improve the latency and packet loss measurements for the excellent <a href="https://flent.org">Flent</a> tool. Flent was developed by and for the <a href="https://www.bufferbloat.net/projects/">Bufferbloat</a> project, which aims to reduce “chaotic and laggy network performance,” making this project valueable for anyone who values their time and sanity.</p>
+</body>
+</html>

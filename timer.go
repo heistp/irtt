@@ -229,7 +229,7 @@ func init() {
 			}
 			return
 		},
-		"comp: simple timer with error compensation (see -tcomp)",
+		"comp: simple timer with error compensation (see --tcomp)",
 	)
 
 	RegisterTimer(
@@ -248,7 +248,7 @@ func init() {
 			}
 			return NewHybridTimer(a, sfct), nil
 		},
-		fmt.Sprintf("hybrid:#: hybrid comp/busy timer, default sleep factor %.2f",
+		fmt.Sprintf("hybrid:#: hybrid comp/busy timer w/ sleep factor (dfl %.2f)",
 			DefaultHybridTimerSleepFactor),
 	)
 

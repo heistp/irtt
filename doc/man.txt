@@ -1,0 +1,43 @@
+All Possible Sections
+---------------------
+
+NAME
+SYNOPSIS
+DESCRIPTION
+OPTIONS
+RETURN VALUE
+ERRORS
+DIAGNOSTICS
+EXAMPLES
+ENVIRONMENT
+FILES
+CAVEATS
+BUGS
+RESTRICTIONS
+NOTES
+SEE ALSO
+AUTHOR
+HISTORY
+
+irtt-client
+-----------
+
+NAME- irtt-client
+SYNOPSIS- overall usage
+DESCRIPTION- brief description of what it does
+OPTIONS- flags
+OUTPUT- JSON doc
+RETURN VALUE- return code info
+EXAMPLES- common client examples
+SEE ALSO- irtt, irtt-server, web site
+
+irtt-server
+-----------
+
+NAME- irtt-server
+SYNOPSIS- overall usage
+DESCRIPTION- brief description of what it does
+OPTIONS- flags
+RETURN VALUE- return code info
+EXAMPLES- common server examples
+SEE ALSO- irtt, irtt-client, web site

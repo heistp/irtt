@@ -1,5 +1,10 @@
 #!/bin/sh
 
+# This script may be used during development for making builds and generating doc.
+# Requirements:
+# - stringer (go get -u -a golang.org/x/tools/cmd/stringer)
+# - pandoc (apt-get install pandoc OR brew install pandoc)
+
 action="build"
 pkg="github.com/peteheist/irtt/cmd/irtt"
 ldflags=""
@@ -7,6 +12,11 @@ linkshared=""
 tags=""
 race=""
 env=""
+
+# html filter
+html_filter() {
+	sed 's/<table>/<table class="pure-table pure-table-striped">/g'
+}
 
 # interpret keywords
 for a in $*; do
@@ -16,7 +26,7 @@ for a in $*; do
 		;;
 		"nobuild") nobuild="1"
 		;;
-		"man") man="1"
+		"doc") doc="1"
 		;;
 		"min") ldflags="$ldflags -s -w"
 		;;
@@ -56,9 +66,10 @@ if [ -z "$nobuild" ]; then
 	eval $env go $action -tags \'$tags\' $race -ldflags=\'$ldflags\' $linkshared $pkg
 fi
 
-# generate man pages
-if [ -n "$man" ]; then
-	md2man-roff man/irtt.md > man/irtt.1
-	md2man-roff man/irtt-client.md > man/irtt-client.1
-	md2man-roff man/irtt-server.md > man/irtt-server.1
+# generate docs
+if [ -n "$doc" ]; then
+	for f in irtt irtt-client irtt-server; do
+		pandoc -s -t man doc/$f.md -o doc/$f.1
+		pandoc -t html -H doc/head.html doc/$f.md | html_filter > doc/$f.html
+	done
 fi
