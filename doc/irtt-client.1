@@ -11,9 +11,7 @@ irtt\-client \- Isochronous Round\-Trip Time Client
 irtt client [\f[I]args\f[]]
 .SH DESCRIPTION
 .PP
-IRTT measures round\-trip time and other latency related metrics using
-UDP packets sent on a fixed period, and produces both text and JSON
-output.
+\f[I]irtt client\f[] is the client for irtt(1).
 .SH OPTIONS
 .TP
 .B \-d \f[I]duration\f[]
@@ -549,7 +547,7 @@ T}
 T{
 IPv6 IP
 T}@T{
-[fe80::426c:8fff:fe13:9feb%en0]
+[2001:db8:8f::2/32]
 T}
 T{
 IPv4/6 hostname
@@ -602,8 +600,691 @@ nanoseconds
 T}
 .TE
 .SH OUTPUT
-.SH RETURN VALUE
+.PP
+IRTT's JSON output format consists of five top\-level objects:
+.IP "1." 3
+version
+.IP "2." 3
+system_info
+.IP "3." 3
+config
+.IP "4." 3
+stats
+.IP "5." 3
+round_trips
+.PP
+These are documented through the examples below.
+All attributes are present unless otherwise \f[B]noted\f[].
+.SS version
+.PP
+version information
+.IP
+.nf
+\f[C]
+"version":\ {
+\ \ \ \ "irtt":\ "0.9",
+\ \ \ \ "protocol":\ 1,
+\ \ \ \ "json_format":\ 1
+},
+\f[]
+.fi
+.IP \[bu] 2
+\f[I]irtt\f[] the IRTT version number
+.IP \[bu] 2
+\f[I]protocol\f[] the protocol version number (increments mean
+incompatible changes)
+.IP \[bu] 2
+\f[I]json_format\f[] the JSON format number (increments mean
+incompatible changes)
+.SS system_info
+.PP
+a few basic pieces of system information
+.IP
+.nf
+\f[C]
+"system_info":\ {
+\ \ \ \ "os":\ "darwin",
+\ \ \ \ "cpus":\ 8,
+\ \ \ \ "go_version":\ "go1.9.2",
+\ \ \ \ "hostname":\ "tron.local"
+},
+\f[]
+.fi
+.IP \[bu] 2
+\f[I]os\f[] the Operating System from Go's \f[I]runtime.GOOS\f[]
+.IP \[bu] 2
+\f[I]cpus\f[] the number of CPUs reported by Go's
+\f[I]runtime.NumCPU()\f[], which reflects the number of logical rather
+than physical CPUs.
+In the example below, the number 8 is reported for a Core i7 (quad core)
+with hyperthreading (2 threads per core).
+.IP \[bu] 2
+\f[I]go_version\f[] the version of Go the executable was built with
+.IP \[bu] 2
+\f[I]hostname\f[] the local hostname
+.SS config
+.PP
+the configuration used for the test
+.IP
+.nf
+\f[C]
+"config":\ {
+\ \ \ \ "local_address":\ "127.0.0.1:51203",
+\ \ \ \ "remote_address":\ "127.0.0.1:2112",
+\ \ \ \ "open_timeouts":\ "1s,2s,4s,8s",
+\ \ \ \ "params":\ {
+\ \ \ \ \ \ \ \ "proto_version":\ 1,
+\ \ \ \ \ \ \ \ "duration":\ 600000000,
+\ \ \ \ \ \ \ \ "interval":\ 200000000,
+\ \ \ \ \ \ \ \ "length":\ 48,
+\ \ \ \ \ \ \ \ "received_stats":\ "both",
+\ \ \ \ \ \ \ \ "stamp_at":\ "both",
+\ \ \ \ \ \ \ \ "clock":\ "both",
+\ \ \ \ \ \ \ \ "dscp":\ 0,
+\ \ \ \ \ \ \ \ "server_fill":\ ""
+\ \ \ \ },
+\ \ \ \ "loose":\ false,
+\ \ \ \ "ip_version":\ "IPv4",
+\ \ \ \ "df":\ 0,
+\ \ \ \ "ttl":\ 0,
+\ \ \ \ "timer":\ "comp",
+\ \ \ \ "waiter":\ "3x4s",
+\ \ \ \ "filler":\ "none",
+\ \ \ \ "fill_one":\ false,
+\ \ \ \ "thread_lock":\ false,
+\ \ \ \ "supplied":\ {
+\ \ \ \ \ \ \ \ "local_address":\ ":0",
+\ \ \ \ \ \ \ \ "remote_address":\ "localhost",
+\ \ \ \ \ \ \ \ "open_timeouts":\ "1s,2s,4s,8s",
+\ \ \ \ \ \ \ \ "params":\ {
+\ \ \ \ \ \ \ \ \ \ \ \ "proto_version":\ 1,
+\ \ \ \ \ \ \ \ \ \ \ \ "duration":\ 600000000,
+\ \ \ \ \ \ \ \ \ \ \ \ "interval":\ 200000000,
+\ \ \ \ \ \ \ \ \ \ \ \ "length":\ 0,
+\ \ \ \ \ \ \ \ \ \ \ \ "received_stats":\ "both",
+\ \ \ \ \ \ \ \ \ \ \ \ "stamp_at":\ "both",
+\ \ \ \ \ \ \ \ \ \ \ \ "clock":\ "both",
+\ \ \ \ \ \ \ \ \ \ \ \ "dscp":\ 0,
+\ \ \ \ \ \ \ \ \ \ \ \ "server_fill":\ ""
+\ \ \ \ \ \ \ \ },
+\ \ \ \ \ \ \ \ "loose":\ false,
+\ \ \ \ \ \ \ \ "ip_version":\ "IPv4+6",
+\ \ \ \ \ \ \ \ "df":\ 0,
+\ \ \ \ \ \ \ \ "ttl":\ 0,
+\ \ \ \ \ \ \ \ "timer":\ "comp",
+\ \ \ \ \ \ \ \ "waiter":\ "3x4s",
+\ \ \ \ \ \ \ \ "filler":\ "none",
+\ \ \ \ \ \ \ \ "fill_one":\ false,
+\ \ \ \ \ \ \ \ "thread_lock":\ false
+\ \ \ \ }
+},
+\f[]
+.fi
+.IP \[bu] 2
+\f[I]local_address\f[] the local address (IP:port) for the client
+.IP \[bu] 2
+\f[I]remote_address\f[] the remote address (IP:port) for the server
+.IP \[bu] 2
+\f[I]open_timeouts\f[] a list of timeout durations used after an open
+packet is sent
+.IP \[bu] 2
+\f[I]params\f[] are the parameters that were negotiated with the server,
+including:
+.RS 2
+.IP \[bu] 2
+\f[I]proto_version\f[] protocol version number
+.IP \[bu] 2
+\f[I]duration\f[] duration of the test, in nanoseconds
+.IP \[bu] 2
+\f[I]interval\f[] send interval, in nanoseconds
+.IP \[bu] 2
+\f[I]length\f[] packet length
+.IP \[bu] 2
+\f[I]received_stats\f[] statistics for packets received by server (none,
+count, window or both, \f[I]\-\-stats\f[] flag for irtt client)
+.IP \[bu] 2
+\f[I]stamp_at\f[] timestamp selection parameter (none, send, receive,
+both or midpoint, \f[I]\-\-tstamp\f[] flag for irtt client)
+.IP \[bu] 2
+\f[I]clock\f[] clock selection parameter (wall or monotonic,
+\f[I]\-\-clock\f[] flag for irtt client)
+.IP \[bu] 2
+\f[I]dscp\f[] the
+DSCP (https://en.wikipedia.org/wiki/Differentiated_services) value
+.IP \[bu] 2
+\f[I]server_fill\f[] the requested server fill (\f[I]\-\-sfill\f[] flag
+for irtt client)
+.RE
+.IP \[bu] 2
+\f[I]loose\f[] if true, client accepts and uses restricted server
+parameters, with a warning
+.IP \[bu] 2
+\f[I]ip_version\f[] the IP version used (IPv4 or IPv6)
+.IP \[bu] 2
+\f[I]df\f[] the do\-not\-fragment setting (0 == OS default, 1 == false,
+2 == true)
+.IP \[bu] 2
+\f[I]ttl\f[] the IP
+time\-to\-live (https://en.wikipedia.org/wiki/Time_to_live) value
+.IP \[bu] 2
+\f[I]timer\f[] the timer used: simple, comp, hybrid or busy (irtt client
+\-\-timer flag)
+.IP \[bu] 2
+\f[I]waiter\f[] the waiter used: fixed duration, multiple of RTT or
+multiple of max RTT (irtt client \f[I]\-\-wait\f[] flag)
+.IP \[bu] 2
+\f[I]filler\f[] the packet filler used: none, rand or pattern (irtt
+client \f[I]\-\-fill\f[] flag)
+.IP \[bu] 2
+\f[I]fill_one\f[] whether to fill only once and repeat for all packets
+(irtt client \f[I]\-\-fill\-one\f[] flag)
+.IP \[bu] 2
+\f[I]thread_lock\f[] whether to lock packet handling goroutines to OS
+threads
+.IP \[bu] 2
+\f[I]supplied\f[] a nested \f[I]config\f[] object with the configuration
+as originally supplied to the API or \f[I]irtt\f[] command.
+The supplied configuration can differ from the final configuration in
+the following ways:
+.RS 2
+.IP \[bu] 2
+\f[I]local_address\f[] and \f[I]remote_address\f[] may have hostnames or
+named ports before being resolved to an IP and numbered port
+.IP \[bu] 2
+\f[I]ip_version\f[] may be IPv4+6 before it is determined after address
+resolution
+.IP \[bu] 2
+\f[I]params\f[] may be different before the server applies restrictions
+based on its configuration
+.RE
+.SS stats
+.PP
+statistics for the results
+.IP
+.nf
+\f[C]
+"stats":\ {
+\ \ \ \ "start_time":\ "2017\-10\-16T21:05:23.502719056+02:00",
+\ \ \ \ "send_call":\ {
+\ \ \ \ \ \ \ \ "total":\ 79547,
+\ \ \ \ \ \ \ \ "n":\ 3,
+\ \ \ \ \ \ \ \ "min":\ 17790,
+\ \ \ \ \ \ \ \ "max":\ 33926,
+\ \ \ \ \ \ \ \ "mean":\ 26515,
+\ \ \ \ \ \ \ \ "stddev":\ 8148,
+\ \ \ \ \ \ \ \ "variance":\ 66390200
+\ \ \ \ },
+\ \ \ \ "timer_error":\ {
+\ \ \ \ \ \ \ \ "total":\ 227261,
+\ \ \ \ \ \ \ \ "n":\ 2,
+\ \ \ \ \ \ \ \ "min":\ 59003,
+\ \ \ \ \ \ \ \ "max":\ 168258,
+\ \ \ \ \ \ \ \ "mean":\ 113630,
+\ \ \ \ \ \ \ \ "stddev":\ 77254,
+\ \ \ \ \ \ \ \ "variance":\ 5968327512
+\ \ \ \ },
+\ \ \ \ "rtt":\ {
+\ \ \ \ \ \ \ \ "total":\ 233915,
+\ \ \ \ \ \ \ \ "n":\ 2,
+\ \ \ \ \ \ \ \ "min":\ 99455,
+\ \ \ \ \ \ \ \ "max":\ 134460,
+\ \ \ \ \ \ \ \ "mean":\ 116957,
+\ \ \ \ \ \ \ \ "median":\ 116957,
+\ \ \ \ \ \ \ \ "stddev":\ 24752,
+\ \ \ \ \ \ \ \ "variance":\ 612675012
+\ \ \ \ },
+\ \ \ \ "send_delay":\ {
+\ \ \ \ \ \ \ \ "total":\ 143470,
+\ \ \ \ \ \ \ \ "n":\ 2,
+\ \ \ \ \ \ \ \ "min":\ 54187,
+\ \ \ \ \ \ \ \ "max":\ 89283,
+\ \ \ \ \ \ \ \ "mean":\ 71735,
+\ \ \ \ \ \ \ \ "median":\ 71735,
+\ \ \ \ \ \ \ \ "stddev":\ 24816,
+\ \ \ \ \ \ \ \ "variance":\ 615864608
+\ \ \ \ },
+\ \ \ \ "receive_delay":\ {
+\ \ \ \ \ \ \ \ "total":\ 90445,
+\ \ \ \ \ \ \ \ "n":\ 2,
+\ \ \ \ \ \ \ \ "min":\ 45177,
+\ \ \ \ \ \ \ \ "max":\ 45268,
+\ \ \ \ \ \ \ \ "mean":\ 45222,
+\ \ \ \ \ \ \ \ "median":\ 45222,
+\ \ \ \ \ \ \ \ "stddev":\ 64,
+\ \ \ \ \ \ \ \ "variance":\ 4140
+\ \ \ \ },
+\ \ \ \ "server_packets_received":\ 2,
+\ \ \ \ "bytes_sent":\ 144,
+\ \ \ \ "bytes_received":\ 96,
+\ \ \ \ "duplicates":\ 0,
+\ \ \ \ "late_packets":\ 0,
+\ \ \ \ "wait":\ 403380,
+\ \ \ \ "duration":\ 400964028,
+\ \ \ \ "packets_sent":\ 3,
+\ \ \ \ "packets_received":\ 2,
+\ \ \ \ "packet_loss_percent":\ 33.333333333333336,
+\ \ \ \ "upstream_loss_percent":\ 33.333333333333336,
+\ \ \ \ "downstream_loss_percent":\ 0,
+\ \ \ \ "duplicate_percent":\ 0,
+\ \ \ \ "late_packets_percent":\ 0,
+\ \ \ \ "ipdv_send":\ {
+\ \ \ \ \ \ \ \ "total":\ 35096,
+\ \ \ \ \ \ \ \ "n":\ 1,
+\ \ \ \ \ \ \ \ "min":\ 35096,
+\ \ \ \ \ \ \ \ "max":\ 35096,
+\ \ \ \ \ \ \ \ "mean":\ 35096,
+\ \ \ \ \ \ \ \ "median":\ 35096,
+\ \ \ \ \ \ \ \ "stddev":\ 0,
+\ \ \ \ \ \ \ \ "variance":\ 0
+\ \ \ \ },
+\ \ \ \ "ipdv_receive":\ {
+\ \ \ \ \ \ \ \ "total":\ 91,
+\ \ \ \ \ \ \ \ "n":\ 1,
+\ \ \ \ \ \ \ \ "min":\ 91,
+\ \ \ \ \ \ \ \ "max":\ 91,
+\ \ \ \ \ \ \ \ "mean":\ 91,
+\ \ \ \ \ \ \ \ "median":\ 91,
+\ \ \ \ \ \ \ \ "stddev":\ 0,
+\ \ \ \ \ \ \ \ "variance":\ 0
+\ \ \ \ },
+\ \ \ \ "ipdv_round_trip":\ {
+\ \ \ \ \ \ \ \ "total":\ 35005,
+\ \ \ \ \ \ \ \ "n":\ 1,
+\ \ \ \ \ \ \ \ "min":\ 35005,
+\ \ \ \ \ \ \ \ "max":\ 35005,
+\ \ \ \ \ \ \ \ "mean":\ 35005,
+\ \ \ \ \ \ \ \ "median":\ 35005,
+\ \ \ \ \ \ \ \ "stddev":\ 0,
+\ \ \ \ \ \ \ \ "variance":\ 0
+\ \ \ \ },
+\ \ \ \ "server_processing_time":\ {
+\ \ \ \ \ \ \ \ "total":\ 20931,
+\ \ \ \ \ \ \ \ "n":\ 2,
+\ \ \ \ \ \ \ \ "min":\ 9979,
+\ \ \ \ \ \ \ \ "max":\ 10952,
+\ \ \ \ \ \ \ \ "mean":\ 10465,
+\ \ \ \ \ \ \ \ "stddev":\ 688,
+\ \ \ \ \ \ \ \ "variance":\ 473364
+\ \ \ \ },
+\ \ \ \ "timer_err_percent":\ 0.056815,
+\ \ \ \ "timer_misses":\ 0,
+\ \ \ \ "timer_miss_percent":\ 0,
+\ \ \ \ "send_rate":\ {
+\ \ \ \ \ \ \ \ "bps":\ 2878,
+\ \ \ \ \ \ \ \ "string":\ "2.9\ Kbps"
+\ \ \ \ },
+\ \ \ \ "receive_rate":\ {
+\ \ \ \ \ \ \ \ "bps":\ 3839,
+\ \ \ \ \ \ \ \ "string":\ "3.8\ Kbps"
+\ \ \ \ }
+},
+\f[]
+.fi
+.PP
+\f[B]Note:\f[] In the \f[I]stats\f[] object, a \f[I]duration stats\f[]
+class of object repeats and will not be repeated in the individual
+descriptions.
+It contains statistics about nanosecond duration values and has the
+following attributes:
+.IP \[bu] 2
+\f[I]total\f[] the total of the duration values
+.IP \[bu] 2
+\f[I]n\f[] the number of duration values
+.IP \[bu] 2
+\f[I]min\f[] the minimum duration value
+.IP \[bu] 2
+\f[I]max\f[] the maximum duration value
+.IP \[bu] 2
+\f[I]mean\f[] the mean duration value
+.IP \[bu] 2
+\f[I]stddev\f[] the standard deviation
+.IP \[bu] 2
+\f[I]variance\f[] the variance
+.PP
+The regular attributes in \f[I]stats\f[] are as follows:
+.IP \[bu] 2
+\f[I]start_time\f[] the start time of the test, in TZ format
+.IP \[bu] 2
+\f[I]send_call\f[] a duration stats object for the call time when
+sending packets
+.IP \[bu] 2
+\f[I]timer_error\f[] a duration stats object for the observed sleep time
+error
+.IP \[bu] 2
+\f[I]rtt\f[] a duration stats object for the round\-trip time
+.IP \[bu] 2
+\f[I]send_delay\f[] a duration stats object for the one\-way send delay
+\f[B](only available if server timestamps are enabled)\f[]
+.IP \[bu] 2
+\f[I]receive_delay\f[] a duration stats object for the one\-way receive
+delay \f[B](only available if server timestamps are enabled)\f[]
+.IP \[bu] 2
+\f[I]server_packets_received\f[] the number of packets received by the
+server, including duplicates (always present, but only valid if the
+\f[I]ReceivedStats\f[] parameter includes \f[I]ReceivedStatsCount\f[],
+or the \f[I]\-\-stats\f[] flag to the irtt client is \f[I]count\f[] or
+\f[I]both\f[])
+.IP \[bu] 2
+\f[I]bytes_sent\f[] the number of UDP payload bytes sent during the test
+.IP \[bu] 2
+\f[I]bytes_received\f[] the number of UDP payload bytes received during
+the test
+.IP \[bu] 2
+\f[I]duplicates\f[] the number of packets received with the same
+sequence number
+.IP \[bu] 2
+\f[I]late_packets\f[] the number of packets received with a sequence
+number lower than the previously received sequence number (one simple
+metric for out\-of\-order packets)
+.IP \[bu] 2
+\f[I]wait\f[] the actual time spent waiting for final packets, in
+nanoseconds
+.IP \[bu] 2
+\f[I]duration\f[] the actual duration of the test, in nanoseconds, from
+the time just before the first packet was sent to the time after the
+last packet was received and results are starting to be calculated
+.IP \[bu] 2
+\f[I]packets_sent\f[] the number of packets sent to the server
+.IP \[bu] 2
+\f[I]packets_received\f[] the number of packets received from the server
+.IP \[bu] 2
+\f[I]packet_loss_percent\f[] 100 * (\f[I]packets_sent\f[] \-
+\f[I]packets_received\f[]) / \f[I]packets_sent\f[]
+.IP \[bu] 2
+\f[I]upstream_loss_percent\f[] 100 * (\f[I]packets_sent\f[] \-
+\f[I]server_packets_received\f[] / \f[I]packets_sent\f[]) (always
+present, but only valid if \f[I]server_packets_received\f[] is valid)
+.IP \[bu] 2
+\f[I]downstream_loss_percent\f[] 100 * (\f[I]server_packets_received\f[]
+\- \f[I]packets_received\f[] / \f[I]server_packets_received\f[]) (always
+present, but only valid if \f[I]server_packets_received\f[] is valid)
+.IP \[bu] 2
+\f[I]duplicate_percent\f[] 100 * \f[I]duplicates\f[] /
+\f[I]packets_received\f[]
+.IP \[bu] 2
+\f[I]late_packets_percent\f[] 100 * \f[I]late_packets\f[] /
+\f[I]packets_received\f[]
+.IP \[bu] 2
+\f[I]ipdv_send\f[] a duration stats object for the send
+IPDV (https://en.wikipedia.org/wiki/Packet_delay_variation) \f[B](only
+available if server timestamps are enabled)\f[]
+.IP \[bu] 2
+\f[I]ipdv_receive\f[] a duration stats object for the receive
+IPDV (https://en.wikipedia.org/wiki/Packet_delay_variation) \f[B](only
+available if server timestamps are enabled)\f[]
+.IP \[bu] 2
+\f[I]ipdv_round_trip\f[] a duration stats object for the round\-trip
+IPDV (https://en.wikipedia.org/wiki/Packet_delay_variation)
+\f[B](available regardless of whether server timestamps are enabled or
+not)\f[]
+.IP \[bu] 2
+\f[I]server_processing_time\f[] a duration stats object for the time the
+server took after it received the packet to when it sent the response
+\f[B](only available when both send and receive timestamps are
+enabled)\f[]
+.IP \[bu] 2
+\f[I]timer_err_percent\f[] the mean of the absolute values of the timer
+error, as a percentage of the interval
+.IP \[bu] 2
+\f[I]timer_misses\f[] the number of times the timer missed the interval
+(was at least 50% over the scheduled time)
+.IP \[bu] 2
+\f[I]timer_miss_percent\f[] 100 * \f[I]timer_misses\f[] / expected
+packets sent
+.IP \[bu] 2
+\f[I]send_rate\f[] the send bitrate (bits\-per\-second and corresponding
+string), calculated using the number of UDP payload bytes sent between
+the time right before the first send call and the time right after the
+last send call
+.IP \[bu] 2
+\f[I]receive_rate\f[] the receive bitrate (bits\-per\-second and
+corresponding string), calculated using the number of UDP payload bytes
+received between the time right after the first receive call and the
+time right after the last receive call
+.SS round_trips
+.PP
+each round\-trip is a single request to / reply from the server
+.IP
+.nf
+\f[C]
+"round_trips":\ [
+\ \ \ \ {
+\ \ \ \ \ \ \ \ "seqno":\ 0,
+\ \ \ \ \ \ \ \ "lost":\ false,
+\ \ \ \ \ \ \ \ "timestamps":\ {
+\ \ \ \ \ \ \ \ \ \ \ \ "client":\ {
+\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ "receive":\ {
+\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ "wall":\ 1508180723502871779,
+\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ "monotonic":\ 2921143
+\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ },
+\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ "send":\ {
+\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ "wall":\ 1508180723502727340,
+\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ "monotonic":\ 2776704
+\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ }
+\ \ \ \ \ \ \ \ \ \ \ \ },
+\ \ \ \ \ \ \ \ \ \ \ \ "server":\ {
+\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ "receive":\ {
+\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ "wall":\ 1508180723502816623,
+\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ "monotonic":\ 32644353327
+\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ },
+\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ "send":\ {
+\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ "wall":\ 1508180723502826602,
+\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ "monotonic":\ 32644363306
+\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ }
+\ \ \ \ \ \ \ \ \ \ \ \ }
+\ \ \ \ \ \ \ \ },
+\ \ \ \ \ \ \ \ "delay":\ {
+\ \ \ \ \ \ \ \ \ \ \ \ "receive":\ 45177,
+\ \ \ \ \ \ \ \ \ \ \ \ "rtt":\ 134460,
+\ \ \ \ \ \ \ \ \ \ \ \ "send":\ 89283
+\ \ \ \ \ \ \ \ },
+\ \ \ \ \ \ \ \ "ipdv":\ {}
+\ \ \ \ },
+\ \ \ \ {
+\ \ \ \ \ \ \ \ "seqno":\ 1,
+\ \ \ \ \ \ \ \ "lost":\ false,
+\ \ \ \ \ \ \ \ "timestamps":\ {
+\ \ \ \ \ \ \ \ \ \ \ \ "client":\ {
+\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ "receive":\ {
+\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ "wall":\ 1508180723702917735,
+\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ "monotonic":\ 202967099
+\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ },
+\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ "send":\ {
+\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ "wall":\ 1508180723702807328,
+\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ "monotonic":\ 202856692
+\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ }
+\ \ \ \ \ \ \ \ \ \ \ \ },
+\ \ \ \ \ \ \ \ \ \ \ \ "server":\ {
+\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ "receive":\ {
+\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ "wall":\ 1508180723702861515,
+\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ "monotonic":\ 32844398219
+\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ },
+\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ "send":\ {
+\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ "wall":\ 1508180723702872467,
+\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ "monotonic":\ 32844409171
+\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ }
+\ \ \ \ \ \ \ \ \ \ \ \ }
+\ \ \ \ \ \ \ \ },
+\ \ \ \ \ \ \ \ "delay":\ {
+\ \ \ \ \ \ \ \ \ \ \ \ "receive":\ 45268,
+\ \ \ \ \ \ \ \ \ \ \ \ "rtt":\ 99455,
+\ \ \ \ \ \ \ \ \ \ \ \ "send":\ 54187
+\ \ \ \ \ \ \ \ },
+\ \ \ \ \ \ \ \ "ipdv":\ {
+\ \ \ \ \ \ \ \ \ \ \ \ "receive":\ 91,
+\ \ \ \ \ \ \ \ \ \ \ \ "rtt":\ \-35005,
+\ \ \ \ \ \ \ \ \ \ \ \ "send":\ \-35096
+\ \ \ \ \ \ \ \ }
+\ \ \ \ },
+\ \ \ \ {
+\ \ \ \ \ \ \ \ "seqno":\ 2,
+\ \ \ \ \ \ \ \ "lost":\ true,
+\ \ \ \ \ \ \ \ "timestamps":\ {
+\ \ \ \ \ \ \ \ \ \ \ \ "client":\ {
+\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ "receive":\ {},
+\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ "send":\ {
+\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ "wall":\ 1508180723902925971,
+\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ "monotonic":\ 402975335
+\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ }
+\ \ \ \ \ \ \ \ \ \ \ \ },
+\ \ \ \ \ \ \ \ \ \ \ \ "server":\ {
+\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ "receive":\ {},
+\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ "send":\ {}
+\ \ \ \ \ \ \ \ \ \ \ \ }
+\ \ \ \ \ \ \ \ },
+\ \ \ \ \ \ \ \ "delay":\ {},
+\ \ \ \ \ \ \ \ "ipdv":\ {}
+\ \ \ \ }
+]
+\f[]
+.fi
+.PP
+\f[B]Note:\f[] \f[I]wall\f[] values are from Go's
+\f[I]time.Time.UnixNano()\f[], the number of nanoseconds elapsed since
+January 1, 1970 UTC
+.PP
+\f[B]Note:\f[] \f[I]monotonic\f[] values are the number of nanoseconds
+since the start of the test for the client, and since start of the
+process for the server
+.IP \[bu] 2
+\f[I]seqno\f[] the sequence number
+.IP \[bu] 2
+\f[I]lost\f[] the lost status of the packet, which can be one of
+\f[I]false\f[], \f[I]true\f[], \f[I]true_down\f[] or \f[I]true_up\f[].
+The \f[I]true_down\f[] and \f[I]true_up\f[] values are only possible if
+the \f[I]ReceivedStats\f[] parameter includes
+\f[I]ReceivedStatsWindow\f[] (irtt client \f[I]\-\-stats\f[] flag).
+Even then, if it could not be determined whether the packet was lost
+upstream or downstream, the value \f[I]true\f[] is used.
+.IP \[bu] 2
+\f[I]timestamps\f[] the client and server timestamps
+.RS 2
+.IP \[bu] 2
+\f[I]client\f[] the client send and receive wall and monotonic
+timestamps \f[B](\f[BI]receive\f[B] values only present if
+\f[BI]lost\f[B] is false)\f[]
+.IP \[bu] 2
+\f[I]server\f[] the server send and receive wall and monotonic
+timestamps \f[B](both \f[BI]send\f[B] and \f[BI]receive\f[B] values not
+present if \f[BI]lost\f[B] is true)\f[], and additionally:
+.RS 2
+.IP \[bu] 2
+\f[I]send\f[] values are not present if the StampAt (irtt client
+\f[I]\-\-tstamp\f[] flag) does not include send timestamps
+.IP \[bu] 2
+\f[I]receive\f[] values are not present if the StampAt (irtt client
+\f[I]\-\-tstamp\f[] flag) does not include receive timestamps
+.IP \[bu] 2
+\f[I]wall\f[] values are not present if the Clock (irtt client
+\f[I]\-\-clock\f[] flag) does not include wall values or server
+timestamps are not enabled
+.IP \[bu] 2
+\f[I]monotonic\f[] values are not present if the Clock (irtt client
+\f[I]\-\-clock\f[] flag) does not include monotonic values or server
+timestamps are not enabled
+.RE
+.RE
+.IP \[bu] 2
+\f[I]delay\f[] an object containing the delay values
+.RS 2
+.IP \[bu] 2
+\f[I]receive\f[] the one\-way receive delay, in nanoseconds
+\f[B](present only if server timestamps are enabled and at least one
+wall clock value is available)\f[]
+.IP \[bu] 2
+\f[I]rtt\f[] the round\-trip time, in nanoseconds, always present
+.IP \[bu] 2
+\f[I]send\f[] the one\-way send delay, in nanoseconds \f[B](present only
+if server timestamps are enabled and at least one wall clock value is
+available)\f[]
+.RE
+.IP \[bu] 2
+\f[I]ipdv\f[] an object containing the
+IPDV (https://en.wikipedia.org/wiki/Packet_delay_variation) values
+\f[B](attributes present only for \f[BI]seqno\f[B] > 0, and if
+\f[BI]lost\f[B] is \f[BI]false\f[B] for both the current and previous
+\f[BI]round_trip\f[B])\f[]
+.RS 2
+.IP \[bu] 2
+\f[I]receive\f[] the difference in receive delay relative to the
+previous packet \f[B](present only if at least one server timestamp is
+available)\f[]
+.IP \[bu] 2
+\f[I]rtt\f[] the difference in round\-trip time relative to the previous
+packet (always present for \f[I]seqno\f[] > 0)
+.IP \[bu] 2
+\f[I]send\f[] the difference in send delay relative to the previous
+packet \f[B](present only if at least one server timestamp is
+available)\f[]
+.RE
+.SH EXIT STATUS
+.PP
+\f[I]irtt client\f[] exits with one of the following status codes:
+.PP
+.TS
+tab(@);
+l l.
+T{
+Code
+T}@T{
+Meaning
+T}
+_
+T{
+0
+T}@T{
+Success
+T}
+T{
+1
+T}@T{
+Runtime error
+T}
+T{
+2
+T}@T{
+Command line error
+T}
+T{
+3
+T}@T{
+Two interrupt signals received
+T}
+.TE
 .SH EXAMPLES
+.TP
+.B $ irtt client localhost
+Sends requests once per second for one minute to localhost.
+.RS
+.RE
+.TP
+.B $ irtt client \-i 200ms \-d 10s \-o \- localhost
+Sends requests every 0.2 sec for 10 seconds to localhost.
+Writes JSON output to stdout.
+.RS
+.RE
+.TP
+.B $ irtt client \-i 20ms \-d 1m \-l 172 \-\-fill=rand \-\-sfill=rand 192.168.100.10
+Sends requests every 20ms for one minute to 192.168.100.10.
+Fills both the client and server payload with random data.
+This simulates a G.711 VoIP conversation, one of the most commonly used
+codecs for VoIP as of this writing.
+.RS
+.RE
+.TP
+.B $ irtt client \-i 0.1s \-d 5s \-6 \-\-dscp=46 irtt.example.org
+Sends requests with IPv6 every 100ms for 5 seconds to irtt.example.org.
+Sets the DSCP value (ToS field) of requests and responses to 46
+(Expedited Forwarding).
+.RS
+.RE
+.TP
+.B $ irtt client \-\-hmac=secret \-d 10s \[lq][2001:db8:8f::2/32]:64381\[rq]
+Sends requests to the specified IPv6 IP on port 64381 every second for
+10 seconds.
+Adds an HMAC to each packet with the key \f[I]secret\f[].
+.RS
+.RE
 .SH SEE ALSO
 .PP
 irtt(1), irtt\-server(1)

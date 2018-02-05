@@ -99,7 +99,7 @@ send delay and IPDV.
 
 # LIMITATIONS
 
-"It is the limitations of software that give it life." -Me, justifying my limitations
+> "It is the limitations of software that give it life." -Me, justifying my limitations
 
 ## Isochronous (fixed period) send schedule
 
@@ -201,7 +201,7 @@ and garbled VoIP conversation, or losing at your favorite online game (unless
 you like "lag" as an excuse). As of this writing, many broadband connections are
 well past the point of diminishing returns when it comes to throughput, yet
 that's what we continue to take as the primary measure of Internet performance.
-This is analogous to car buyers making top speed their first priority.
+This is analogous to ordinary car buyers making top speed their first priority.
 
 # SEE ALSO
 
@@ -223,4 +223,4 @@ IRTT was originally written to improve the latency and packet loss measurements
 for the excellent [Flent](https://flent.org) tool. Flent was developed by and
 for the [Bufferbloat](https://www.bufferbloat.net/projects/) project, which aims
 to reduce "chaotic and laggy network performance," making this project valuable
-for anyone who values their time and sanity.
+for anyone who values their time and sanity while using the Internet.

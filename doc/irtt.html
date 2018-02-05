@@ -45,6 +45,10 @@
   	dd p:first-child {
   		margin-top: 0;
   	}
+  	
+  	blockquote {
+  		font-style: italic;
+  	}
   </style>
 </head>
 <body>
@@ -122,7 +126,9 @@ IRTT server starting...
 <li>The server doesn’t run well on 32-bit Windows platforms. When connecting with a client, you may see <code>Terminated due to receive error</code>. To work around this, disable dual timestamps from the client by including <code>--tstamp=midpoint</code>.</li>
 </ul>
 <h1 id="limitations">LIMITATIONS</h1>
+<blockquote>
 <p>“It is the limitations of software that give it life.” -Me, justifying my limitations</p>
+</blockquote>
 <h2 id="isochronous-fixed-period-send-schedule">Isochronous (fixed period) send schedule</h2>
 <p>Currently, IRTT only sends packets on a fixed period, foregoing the ability to simulate arbitrary traffic. Accepting this limitation offers some benefits:</p>
 <ul>
@@ -163,7 +169,7 @@ IRTT server starting...
 </ul>
 <p>However, the current strategy means that a good approximation of per-packet loss results can be obtained with only 8 additional bytes in each packet. It also requires very little computational time on the server, and almost all computation on the client occurs during results generation, after the test is complete. It isn’t as accurate with late (out-of-order) upstream packets or with long sequences of lost packets, but high loss or high numbers of late packets typically indicate more severe network conditions that should be corrected first anyway, perhaps before per-packet results matter. Note that in case of very high packet loss, the <strong>total</strong> number of packets received by the server but not returned to the client (which can be obtained using <code>--stats=count</code>) will still be correct, which will still provide an accurate <strong>average</strong> loss percentage in each direction over the course of the test.</p>
 <h1 id="notes">NOTES</h1>
-<p>Latency is an under-appreciated metric in network and application performance. There is a certain hard to quantify but visceral “latency stress” that comes from waiting in expectation after a web page click, straining through a delayed and garbled VoIP conversation, or losing at your favorite online game (unless you like “lag” as an excuse). As of this writing, many broadband connections are well past the point of diminishing returns when it comes to throughput, yet that’s what we continue to take as the primary measure of Internet performance. This is analogous to car buyers making top speed their first priority.</p>
+<p>Latency is an under-appreciated metric in network and application performance. There is a certain hard to quantify but visceral “latency stress” that comes from waiting in expectation after a web page click, straining through a delayed and garbled VoIP conversation, or losing at your favorite online game (unless you like “lag” as an excuse). As of this writing, many broadband connections are well past the point of diminishing returns when it comes to throughput, yet that’s what we continue to take as the primary measure of Internet performance. This is analogous to ordinary car buyers making top speed their first priority.</p>
 <h1 id="see-also">SEE ALSO</h1>
 <p>irtt-client(1), irtt-server(1)</p>
 <p><a href="https://github.com/peteheist/irtt/">IRTT GitHub repository</a></p>
@@ -171,6 +177,6 @@ IRTT server starting...
 <p>Pete Heist <a href="mailto:pete@eventide.io">pete@eventide.io</a></p>
 <p>Many thanks to both Toke Høiland-Jørgensen and Dave Täht from the <a href="https://www.bufferbloat.net/">Bufferbloat project</a> for their valuable advice. Any problems in design or implementation are entirely my own.</p>
 <h1 id="history">HISTORY</h1>
-<p>IRTT was originally written to improve the latency and packet loss measurements for the excellent <a href="https://flent.org">Flent</a> tool. Flent was developed by and for the <a href="https://www.bufferbloat.net/projects/">Bufferbloat</a> project, which aims to reduce “chaotic and laggy network performance,” making this project valueable for anyone who values their time and sanity.</p>
+<p>IRTT was originally written to improve the latency and packet loss measurements for the excellent <a href="https://flent.org">Flent</a> tool. Flent was developed by and for the <a href="https://www.bufferbloat.net/projects/">Bufferbloat</a> project, which aims to reduce “chaotic and laggy network performance,” making this project valuable for anyone who values their time and sanity while using the Internet.</p>
 </body>
 </html>
