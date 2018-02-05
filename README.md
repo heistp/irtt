@@ -16,7 +16,7 @@ submitting a new bug or feature request.
 3. [Features](#features)
 4. [Limitations](#limitations)
 5. [Installation](#installation)
-6. [Quick Start](#quick-start)
+6. [Documentation](#documentation)
 7. [Frequently Asked Questions](#frequently-asked-questions)
 8. [Releases](#releases)
 9. [TODO and Roadmap](#todo-and-roadmap)
@@ -135,11 +135,16 @@ For more on cross-compilation, see [this
 page](http://golang.org/doc/install/source#environment) for a full list of valid GOOS
 GOARCH combinations.
 
-## Quick Start
+## Documentation
 
 After installing IRTT, see the
-[EXAMPLE](http://htmlpreview.github.io/?https://github.com/peteheist/irtt/blob/master/doc/irtt.html#example)
-section of the irtt man page.
+[irtt(1)](http://htmlpreview.github.io/?https://github.com/peteheist/irtt/blob/master/doc/irtt.html),
+[irtt-client(1)](http://htmlpreview.github.io/?https://github.com/peteheist/irtt/blob/master/doc/irtt-client.html)
+and [irtt-server(1)](http://htmlpreview.github.io/?https://github.com/peteheist/irtt/blob/master/doc/irtt-server.html)
+man pages.
+
+To get started quickly, the EXAMPLE sections of each man page show common
+usages for the client and server.
 
 ## Frequently Asked Questions
 
