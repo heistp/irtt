@@ -29,7 +29,7 @@ Latency is an under-appreciated metric in network and application performance.
 As of this writing, many broadband connections are well past the point of
 diminishing returns when it comes to throughput, yet that’s what we continue to
 take as the primary measure of Internet performance. This is analogous to
-ordinary car buyers making top speed their first priority!
+ordinary car buyers making top speed their first priority.
 
 There is a certain hard to quantify but visceral “latency stress” that comes
 from waiting in expectation after a web page click, straining through a delayed
