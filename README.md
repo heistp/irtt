@@ -1,7 +1,8 @@
 # IRTT (Isochronous Round-Trip Tester)
 
-IRTT measures round-trip time and other metrics using UDP packets sent on a
-fixed period, and produces both user and machine parseable output.
+IRTT measures round-trip time, one-way delay and other metrics using UDP
+packets sent on a fixed period, and produces both user and machine parseable
+output.
 
 IRTT has reached version 0.9, and is usable today, but needs more work until
 version 1.0 can be released. I would appreciate any feedback, which you can
@@ -25,17 +26,17 @@ submitting a new bug or feature request.
 ## Motivation
 
 Latency is an under-appreciated metric in network and application performance.
+As of this writing, many broadband connections are well past the point of
+diminishing returns when it comes to throughput, yet that’s what we continue to
+take as the primary measure of Internet performance. This is analogous to
+ordinary car buyers making top speed their first priority!
+
 There is a certain hard to quantify but visceral “latency stress” that comes
 from waiting in expectation after a web page click, straining through a delayed
 and garbled VoIP conversation, or losing at your favorite online game (unless
 you like “lag” as an excuse). Those who work on reducing latency and improving
-network performance characteristics may be driven by the idea of helping relieve
-this stress for others.
-
-As of this writing, many broadband connections are well past the point of
-diminishing returns when it comes to throughput, yet that’s what we continue to
-take as the primary measure of Internet performance. This is analogous to
-ordinary car buyers making top speed their first priority.
+network performance characteristics beyond just throughput may be driven by the
+idea of helping relieve this stress for others.
 
 IRTT was originally written to improve the latency and packet loss measurements
 for the excellent [Flent](https://flent.org) tool. Flent was developed by and
