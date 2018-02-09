@@ -3,6 +3,8 @@ Description=irtt server bound to interface %i
 After=network.target
 BindsTo=sys-subsystem-net-devices-%i.device
 After=sys-subsystem-net-devices-%i.device
+Documentation=man:irtt(1)
+Documentation=man:irtt-server(1)
 
 [Service]
 ExecStart=/usr/bin/irtt server -b %%%i

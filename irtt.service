@@ -1,6 +1,8 @@
 [Unit]
 Description=irtt server
 After=network.target
+Documentation=man:irtt(1)
+Documentation=man:irtt-server(1)
 
 [Service]
 ExecStart=/usr/bin/irtt server
