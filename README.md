@@ -19,8 +19,8 @@ submitting a new bug or feature request.
 5. [Installation](#installation)
 6. [Documentation](#documentation)
 7. [Frequently Asked Questions](#frequently-asked-questions)
-8. [Releases](#releases)
-9. [TODO and Roadmap](#todo-and-roadmap)
+8. [TODO and Roadmap](#todo-and-roadmap)
+9. [Releases](#releases)
 10. [Thanks](#thanks)
 
 ## Motivation
@@ -309,41 +309,7 @@ sections of each man page for common client and server usage.
 
 ## Releases
 
-### Version 0.9
-
-Version 0.9 is the first tagged release of IRTT. Following are the changes
-from the untagged 0.1 development version:
-
-- Command line option changes:
-  - Due to adoption of the [pflag](https://github.com/ogier/pflag) package, all long
-    options now start with -- and must use = with values (e.g. `--fill=rand`).
-    After the subcommand, flags and arguments may now appear in any order.
-  - `irtt client` changes:
-    - `-rs` is renamed to `--stats`
-    - `-strictparams` is removed and is now the default. `--loose` may be used
-      instead to accept and use server restricted parameters, with a warning.
-    - `-ts` is renamed to `--tstamp`
-    - `-qq` is renamed to `-Q`
-    - `-fillall` is removed and is now the default. `--fill-one` may be used as
-      a small optimization, but should rarely be needed.
-  - `irtt server` changes:
-    - `-nodscp` is renamed to `--no-dscp`
-    - `-setsrcip` is renamed to `--set-src-ip`
-- The communication protocol has changed, so clients and servers must both be
-  updated. The handshake now includes a protocol version, which may change
-  independently of the release version. For now, the protocol version between
-  client and server must match exactly or the client will refuse to connect.
-- Server fills are now supported, and may be restricted on the server. See
-  `--sfill` for the client and `--allow-fills` on the server. As an example, one
-  can do `irtt client --fill=rand --sfill=rand -l 172 server` for random
-  payloads in both directions. The server default is `--allow-fills=rand` so
-  that arbitrary data cannot be relayed between two hosts. `server_fill` now
-  appears under `params` in the JSON.
-- Version information has been added to the JSON output.
-- The default server minimum interval is now `10ms`.
-- The default client duration has been changed from `1h` to `1m`.
-- Some author info was changed in the commit history, so the rewritten history
-  must be fetched in all forks and any changes rebased.
+See [CHANGES.md](CHANGES.md).
 
 ## TODO and Roadmap
 
