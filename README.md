@@ -240,42 +240,48 @@ sections of each man page for common client and server usage.
       on unspecified IP addresses. This is not done by default in order to avoid
       the additional per-packet heap allocations required by the
       `golang.org/x/net` packages.
-   6) You're using a 0.1 development version of the server with a newer client,
-      in which case you'll also see `[Drop] [UnknownParam] unknown negotiation
-      param (0x8 = 0)` in the server logs. Make sure both client and server are up
-      to date. Going forward, the protocol is versioned (independently from IRTT in
-      general), and is checked when the client connects to the server. For now, the
-      protocol versions must match exactly.
 
-9) Why don't you include median values for send call time, timer error and
-   server processing time?
+9) Why can't the client connect to the server, and I either see `[Drop]
+   [UnknownParam] unknown negotiation param (0x8 = 0)` on the server, or a strange
+   message on the client like `[InvalidServerRestriction] server tried to reduce
+   interval to < 1s, from 1s to 92ns`?
 
-   Those values aren't stored for each round trip, and it's difficult to do a
-	 running calculation of the median, although
-	 [this method](https://rhettinger.wordpress.com/2010/02/06/lost-knowledge/) of
-	 using skip lists appears to have promise. It's a possibility for the future,
-	 but so far it isn't a high priority. If it is for you, file an
-   [Issue](https://github.com/peteheist/irtt/issues).
+   You're using a 0.1 development version of the server with a newer client.
+   Make sure both client and server are up to date. Going forward, the protocol
+   is versioned (independently from IRTT in general), and is checked when the
+   client connects to the server. For now, the protocol versions must match
+   exactly.
 
-10) I see you use MD5 for the HMAC. Isn't that insecure?
+10) Why don't you include median values for send call time, timer error and
+    server processing time?
+
+    Those values aren't stored for each round trip, and it's difficult to do a
+	  running calculation of the median, although
+	  [this method](https://rhettinger.wordpress.com/2010/02/06/lost-knowledge/) of
+	  using skip lists appears to have promise. It's a possibility for the future,
+	  but so far it isn't a high priority. If it is for you, file an
+    [Issue](https://github.com/peteheist/irtt/issues).
+
+11) I see you use MD5 for the HMAC. Isn't that insecure?
 
     MD5 should not have practical vulnerabilities when used in a message authenticate
-    code. See [this page](https://en.wikipedia.org/wiki/Hash-based_message_authentication_code#Security)
+    code. See
+    [this page](https://en.wikipedia.org/wiki/Hash-based_message_authentication_code#Security)
     for more info.
 
-11) Will you add unit tests?
+12) Will you add unit tests?
 
     Maybe some. I feel that the most important thing for a project of this size
     is that the design is clear enough that bugs are next to impossible. IRTT
     is not there yet though, particularly when it comes to packet manipulation.
 
-12) Are there any plans for translation to other languages?
+13) Are there any plans for translation to other languages?
 
     While some parts of the API were designed to keep i18n possible, there is no
     support for i18n built in to the Go standard libraries. It should be possible,
     but could be a challenge, and is not something I'm likely to undertake myself.
 
-13) Why do I get `Error: failed to allocate results buffer for X round trips
+14) Why do I get `Error: failed to allocate results buffer for X round trips
    (runtime error: makeslice: cap out of range)`?
 
     Your test interval and duration probably require a results buffer that's
@@ -285,7 +291,7 @@ sections of each man page for common client and server usage.
     `maxSliceCap` in [slice.go](https://golang.org/src/runtime/slice.go) and
     `_MaxMem` in [malloc.go](https://golang.org/src/runtime/malloc.go).
 
-14) Why is little endian byte order used in the packet format?
+15) Why is little endian byte order used in the packet format?
 
     As for Google's [protobufs](https://github.com/google/protobuf), this was
     chosen because the vast majority of modern processors use little-endian byte
@@ -294,7 +300,7 @@ sections of each man page for common client and server usage.
     [unsafe](https://golang.org/pkg/unsafe/) package, but so far this
     optimization has not been shown to be necessary.
 
-15) Why is the virt size (vsz) memory usage so high in Linux?
+16) Why is the virt size (vsz) memory usage so high in Linux?
 
     This has to do with the way Go allocates memory. See
     [this article](https://deferpanic.com/blog/understanding-golang-memory-usage/)
