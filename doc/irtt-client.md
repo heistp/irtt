@@ -1,6 +1,6 @@
-% IRTT-CLIENT(1) v0.9 | IRTT Manual
+% IRTT-CLIENT(1) v0.9.0 | IRTT Manual
 %
-% February 4, 2018
+% February 11, 2018
 
 # NAME
 
@@ -245,7 +245,7 @@ version information
 
 ```
 "version": {
-    "irtt": "0.9",
+    "irtt": "0.9.0",
     "protocol": 1,
     "json_format": 1
 },

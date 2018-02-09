@@ -1,6 +1,6 @@
-% IRTT(1) v0.9 | IRTT Manual
+% IRTT(1) v0.9.0 | IRTT Manual
 %
-% February 4, 2018
+% February 11, 2018
 
 # NAME
 

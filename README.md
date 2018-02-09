@@ -5,7 +5,7 @@ packets sent on a fixed period, and produces both user and machine parseable
 output.
 
 IRTT has reached version 0.9.0, and is usable today, but needs more work until
-version 1.0 can be released. I would appreciate any feedback, which you can
+version 1.0.0 can be released. I would appreciate any feedback, which you can
 send under Issues. However, it could be useful to first review the
 [TODO and Roadmap](#todo-and-roadmap) section of the documentation before
 submitting a new bug or feature request.
@@ -313,7 +313,7 @@ See [CHANGES.md](CHANGES.md).
 
 ## TODO and Roadmap
 
-### TODO v1.0
+### TODO v1.0.0
 
 - Refactor packet manipulation to improve readability and prevent multiple validations
 - Improve open/close process:
