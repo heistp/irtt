@@ -6,7 +6,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
-## [0.9.0] - 2018-02-11
+## 0.9.0 - 2018-02-11
 
 ### Added
 
@@ -44,8 +44,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Some author info was changed in the commit history, so the rewritten history
   must be fetched in all forks and any changes rebased.
 
-## [0.1.0] - 2017-10-15
+## 0.1.0 - 2017-10-15
 
 ### Added
 
 - Initial release.
+
+[Unreleased]: https://github.com/peteheist/irtt/compare/v0.9.0...HEAD
