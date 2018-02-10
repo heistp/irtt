@@ -7,8 +7,8 @@ output.
 IRTT has reached version 0.9.0, and is usable today, but needs more work until
 version 1.0.0 can be released. I would appreciate any feedback, which you can
 send under Issues. However, it could be useful to first review the
-[TODO and Roadmap](#todo-and-roadmap) section of the documentation before
-submitting a new bug or feature request.
+[Roadmap](#roadmap) section of the documentation before submitting a new bug or
+feature request.
 
 ## Table of Contents
 
@@ -19,8 +19,8 @@ submitting a new bug or feature request.
 5. [Installation](#installation)
 6. [Documentation](#documentation)
 7. [Frequently Asked Questions](#frequently-asked-questions)
-8. [TODO and Roadmap](#todo-and-roadmap)
-9. [Releases](#releases)
+8. [Roadmap](#roadmap)
+9. [Changes](#changes)
 10. [Thanks](#thanks)
 
 ## Motivation
@@ -132,27 +132,23 @@ then from the `github.com/peteheist/irtt` directory, do:
 
 ## Documentation
 
-After installing IRTT, see the
-[irtt(1)](http://htmlpreview.github.io/?https://github.com/peteheist/irtt/blob/master/doc/irtt.html),
-[irtt-client(1)](http://htmlpreview.github.io/?https://github.com/peteheist/irtt/blob/master/doc/irtt-client.html)
-and [irtt-server(1)](http://htmlpreview.github.io/?https://github.com/peteheist/irtt/blob/master/doc/irtt-server.html)
-man pages.
-
-To get started quickly, see the
-[EXAMPLE](http://htmlpreview.github.io/?https://github.com/peteheist/irtt/blob/master/doc/irtt.html#example)
-sections of each man page for common client and server usage.
+After installing IRTT, see the man pages and their corresponding EXAMPLES
+sections to get started quickly:
+- [irtt(1)](http://htmlpreview.github.io/?https://github.com/peteheist/irtt/blob/master/doc/irtt.html) | [EXAMPLES](http://htmlpreview.github.io/?https://github.com/peteheist/irtt/blob/master/doc/irtt.html#examples)
+- [irtt-client(1)](http://htmlpreview.github.io/?https://github.com/peteheist/irtt/blob/master/doc/irtt-client.html) | [EXAMPLES](http://htmlpreview.github.io/?https://github.com/peteheist/irtt/blob/master/doc/irtt-client.html#examples)
+- [irtt-server(1)](http://htmlpreview.github.io/?https://github.com/peteheist/irtt/blob/master/doc/irtt-server.html) | [EXAMPLES](http://htmlpreview.github.io/?https://github.com/peteheist/irtt/blob/master/doc/irtt-server.html#examples)
 
 ## Frequently Asked Questions
 
 1) Why not just use ping?
 
    Ping may be the preferred tool when measuring minimum latency, or for other
-   reasons. IRTT's reported mean RTT is likely to be around 0.1-0.4 ms higher
-   and a bit more variable than the results reported by ping, due to the
-   overhead of entering userspace, together with Go's system call overhead and
-   scheduling variability. That said, this overhead should be negligible at most
-   Internet RTTs, and there are advantages that IRTT has over ping when minimum
-   RTT is not what you're measuring:
+   reasons. IRTT's reported mean RTT is likely to be a bit higher (on the order
+   of hundreds of microseconds) and a bit more variable than the results
+   reported by ping, due to the overhead of entering userspace, together with
+   Go's system call overhead and scheduling variability. That said, this
+   overhead should be negligible at most Internet RTTs, and there are advantages
+   that IRTT has over ping when minimum RTT is not what you're measuring:
 
 	 - In addition to round-trip time, IRTT also measures OWD, IPDV and upstream
 	   vs downstream packet loss.
@@ -162,7 +158,7 @@ sections of each man page for common client and server usage.
 		 and use.
 	 - IRTT has a three-way handshake to prevent test traffic redirection from
 		 spoofed source IPs.
-	 - IRTT can fill the payload (if included) with random data.
+	 - IRTT can fill the payload (if included) with random or arbitrary data.
 
 2) Why does `irtt client` use `-l` for packet length instead of following ping
    and using `-s` for size?
@@ -307,13 +303,15 @@ sections of each man page for common client and server usage.
     for more information. File an Issue if your resident usage (rss/res) is high
     or you feel that memory consumption is somehow a problem.
 
-## Releases
+## Changes
 
 See [CHANGES.md](CHANGES.md).
 
-## TODO and Roadmap
+## Roadmap
 
-### TODO v1.0.0
+### v1.0.0
+
+_Planned for v1.0.0..._
 
 - Refactor packet manipulation to improve readability, prevent multiple validations
   and support unit tests
@@ -330,19 +328,14 @@ See [CHANGES.md](CHANGES.md).
 	- Add per-IP limiting
 - Write a SmokePing probe
 
-### Roadmap
+### Inbox
 
-_Planned for the future..._
+_Collection area for the future..._
 
-- Add a Scheduler interface to allow non-isochronous send schedules and variable
-  packet lengths
-  - Find some way to determine packet interval and length distributions for
-    captured traffic
-  - Determine if asymmetric send schedules (between client and server) required
 - Improve induced latency and jitter:
   - Use Go profiling, scheduler tracing, strace and sar
   - Do more thorough tests of `chrt -r 99`, `--thread` and `--gc`
-  - Find or file issue with Go team over scheduler performance
+  - Find or file issue with Go team over scheduler performance, if needed
   - Prototype doing thread scheduling or socket i/o for Linux in C
 - Add different server authentication modes:
 	- none (no conn token in header, for minimum packet sizes during local use)
@@ -350,11 +343,12 @@ _Planned for the future..._
 	- nacl-hmac (hmac key negotiated with public/private key encryption)
 - Implement graceful server shutdown with sconn close
 - Implement zero-downtime restarts
-
-### Inbox
-
-_Collection area for undefined or uncertain stuff..._
-
+- Add a Scheduler interface to allow non-isochronous send schedules and variable
+  packet lengths
+  - Find some way to determine packet interval and length distributions for
+    captured traffic
+  - Determine if asymmetric send schedules (between client and server) required
+- Add an overhead test mode to compare ping vs irtt
 - Add client flag to skip sleep and catch up after timer misses
 - Always return instance of irtt.Error? If so, look at exitOnError.
 - Find better model for concurrency (one goroutine per sconn induces latency)

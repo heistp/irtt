@@ -37,7 +37,7 @@ packets sent on a fixed period, and produces both text and JSON output.
 *version*
 :   shows the version
 
-# EXAMPLE
+# EXAMPLES
 
 After installing IRTT, start a server:
 
