@@ -315,7 +315,8 @@ See [CHANGES.md](CHANGES.md).
 
 ### TODO v1.0.0
 
-- Refactor packet manipulation to improve readability and prevent multiple validations
+- Refactor packet manipulation to improve readability, prevent multiple validations
+  and support unit tests
 - Improve open/close process:
   - Make timeout support automatic exponential backoff, like 4x15s
   - Repeat close packets until acknowledgement, like open
