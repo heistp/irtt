@@ -313,9 +313,12 @@ See [CHANGES.md](CHANGES.md).
 
 _Planned for v1.0.0..._
 
+- Write a SmokePing probe
 - Refactor packet manipulation to improve readability, prevent multiple validations
   and support unit tests
 - Improve open/close process:
+  - Do Happy Eyeballs (RFC 8305) to better handle multiple address families and
+    addresses
   - Make timeout support automatic exponential backoff, like 4x15s
   - Repeat close packets until acknowledgement, like open
   - Include final stats in the close acknowledgement from the server
@@ -326,12 +329,13 @@ _Planned for v1.0.0..._
   - Specify close timeout as param from client, which may be restricted
   - Make connref mechanism robust to listener failure
 	- Add per-IP limiting
-- Write a SmokePing probe
 
 ### Inbox
 
 _Collection area for the future..._
 
+- Add OWD compensation at results generation stage for shifting mean value to 0
+  to improve readability for clocks that are badly out of sync
 - Improve induced latency and jitter:
   - Use Go profiling, scheduler tracing, strace and sar
   - Do more thorough tests of `chrt -r 99`, `--thread` and `--gc`
@@ -358,7 +362,6 @@ _Collection area for the future..._
 - Add a subcommand to the CLI to convert JSON to CSV
 - Support a range of server ports to improve concurrency and maybe defeat
   latency "slotting" on multi-queue interfaces
-- Prompt to write JSON file on cancellation
 - Add unit tests
 - Add support for load balanced conns (multiple source addresses for same conn)
 - Use unsafe package to speed up packet buffer manipulation
@@ -372,14 +375,12 @@ _Collection area for the future..._
 - Implement median calculation for timer error, send call time and server processing time
 - Allow specifying two out of three of interval, bitrate and packet size
 - Calculate per-packet arrival order during results generation using timestamps
-- Add OWD compensation at results generation stage for shifting mean value to 0
-  to improve readability for clocks that are badly out of sync
 - Add a way to keep out "internal" info from JSON, like IP and hostname, and a
 	subcommand to strip these out after the JSON is created
 - Make it possible to add custom per-round-trip statistics programmatically
 - Add more info on outliers and possibly a textual histogram
-- Allow Client Dial to try multiple IPs when a hostname is given
 - Allow Server listen to listen on multiple IPs for a hostname
+- Prompt to write JSON file on cancellation
 - What do I do for IPDV when there are out of order packets?
 - Does exposing both monotonic and wall clock values open the server to any
 	timing attacks?
