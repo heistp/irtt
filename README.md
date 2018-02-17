@@ -86,6 +86,9 @@ The goals of this project are to:
 		against rogue clients
 	- Packet payload filling to prevent relaying of arbitrary traffic
 - Output to JSON
+- An available [SmokePing](https://oss.oetiker.ch/smokeping/) probe
+  ([code](https://github.com/peteheist/SmokePing/blob/master/lib/Smokeping/probes/IRTT.pm),
+  [pull request](https://github.com/oetiker/SmokePing/pull/110))
 
 ## Limitations
 
@@ -313,7 +316,6 @@ See [CHANGES.md](CHANGES.md).
 
 _Planned for v1.0.0..._
 
-- Write a SmokePing probe
 - Refactor packet manipulation to improve readability, prevent multiple validations
   and support unit tests
 - Improve open/close process:
@@ -329,6 +331,7 @@ _Planned for v1.0.0..._
   - Specify close timeout as param from client, which may be restricted
   - Make connref mechanism robust to listener failure
 	- Add per-IP limiting
+- Show actual size of header in text and json
 
 ### Inbox
 
