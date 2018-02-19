@@ -316,6 +316,7 @@ See [CHANGES.md](CHANGES.md).
 
 _Planned for v1.0.0..._
 
+- Add DSCP text values and return an error when ECN bits are passed to --dscp
 - Refactor packet manipulation to improve readability, prevent multiple validations
   and support unit tests
 - Improve open/close process:
@@ -332,11 +333,14 @@ _Planned for v1.0.0..._
   - Make connref mechanism robust to listener failure
 	- Add per-IP limiting
 - Show actual size of header in text and json
+- Measure and document local differences between ping and irtt response times
+- Create a backports version for Debian stable
 
 ### Inbox
 
 _Collection area for the future..._
 
+- Add [ping-pair](https://www.microsoft.com/en-us/research/wp-content/uploads/2017/09/PingPair-CoNEXT2017.pdf) functionality
 - Add OWD compensation at results generation stage for shifting mean value to 0
   to improve readability for clocks that are badly out of sync
 - Improve induced latency and jitter:
