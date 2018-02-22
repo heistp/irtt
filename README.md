@@ -340,6 +340,7 @@ _Planned for v1.0.0..._
 
 _Collection area for the future..._
 
+- Find a more secure way than cmdline flag to specify --hmac.
 - Add [ping-pair](https://www.microsoft.com/en-us/research/wp-content/uploads/2017/09/PingPair-CoNEXT2017.pdf) functionality
 - Add OWD compensation at results generation stage for shifting mean value to 0
   to improve readability for clocks that are badly out of sync
