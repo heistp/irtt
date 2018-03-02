@@ -46,7 +46,9 @@ for a in $*; do
 		;;
 		"linux-mips64"|"erl") env="GOOS=linux GOARCH=mips"
 		;;
-		"linux-mipsle"|"erx"|"om2p") env="GOOS=linux GOARCH=mipsle"
+		"linux-mipsle"|"erx") env="GOOS=linux GOARCH=mipsle"
+		;;
+		"linux-mips-softfloat"|"om2p") env="GOOS=linux GOARCH=mips GOMIPS=softfloat"
 		;;
 		"darwin-amd64"|"osx") env="GOOS=darwin GOARCH=amd64"
 		;;
