@@ -92,9 +92,6 @@ send delay and IPDV.
 - Windows is unable to set DSCP values for IPv6.
 - Windows is unable to set the source IP address, so `--set-src-ip` may not be used
   on the server.
-- The server doesn't run well on 32-bit Windows platforms. When connecting with
-  a client, you may see `Terminated due to receive error`. To work around
-  this, disable dual timestamps from the client by including `--tstamp=midpoint`.
 
 # LIMITATIONS
 
