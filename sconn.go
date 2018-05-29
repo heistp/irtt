@@ -213,7 +213,7 @@ func (sc *sconn) serveEcho(p *packet) (closed bool, err error) {
 	if at != AtNone {
 		var rt Time
 		var st Time
-		if at == AtMidpoint {
+		if at == AtMidpoint || !highPrecisionTimer {
 			mt := midpoint(p.trcvd, time.Now())
 			rt = newTime(mt, cl)
 			st = newTime(mt, cl)

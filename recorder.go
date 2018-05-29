@@ -211,9 +211,13 @@ func (ts *RoundTripData) RTT() (rtt time.Duration) {
 	}
 	rtt = ts.Client.Receive.Mono - ts.Client.Send.Mono
 	spt := ts.ServerProcessingTime()
-	// only subtract server processing time if it's less than RTT
-	if spt != InvalidDuration && spt < rtt {
+	if spt != InvalidDuration {
 		rtt -= ts.ServerProcessingTime()
+	}
+	// TODO don't let RTT be negative, but this should also be flagged as a timer
+	// inconsistency
+	if rtt < 0 {
+		rtt = 0
 	}
 	return
 }
