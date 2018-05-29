@@ -89,6 +89,7 @@ send delay and IPDV.
 
 # BUGS
 
+- Windows has severe timer issues that may make measurements unreliable
 - Windows is unable to set DSCP values for IPv6.
 - Windows is unable to set the source IP address, so `--set-src-ip` may not be used
   on the server.

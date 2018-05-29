@@ -72,6 +72,9 @@ func (r *Recorder) recordPreSend() time.Time {
 	r.RoundTripData = append(r.RoundTripData, RoundTripData{})
 	tsend := time.Now()
 	r.RoundTripData[len(r.RoundTripData)-1].Client.Send.set(tsend)
+	if r.FirstSend.IsZero() {
+		r.FirstSend = tsend
+	}
 	return tsend
 }
 
@@ -92,9 +95,6 @@ func (r *Recorder) recordPostSend(tsend time.Time, tsent time.Time, n uint64) {
 	r.BytesSent += n
 
 	// update send and sent times
-	if r.FirstSend.IsZero() {
-		r.FirstSend = tsend
-	}
 	r.LastSent = tsent
 
 	// call handler
@@ -203,14 +203,16 @@ func (ts *RoundTripData) ReplyReceived() bool {
 
 // RTT returns the round-trip time. The monotonic clock values are used
 // for accuracy, and the server processing time is subtracted out if
-// both send and receive timestamps are enabled.
+// both send and receive timestamps are enabled and the measured
+// server processing time does not exceed the round-trip time.
 func (ts *RoundTripData) RTT() (rtt time.Duration) {
 	if !ts.ReplyReceived() {
 		return InvalidDuration
 	}
 	rtt = ts.Client.Receive.Mono - ts.Client.Send.Mono
 	spt := ts.ServerProcessingTime()
-	if spt != InvalidDuration {
+	// only subtract server processing time if it's less than RTT
+	if spt != InvalidDuration && spt < rtt {
 		rtt -= ts.ServerProcessingTime()
 	}
 	return

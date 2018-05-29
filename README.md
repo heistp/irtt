@@ -332,6 +332,9 @@ _Planned for v1.0.0..._
   - Specify close timeout as param from client, which may be restricted
   - Make connref mechanism robust to listener failure
 	- Add per-IP limiting
+- Improve measurements on systems with inconsistent clock resolution (Windows)
+  - Try to fix 0 round-trip times
+  - Flag server processing times greater than RTT as timer inconsistensies
 - Show actual size of header in text and json
 - Measure and document local differences between ping and irtt response times
 - Create a backports version for Debian stable
