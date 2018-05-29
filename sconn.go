@@ -225,7 +225,7 @@ func (sc *sconn) serveEcho(p *packet) (closed bool, err error) {
 				st = newTime(time.Now(), cl)
 			}
 		}
-		p.setTimestamp(Timestamp{rt, st})
+		p.setTimestamp(at, Timestamp{rt, st})
 	} else {
 		p.removeTimestamps()
 	}

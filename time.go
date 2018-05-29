@@ -90,13 +90,6 @@ type Timestamp struct {
 	Send    Time `json:"send"`
 }
 
-// IsMidpoint returns true if this Timestamp was made with the midpoint time
-// (halfway between send and receive). If so, Send and Receive are both non-zero
-// and the same.
-func (t Timestamp) IsMidpoint() bool {
-	return !t.Receive.IsZero() && !t.Send.IsZero() && t.Receive == t.Send
-}
-
 // IsBothMono returns true if there are both send and receive times from the
 // monotonic clock.
 func (t Timestamp) IsBothMono() bool {

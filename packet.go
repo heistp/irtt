@@ -397,15 +397,15 @@ func (p *packet) tset(t *Time, wf fidx, mf fidx) {
 	}
 }
 
-func (p *packet) setTimestamp(ts Timestamp) {
-	if ts.IsMidpoint() {
+func (p *packet) setTimestamp(at StampAt, ts Timestamp) {
+	if at == AtMidpoint {
 		p.tset(&ts.Receive, fMWall, fMMono)
 		return
 	}
-	if !ts.Receive.IsZero() {
+	if at&AtReceive != 0 {
 		p.tset(&ts.Receive, fRWall, fRMono)
 	}
-	if !ts.Send.IsZero() {
+	if at&AtSend != 0 {
 		p.tset(&ts.Send, fSWall, fSMono)
 	}
 }

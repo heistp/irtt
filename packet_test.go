@@ -86,7 +86,7 @@ func TestReplyPacket(t *testing.T) {
 	p.setReceivedWindow(testRepReceivedWindow)
 
 	p.addTimestampFields(AtBoth, BothClocks)
-	p.setTimestamp(testRepTimestamp)
+	p.setTimestamp(AtBoth, testRepTimestamp)
 
 	p.setSeqno(testRepSeqno)
 	p.setLen(256)

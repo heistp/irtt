@@ -338,9 +338,6 @@ func (ts *RoundTripData) IsBothTimestamped() bool {
 // received a request and when it sent its reply.
 func (ts *RoundTripData) ServerProcessingTime() (d time.Duration) {
 	d = InvalidDuration
-	if ts.Server.IsMidpoint() {
-		return
-	}
 	if ts.Server.IsBothMono() {
 		d = time.Duration(ts.Server.Send.Mono - ts.Server.Receive.Mono)
 	} else if ts.Server.IsBothWall() {
