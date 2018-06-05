@@ -316,7 +316,9 @@ See [CHANGES.md](CHANGES.md).
 
 _Planned for v1.0.0..._
 
-- Replace monotonic clock values in Windows with QueryPerformanceCounter calls
+- Replace monotonic clock values for Windows with QueryPerformanceCounter calls
+- Replace wall clock values for Windows with GetSystemTimePreciseAsFileTime
+  calls
 - Add DSCP text values and return an error when ECN bits are passed to --dscp
 - Refactor packet manipulation to improve readability, prevent multiple validations
   and support unit tests
