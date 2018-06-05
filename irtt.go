@@ -42,6 +42,7 @@ func init() {
 	registerCommand("client", "runs the client", runClientCLI, clientUsage)
 	registerCommand("server", "runs the server", runServerCLI, serverUsage)
 	registerCommand("bench", "runs HMAC and fill benchmarks", runBench, nil)
+	registerCommand("timer", "runs timer resolution test", runTimer, nil)
 	registerCommand("clock", "runs wall vs monotonic clock test", runClock, nil)
 	registerCommand("sleep", "runs sleep accuracy test", runSleep, nil)
 	registerCommand("version", "shows the version", runVersion, nil)
