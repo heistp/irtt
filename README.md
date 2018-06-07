@@ -320,6 +320,7 @@ _Planned for v1.0.0..._
   - Use QueryPerformanceCounter for monotonic clock
   - Use GetSystemTimePreciseAsFileTime for wall clock
   - Replace all references to time.Time with irtt.Time
+  - Remove server processing time calculation hack
 - Improve output flexibility:
   - Allow specifying a format string for text output with optional units for times
   - Add format abbreviations for CSV, space delimited, etc.
@@ -348,9 +349,6 @@ _Planned for v1.0.0..._
   - Make connref mechanism robust to listener failure
 	- Add per-IP limiting
   - Add a more secure way than cmdline flag to specify --hmac
-- Improve measurements on systems with inconsistent clock resolution (Windows)
-  - Try to fix 0 round-trip times
-  - Flag server processing times greater than RTT as timer inconsistensies
 - Stabilize API:
   - Always return instance of irtt.Error? If so, look at exitOnError.
   - Use error code (if available) as exit code
