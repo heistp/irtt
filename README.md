@@ -299,7 +299,7 @@ sections to get started quickly:
     [unsafe](https://golang.org/pkg/unsafe/) package, but so far this
     optimization has not been shown to be necessary.
 
-16) Why is the virt size (vsz) memory usage so high in Linux?
+16) Why is the virt size (vsz) memory usage for the server so high in Linux?
 
     This has to do with the way Go allocates memory. See
     [this article](https://deferpanic.com/blog/understanding-golang-memory-usage/)
@@ -316,9 +316,21 @@ See [CHANGES.md](CHANGES.md).
 
 _Planned for v1.0.0..._
 
-- Replace monotonic clock values for Windows with QueryPerformanceCounter calls
-- Replace wall clock values for Windows with GetSystemTimePreciseAsFileTime
-  calls
+- Improve Windows time accuracy:
+  - Use QueryPerformanceCounter for monotonic clock
+  - Use GetSystemTimePreciseAsFileTime for wall clock
+  - Replace all references to time.Time with irtt.Time
+- Improve output flexibility:
+  - Allow specifying a format string for text output with optional units for times
+  - Add format abbreviations for CSV, space delimited, etc.
+  - Add a subcommand to the CLI to convert JSON to CSV
+  - Add a way to disable per-packet results in JSON
+  - Add a way to keep out "internal" info from JSON, like IP and hostname, and a
+	  subcommand to strip these out after the JSON is created
+  - Add more info on outliers and possibly a textual histogram
+- Change some defaults:
+  - Use midpoint timestamps, as dual timestamps rarely improve accuracy
+  - Use wall clock timestamps, as send and receive IPDV are still close
 - Add DSCP text values and return an error when ECN bits are passed to --dscp
 - Refactor packet manipulation to improve readability, prevent multiple validations
   and support unit tests
@@ -335,10 +347,14 @@ _Planned for v1.0.0..._
   - Specify close timeout as param from client, which may be restricted
   - Make connref mechanism robust to listener failure
 	- Add per-IP limiting
+  - Add a more secure way than cmdline flag to specify --hmac
 - Improve measurements on systems with inconsistent clock resolution (Windows)
   - Try to fix 0 round-trip times
   - Flag server processing times greater than RTT as timer inconsistensies
-- Show actual size of header in text and json
+- Stabilize API:
+  - Always return instance of irtt.Error? If so, look at exitOnError.
+  - Use error code (if available) as exit code
+- Show actual size of header in text and json, and add calculation to doc
 - Measure and document local differences between ping and irtt response times
 - Create a backports version for Debian stable
 
@@ -346,7 +362,6 @@ _Planned for v1.0.0..._
 
 _Collection area for the future..._
 
-- Find a more secure way than cmdline flag to specify --hmac.
 - Add [ping-pair](https://www.microsoft.com/en-us/research/wp-content/uploads/2017/09/PingPair-CoNEXT2017.pdf) functionality
 - Add OWD compensation at results generation stage for shifting mean value to 0
   to improve readability for clocks that are badly out of sync
@@ -368,12 +383,8 @@ _Collection area for the future..._
   - Determine if asymmetric send schedules (between client and server) required
 - Add an overhead test mode to compare ping vs irtt
 - Add client flag to skip sleep and catch up after timer misses
-- Always return instance of irtt.Error? If so, look at exitOnError.
-- Find better model for concurrency (one goroutine per sconn induces latency)
-- Use error code (if available) as exit code
 - Add seqno to the Max and maybe Min columns in the text output
 - Prototype TCP throughput test and compare straight Go vs iperf/netperf
-- Add a subcommand to the CLI to convert JSON to CSV
 - Support a range of server ports to improve concurrency and maybe defeat
   latency "slotting" on multi-queue interfaces
 - Add unit tests
@@ -384,21 +395,18 @@ _Collection area for the future..._
 - Implement web interface for client and server
 - Set DSCP per-packet, at least for IPv6
 - Add NAT hole punching
-- Add a flag to disable per-packet results
 - Use a larger, internal received window on the server to increase up/down loss accuracy
-- Implement median calculation for timer error, send call time and server processing time
 - Allow specifying two out of three of interval, bitrate and packet size
 - Calculate per-packet arrival order during results generation using timestamps
-- Add a way to keep out "internal" info from JSON, like IP and hostname, and a
-	subcommand to strip these out after the JSON is created
 - Make it possible to add custom per-round-trip statistics programmatically
-- Add more info on outliers and possibly a textual histogram
-- Allow Server listen to listen on multiple IPs for a hostname
+- Allow Server to listen on multiple IPs for a hostname
 - Prompt to write JSON file on cancellation
-- What do I do for IPDV when there are out of order packets?
-- Does exposing both monotonic and wall clock values open the server to any
-	timing attacks?
-- Should I request a reserved IANA port?
+- Open questions:
+  - What do I do for IPDV when there are out of order packets?
+  - Does exposing both monotonic and wall clock values, as well as dual
+    timestamps, open the server to any timing attacks?
+  - Is there any way to make the server concurrent without inducing latency?
+  - Should I request a reserved IANA port?
 
 ## Thanks
 
