@@ -756,4 +756,4 @@ $ irtt client \--hmac=secret -d 10s "[2001:db8:8f::2/32]:64381"
 
 [irtt(1)](irtt.html), [irtt-server(1)](irtt-server.html)
 
-[IRTT GitHub repository](https://github.com/peteheist/irtt/)
+[IRTT GitHub repository](https://github.com/heistp/irtt/)

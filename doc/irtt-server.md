@@ -195,4 +195,4 @@ $ irtt server -b 192.168.100.11:64381 \--hmac=secret
 
 [irtt(1)](irtt.html), [irtt-client(1)](irtt-client.html)
 
-[IRTT GitHub repository](https://github.com/peteheist/irtt/)
+[IRTT GitHub repository](https://github.com/heistp/irtt/)

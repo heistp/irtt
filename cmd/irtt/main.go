@@ -3,7 +3,7 @@ package main
 import (
 	"os"
 
-	"github.com/peteheist/irtt"
+	"github.com/heistp/irtt"
 )
 
 func main() {

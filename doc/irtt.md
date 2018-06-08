@@ -212,7 +212,7 @@ application:
 
 [irtt-client(1)](irtt-client.html), [irtt-server(1)](irtt-server.html)
 
-[IRTT GitHub repository](https://github.com/peteheist/irtt/)
+[IRTT GitHub repository](https://github.com/heistp/irtt/)
 
 # AUTHOR
 

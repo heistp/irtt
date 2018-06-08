@@ -87,13 +87,13 @@ The goals of this project are to:
 	- Packet payload filling to prevent relaying of arbitrary traffic
 - Output to JSON
 - An available [SmokePing](https://oss.oetiker.ch/smokeping/) probe
-  ([code](https://github.com/peteheist/SmokePing/blob/master/lib/Smokeping/probes/IRTT.pm),
+  ([code](https://github.com/heistp/SmokePing/blob/master/lib/Smokeping/probes/IRTT.pm),
   [pull request](https://github.com/oetiker/SmokePing/pull/110))
 
 ## Limitations
 
 See the
-[LIMITATIONS](http://htmlpreview.github.io/?https://github.com/peteheist/irtt/blob/master/doc/irtt.html#limitations)
+[LIMITATIONS](http://htmlpreview.github.io/?https://github.com/heistp/irtt/blob/master/doc/irtt.html#limitations)
 section of the irtt(1) man page.
 
 ## Installation
@@ -101,7 +101,7 @@ section of the irtt(1) man page.
 To install IRTT manually or build from source, you must:
 
 1. [Install Go](https://golang.org/dl/)
-2. Install irtt: `go get -u github.com/peteheist/irtt/cmd/irtt`
+2. Install irtt: `go get -u github.com/heistp/irtt/cmd/irtt`
 3. For convenience, copy the `irtt` executable, which should be in
    `$HOME/go/bin`, or `$GOPATH/bin` if you have `$GOPATH` defined, to somewhere
    on your `PATH`.
@@ -127,7 +127,7 @@ If you want to build the source for development, you must also:
    which puts the resulting executable in `$GOPATH/bin`.
 
 If you want to build from a branch, you should first follow the steps above,
-then from the `github.com/peteheist/irtt` directory, do:
+then from the `github.com/heistp/irtt` directory, do:
 1. `git checkout branch`
 2. `go get ./...`
 3. `go install ./cmd/irtt` or `./build.sh` and move resulting `irtt` executable
@@ -137,9 +137,9 @@ then from the `github.com/peteheist/irtt` directory, do:
 
 After installing IRTT, see the man pages and their corresponding EXAMPLES
 sections to get started quickly:
-- [irtt(1)](http://htmlpreview.github.io/?https://github.com/peteheist/irtt/blob/master/doc/irtt.html) | [EXAMPLES](http://htmlpreview.github.io/?https://github.com/peteheist/irtt/blob/master/doc/irtt.html#examples)
-- [irtt-client(1)](http://htmlpreview.github.io/?https://github.com/peteheist/irtt/blob/master/doc/irtt-client.html) | [EXAMPLES](http://htmlpreview.github.io/?https://github.com/peteheist/irtt/blob/master/doc/irtt-client.html#examples)
-- [irtt-server(1)](http://htmlpreview.github.io/?https://github.com/peteheist/irtt/blob/master/doc/irtt-server.html) | [EXAMPLES](http://htmlpreview.github.io/?https://github.com/peteheist/irtt/blob/master/doc/irtt-server.html#examples)
+- [irtt(1)](http://htmlpreview.github.io/?https://github.com/heistp/irtt/blob/master/doc/irtt.html) | [EXAMPLES](http://htmlpreview.github.io/?https://github.com/heistp/irtt/blob/master/doc/irtt.html#examples)
+- [irtt-client(1)](http://htmlpreview.github.io/?https://github.com/heistp/irtt/blob/master/doc/irtt-client.html) | [EXAMPLES](http://htmlpreview.github.io/?https://github.com/heistp/irtt/blob/master/doc/irtt-client.html#examples)
+- [irtt-server(1)](http://htmlpreview.github.io/?https://github.com/heistp/irtt/blob/master/doc/irtt-server.html) | [EXAMPLES](http://htmlpreview.github.io/?https://github.com/heistp/irtt/blob/master/doc/irtt-server.html#examples)
 
 ## Frequently Asked Questions
 
@@ -269,7 +269,7 @@ sections to get started quickly:
 	  [this method](https://rhettinger.wordpress.com/2010/02/06/lost-knowledge/) of
 	  using skip lists appears to have promise. It's a possibility for the future,
 	  but so far it isn't a high priority. If it is for you, file an
-    [Issue](https://github.com/peteheist/irtt/issues).
+    [Issue](https://github.com/heistp/irtt/issues).
 
 12) I see you use MD5 for the HMAC. Isn't that insecure?
 
