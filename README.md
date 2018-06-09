@@ -340,7 +340,7 @@ _Planned for v1.0.0..._
 	  subcommand to strip these out after the JSON is created
   - Add more info on outliers and possibly a textual histogram
 - Change some defaults:
-  - Use midpoint timestamps, as dual timestamps rarely improve accuracy
+  - Use receive timestamp, as dual timestamps rarely improve accuracy
   - Use wall clock timestamps, as send and receive IPDV are still close
 - Add DSCP text values and return an error when ECN bits are passed to --dscp
 - Refactor packet manipulation to improve readability, prevent multiple validations
