@@ -326,11 +326,18 @@ See [CHANGES.md](CHANGES.md).
 
 _Planned for v1.0.0..._
 
-- Improve Windows time accuracy:
-  - Use QueryPerformanceCounter for monotonic clock
-  - Use GetSystemTimePreciseAsFileTime for wall clock
-  - Replace all references to time.Time with irtt.Time
-  - Remove server processing time calculation hack
+- Solidify TimeSource, Time and new Windows timer support:
+  - Add --timesrc to client and server
+  - Fall back to Go functions as necessary for older Windows versions
+  - Make sure all calls to TimeSource.Now pass in only needed clocks
+  - Find a better way to log warnings than fmt.Fprintf(os.Stderr) in timesrc_win.go
+  - Rename Time.Mono to Monotonic, or others from Monotonic to Mono for
+    consistency
+- Improve diagnostic commands:
+  - Change bench command to output in columns
+  - Rename sleep command to timer and add --timesrc, --sleep, --timer and --tcomp
+  - Rename timer command to resolution and add --timesrc
+  - Rename clock command to drift and add --timesrc
 - Improve output flexibility:
   - Allow specifying a format string for text output with optional units for times
   - Add format abbreviations for CSV, space delimited, etc.

@@ -213,16 +213,16 @@ func (sc *sconn) serveEcho(p *packet) (closed bool, err error) {
 	if at != AtNone {
 		var rt Time
 		var st Time
-		if at == AtMidpoint || !highPrecisionTimer {
-			mt := midpoint(p.trcvd, time.Now())
-			rt = newTime(mt, cl)
-			st = newTime(mt, cl)
+		if at == AtMidpoint {
+			mt := p.trcvd.Midpoint(sc.TimeSource.Now(cl))
+			rt = mt
+			st = mt
 		} else {
 			if at&AtReceive != 0 {
-				rt = newTime(p.trcvd, cl)
+				rt = p.trcvd.KeepClocks(cl)
 			}
 			if at&AtSend != 0 {
-				st = newTime(time.Now(), cl)
+				st = sc.TimeSource.Now(cl)
 			}
 		}
 		p.setTimestamp(at, Timestamp{rt, st})

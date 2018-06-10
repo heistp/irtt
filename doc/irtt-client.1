@@ -770,6 +770,8 @@ time\-to\-live (https://en.wikipedia.org/wiki/Time_to_live) value
 \f[I]timer\f[] the timer used: simple, comp, hybrid or busy (irtt client
 \-\-timer flag)
 .IP \[bu] 2
+\f[I]time_source\f[] the time source used: go or windows
+.IP \[bu] 2
 \f[I]waiter\f[] the waiter used: fixed duration, multiple of RTT or
 multiple of max RTT (irtt client \f[I]\-\-wait\f[] flag)
 .IP \[bu] 2
@@ -804,7 +806,10 @@ statistics for the results
 .nf
 \f[C]
 "stats":\ {
-\ \ \ \ "start_time":\ "2017\-10\-16T21:05:23.502719056+02:00",
+\ \ \ \ "start_time":\ {
+\ \ \ \ \ \ \ \ "wall":\ 1528621979787034330,
+\ \ \ \ \ \ \ \ "monotonic":\ 5136247
+\ \ \ \ },
 \ \ \ \ "send_call":\ {
 \ \ \ \ \ \ \ \ "total":\ 79547,
 \ \ \ \ \ \ \ \ "n":\ 3,
@@ -943,7 +948,8 @@ following attributes:
 .PP
 The regular attributes in \f[I]stats\f[] are as follows:
 .IP \[bu] 2
-\f[I]start_time\f[] the start time of the test, in TZ format
+\f[I]start_time\f[] the start time of the test (see \f[I]round_trips\f[]
+Notes for descriptions of \f[I]wall\f[] and \f[I]monotonic\f[] values)
 .IP \[bu] 2
 \f[I]send_call\f[] a duration stats object for the call time when
 sending packets
@@ -1144,8 +1150,8 @@ each round\-trip is a single request to / reply from the server
 January 1, 1970 UTC
 .PP
 \f[B]Note:\f[] \f[I]monotonic\f[] values are the number of nanoseconds
-since the start of the test for the client, and since start of the
-process for the server
+since some arbitrary point in time, so can only be relied on to measure
+duration
 .IP \[bu] 2
 \f[I]seqno\f[] the sequence number
 .IP \[bu] 2

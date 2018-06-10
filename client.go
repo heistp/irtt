@@ -99,7 +99,8 @@ func (c *Client) Run(ctx context.Context) (r *Result, err error) {
 	}
 
 	// create recorder
-	if c.rec, err = newRecorder(pcount(c.Duration, c.Interval), c.Handler); err != nil {
+	if c.rec, err = newRecorder(pcount(c.Duration, c.Interval), c.TimeSource,
+		c.Handler); err != nil {
 		return
 	}
 
@@ -308,7 +309,7 @@ func (c *Client) send(ctx context.Context) error {
 	p.updateHMAC()
 
 	// record the start time of the test and calculate the end
-	t := time.Now()
+	t := c.TimeSource.Now(BothClocks)
 	c.rec.Start = t
 	end := c.rec.Start.Add(c.Duration)
 
@@ -346,8 +347,8 @@ func (c *Client) send(ctx context.Context) error {
 		p.updateHMAC()
 
 		// set the current base interval we're at
-		tnext := c.rec.Start.Add(
-			c.Interval * (time.Now().Sub(c.rec.Start) / c.Interval))
+		tnext := c.rec.Start.Add(c.Interval *
+			(c.TimeSource.Now(Monotonic).Sub(c.rec.Start) / c.Interval))
 
 		// if we're under half-way to the next interval, sleep until the next
 		// interval, but if we're over half-way, sleep until the interval after
@@ -358,17 +359,17 @@ func (c *Client) send(ctx context.Context) error {
 			tnext = tnext.Add(2 * c.Interval)
 		}
 
-		// break if tnext if after the end of the test
+		// break if tnext is after the end of the test
 		if !tnext.Before(end) {
 			break
 		}
 
 		// calculate sleep duration
-		tsleep := time.Now()
+		tsleep := c.TimeSource.Now(Monotonic)
 		dsleep := tnext.Sub(tsleep)
 
 		// sleep
-		t, err = c.Timer.Sleep(ctx, tsleep, dsleep)
+		t, err = c.Timer.Sleep(ctx, c.TimeSource, tsleep, dsleep)
 		if err != nil {
 			return err
 		}

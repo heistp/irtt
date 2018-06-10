@@ -8,8 +8,6 @@ import (
 	"time"
 )
 
-var monotonicStart = time.Now()
-
 // InvalidDuration indicates a duration that is not valid.
 const InvalidDuration = time.Duration(math.MaxInt64)
 
@@ -46,41 +44,95 @@ func ParseDurations(sdurs string) (durs Durations, err error) {
 // comparing wall clock time. Comparisons between wall clock values are only as
 // accurate as the synchronization between the clocks that produced the values.
 type Time struct {
-	Wall int64         `json:"wall,omitempty"`
+	// Wall is the wall clock value as the number of nanoseconds elapsed since
+	// January 1, 1970 UTC.
+	Wall int64 `json:"wall,omitempty"`
+
+	// Monotonic is the monotonic clock value and may be relative to any start
+	// point in time.
 	Mono time.Duration `json:"monotonic,omitempty"`
 }
 
-func newTime(t time.Time, clock Clock) Time {
-	switch clock {
-	case Wall:
-		return Time{t.UnixNano(), time.Duration(0)}
-	case Monotonic:
-		return Time{0, t.Sub(monotonicStart)}
-	case BothClocks:
-		return Time{t.UnixNano(), t.Sub(monotonicStart)}
-	default:
-		panic(fmt.Sprintf("unknown clock %s", clock))
+// Sub returns the duration t-u. Monotonic times are used if both are non-zero.
+func (t Time) Sub(u Time) time.Duration {
+	if t.Mono != 0 && u.Mono != 0 {
+		return t.Mono - u.Mono
+	} else if t.Wall != 0 && u.Wall != 0 {
+		return time.Duration(t.Wall - u.Wall)
 	}
+	panic("Time.Sub() clock mismatch")
 }
 
-func (ts *Time) set(t time.Time) {
-	ts.Wall = t.UnixNano()
-	ts.Mono = t.Sub(monotonicStart)
+// Add returns the time t+d.
+func (t Time) Add(d time.Duration) Time {
+	ok := false
+	if t.Wall != 0 {
+		t.Wall += int64(d)
+		ok = true
+	}
+	if t.Mono != 0 {
+		t.Mono += d
+		ok = true
+	}
+	if !ok {
+		panic("Time.Add() for zero time")
+	}
+	return t
+}
+
+// After returns whether the time instant t is after u.
+func (t Time) After(u Time) bool {
+	if t.Mono != 0 && u.Mono != 0 {
+		return t.Mono > u.Mono
+	} else if t.Wall != 0 && u.Wall != 0 {
+		return t.Wall > u.Wall
+	}
+	panic("Time.After() clock mismatch")
+}
+
+// Before returns whether the time instant t is before u.
+func (t Time) Before(u Time) bool {
+	if t.Mono != 0 && u.Mono != 0 {
+		return t.Mono < u.Mono
+	} else if t.Wall != 0 && u.Wall != 0 {
+		return t.Wall < u.Wall
+	}
+	panic("Time.Before() clock mismatch")
+}
+
+// Midpoint returns the point in time halfway between t and u.
+func (t Time) Midpoint(u Time) Time {
+	return t.Add(u.Sub(t) / 2)
+}
+
+// KeepClocks keeps only the specified clocks. Passing in Wall sets Mono to 0,
+// Monotonic sets Wall to 0 and BothClocks does nothing.
+func (t Time) KeepClocks(c Clock) Time {
+	switch c {
+	case Wall:
+		t.Mono = 0
+	case Monotonic:
+		t.Wall = 0
+	case BothClocks:
+	default:
+		panic(fmt.Sprintf("unknown clock %s", c))
+	}
+	return t
 }
 
 // IsWallZero returns true if Wall is zero.
-func (ts Time) IsWallZero() bool {
-	return ts.Wall == 0
+func (t Time) IsWallZero() bool {
+	return t.Wall == 0
 }
 
 // IsMonoZero returns true if Mono is zero.
-func (ts Time) IsMonoZero() bool {
-	return ts.Mono == 0
+func (t Time) IsMonoZero() bool {
+	return t.Mono == 0
 }
 
 // IsZero returns true if both Wall and Mono are zero.
-func (ts Time) IsZero() bool {
-	return ts.IsWallZero() && ts.IsMonoZero()
+func (t Time) IsZero() bool {
+	return t.IsWallZero() && t.IsMonoZero()
 }
 
 // Timestamp stores receive and send times. If the Timestamp was set to the
@@ -270,12 +322,6 @@ func ParseAllowStamp(s string) (AllowStamp, error) {
 		}
 	}
 	return NoStamp, Errorf(InvalidAllowStampString, "invalid AllowStamp string: %s", s)
-}
-
-// midpoint returns the midpoint between two times.
-func midpoint(t1 time.Time, t2 time.Time) time.Time {
-	// we'll live without nanosecond rounding here
-	return t1.Add(t2.Sub(t1) / 2)
 }
 
 // rdur rounds a Duration for improved readability.

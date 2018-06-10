@@ -29,8 +29,8 @@ func newResult(rec *Recorder, cfg *ClientConfig, serr error, rerr error) *Result
 		Stats:       stats,
 	}
 
-	// calculate total duration
-	r.Duration = time.Since(r.Start)
+	// calculate total duration (monotonic time since start)
+	r.Duration = cfg.TimeSource.Now(Monotonic).Sub(r.Start)
 
 	// create RoundTrips array
 	r.RoundTrips = make([]RoundTrip, len(rec.RoundTripData))

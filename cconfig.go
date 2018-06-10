@@ -19,6 +19,7 @@ type ClientConfig struct {
 	DF         DF
 	TTL        int
 	Timer      Timer
+	TimeSource TimeSource
 	Waiter     Waiter
 	Filler     Filler
 	FillOne    bool
@@ -47,6 +48,7 @@ func NewClientConfig() *ClientConfig {
 		DF:         DefaultDF,
 		TTL:        DefaultTTL,
 		Timer:      DefaultTimer,
+		TimeSource: DefaultTimeSource,
 		Waiter:     DefaultWait,
 		ThreadLock: DefaultThreadLock,
 	}
@@ -85,6 +87,7 @@ func (c *ClientConfig) MarshalJSON() ([]byte, error) {
 		DF            DF            `json:"df"`
 		TTL           int           `json:"ttl"`
 		Timer         string        `json:"timer"`
+		TimeSource    string        `json:"time_source"`
 		Waiter        string        `json:"waiter"`
 		Filler        string        `json:"filler"`
 		FillOne       bool          `json:"fill_one"`
@@ -101,6 +104,7 @@ func (c *ClientConfig) MarshalJSON() ([]byte, error) {
 		DF:            c.DF,
 		TTL:           c.TTL,
 		Timer:         c.Timer.String(),
+		TimeSource:    c.TimeSource.String(),
 		Waiter:        c.Waiter.String(),
 		Filler:        fstr,
 		FillOne:       c.FillOne,

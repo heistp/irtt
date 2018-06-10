@@ -53,6 +53,10 @@ var DefaultWait = &WaitMaxRTT{time.Duration(4) * time.Second, 3}
 // DefaultTimer is the default timer implementation, CompTimer.
 var DefaultTimer = NewCompTimer(DefaultCompTimerAverage)
 
+// DefaultTimeSource is the default TimeSource implementation (WindowsTimeSource
+// for Windows and GoTimeSource for everything else).
+var DefaultTimeSource = NewDefaultTimeSource()
+
 // DefaultFillPattern is the default fill pattern.
 var DefaultFillPattern = []byte("irtt")
 

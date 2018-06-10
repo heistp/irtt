@@ -24,12 +24,14 @@ type nconn struct {
 	dscpSupport bool
 	ttl         int
 	df          DF
+	timeSource  TimeSource
 }
 
-func (n *nconn) init(conn *net.UDPConn, ipVer IPVersion) {
+func (n *nconn) init(conn *net.UDPConn, ipVer IPVersion, ts TimeSource) {
 	n.conn = conn
 	n.ipVer = ipVer
 	n.df = DFDefault
+	n.timeSource = ts
 
 	// create x/net conns for socket options
 	if n.ipVer&IPv4 != 0 {
@@ -149,7 +151,7 @@ func dial(ctx context.Context, cfg *ClientConfig) (cc *cconn, err error) {
 
 	// create cconn
 	cc = &cconn{nconn: &nconn{}, cfg: cfg}
-	cc.init(conn, cfg.IPVersion)
+	cc.init(conn, cfg.IPVersion, cfg.TimeSource)
 
 	// open connection to server
 	err = cc.open(ctx)
@@ -254,8 +256,8 @@ func (c *cconn) send(p *packet) (err error) {
 	}
 	var n int
 	n, err = c.conn.Write(p.bytes())
-	p.tsent = time.Now()
-	p.trcvd = time.Time{}
+	p.tsent = c.timeSource.Now(BothClocks)
+	p.trcvd = Time{}
 	if err != nil {
 		return
 	}
@@ -268,8 +270,8 @@ func (c *cconn) send(p *packet) (err error) {
 func (c *cconn) receive(p *packet) (err error) {
 	var n int
 	n, err = c.conn.Read(p.readTo())
-	p.trcvd = time.Now()
-	p.tsent = time.Time{}
+	p.trcvd = c.timeSource.Now(BothClocks)
+	p.tsent = Time{}
 	p.dscp = 0
 	if err != nil {
 		return
@@ -334,7 +336,7 @@ type lconn struct {
 }
 
 // listen creates an lconn by listening on a UDP address.
-func listen(laddr *net.UDPAddr, setSrcIP bool) (l *lconn, err error) {
+func listen(laddr *net.UDPAddr, setSrcIP bool, ts TimeSource) (l *lconn, err error) {
 	ipVer := IPVersionFromUDPAddr(laddr)
 	var conn *net.UDPConn
 	conn, err = net.ListenUDP(ipVer.udpNetwork(), laddr)
@@ -342,14 +344,15 @@ func listen(laddr *net.UDPAddr, setSrcIP bool) (l *lconn, err error) {
 		return
 	}
 	l = &lconn{nconn: &nconn{}, setSrcIP: setSrcIP && laddr.IP.IsUnspecified()}
-	l.init(conn, ipVer)
+	l.init(conn, ipVer, ts)
 	return
 }
 
 // listenAll creates lconns on multiple addresses, with separate lconns for IPv4
 // and IPv6, so that socket options can be set correctly, which is not possible
 // with a dual stack conn.
-func listenAll(ipVer IPVersion, addrs []string, setSrcIP bool) (lconns []*lconn, err error) {
+func listenAll(ipVer IPVersion, addrs []string, setSrcIP bool,
+	ts TimeSource) (lconns []*lconn, err error) {
 	laddrs, err := resolveListenAddrs(addrs, ipVer)
 	if err != nil {
 		return
@@ -357,7 +360,7 @@ func listenAll(ipVer IPVersion, addrs []string, setSrcIP bool) (lconns []*lconn,
 	lconns = make([]*lconn, 0, 16)
 	for _, laddr := range laddrs {
 		var l *lconn
-		l, err = listen(laddr, setSrcIP)
+		l, err = listen(laddr, setSrcIP, ts)
 		if err != nil {
 			return
 		}
@@ -385,8 +388,8 @@ func (l *lconn) send(p *packet) (err error) {
 		l.cm6.Src = p.srcIP
 		n, err = l.ip6conn.WriteTo(p.bytes(), &l.cm6, p.raddr)
 	}
-	p.tsent = time.Now()
-	p.trcvd = time.Time{}
+	p.tsent = l.timeSource.Now(BothClocks)
+	p.trcvd = Time{}
 	if err != nil {
 		return
 	}
@@ -428,8 +431,8 @@ func (l *lconn) receive(p *packet) (err error) {
 	}
 	p.srcIP = nil
 	p.dscp = 0
-	p.trcvd = time.Now()
-	p.tsent = time.Time{}
+	p.trcvd = l.timeSource.Now(BothClocks)
+	p.tsent = Time{}
 	if err != nil {
 		return
 	}

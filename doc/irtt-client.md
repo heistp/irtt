@@ -355,6 +355,7 @@ the configuration used for the test
 - *df* the do-not-fragment setting (0 == OS default, 1 == false, 2 == true)
 - *ttl* the IP [time-to-live](https://en.wikipedia.org/wiki/Time_to_live) value
 - *timer* the timer used: simple, comp, hybrid or busy (irtt client \--timer flag)
+- *time_source* the time source used: go or windows
 - *waiter* the waiter used: fixed duration, multiple of RTT or multiple of max RTT
   (irtt client *\--wait* flag)
 - *filler* the packet filler used: none, rand or pattern (irtt client *\--fill*
@@ -377,7 +378,10 @@ statistics for the results
 
 ```
 "stats": {
-    "start_time": "2017-10-16T21:05:23.502719056+02:00",
+    "start_time": {
+        "wall": 1528621979787034330,
+        "monotonic": 5136247
+    },
     "send_call": {
         "total": 79547,
         "n": 3,
@@ -507,7 +511,8 @@ nanosecond duration values and has the following attributes:
 
 The regular attributes in *stats* are as follows:
 
-- *start_time* the start time of the test, in TZ format
+- *start_time* the start time of the test (see *round_trips* Notes for
+  descriptions of *wall* and *monotonic* values)
 - *send_call* a duration stats object for the call time when sending packets
 - *timer_error* a duration stats object for the observed sleep time error
 - *rtt* a duration stats object for the round-trip time
@@ -663,8 +668,8 @@ each round-trip is a single request to / reply from the server
 **Note:** *wall* values are from Go's *time.Time.UnixNano()*, the number of nanoseconds
 elapsed since January 1, 1970 UTC
 
-**Note:** *monotonic* values are the number of nanoseconds since the start of the test for
-the client, and since start of the process for the server
+**Note:** *monotonic* values are the number of nanoseconds since some arbitrary
+point in time, so can only be relied on to measure duration
 
 - *seqno* the sequence number
 - *lost* the lost status of the packet, which can be one of *false*, *true*,

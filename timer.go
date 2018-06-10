@@ -15,7 +15,7 @@ type Timer interface {
 	// compensation. Timers should obey the Context and use a select that
 	// includes ctx.Done() so that the sleep can be terminated early. In that
 	// case, ctx.Err() should be returned.
-	Sleep(ctx context.Context, t time.Time, d time.Duration) (time.Time, error)
+	Sleep(ctx context.Context, tsrc TimeSource, now Time, d time.Duration) (Time, error)
 
 	String() string
 }
@@ -34,17 +34,18 @@ func NewSimpleTimer() *SimpleTimer {
 }
 
 // Sleep selects on both a time.Timer channel and the done channel.
-func (st *SimpleTimer) Sleep(ctx context.Context, t time.Time, d time.Duration) (time.Time, error) {
+func (st *SimpleTimer) Sleep(ctx context.Context, tsrc TimeSource, now Time,
+	d time.Duration) (Time, error) {
 	st.timer.Reset(d)
 	select {
-	case t := <-st.timer.C:
-		return t, nil
+	case <-st.timer.C:
+		return tsrc.Now(Monotonic), nil
 	case <-ctx.Done():
 		// stop and drain timer for cleanliness
 		if !st.timer.Stop() {
 			<-st.timer.C
 		}
-		return time.Now(), ctx.Err()
+		return tsrc.Now(Monotonic), ctx.Err()
 	}
 }
 
@@ -79,7 +80,8 @@ func NewDefaultCompTimer() *CompTimer {
 }
 
 // Sleep selects on both a time.Timer channel and the done channel.
-func (ct *CompTimer) Sleep(ctx context.Context, t time.Time, d time.Duration) (time.Time, error) {
+func (ct *CompTimer) Sleep(ctx context.Context, tsrc TimeSource, now Time,
+	d time.Duration) (Time, error) {
 	comp := ct.avg.Average()
 
 	// do compensation
@@ -88,8 +90,8 @@ func (ct *CompTimer) Sleep(ctx context.Context, t time.Time, d time.Duration) (t
 	}
 
 	// sleep and calculate error
-	t2, err := ct.stimer.Sleep(ctx, t, d)
-	erf := float64(t2.Sub(t)) / float64(d)
+	t2, err := ct.stimer.Sleep(ctx, tsrc, now, d)
+	erf := float64(t2.Sub(now)) / float64(d)
 
 	// reject outliers
 	if erf >= ct.MinErrorFactor && erf <= ct.MaxErrorFactor {
@@ -109,17 +111,18 @@ type BusyTimer struct {
 }
 
 // Sleep waits with a busy loop and checks the done channel every iteration.
-func (bt *BusyTimer) Sleep(ctx context.Context, t time.Time, d time.Duration) (time.Time, error) {
-	e := t.Add(d)
-	for t.Before(e) {
+func (bt *BusyTimer) Sleep(ctx context.Context, tsrc TimeSource, now Time,
+	d time.Duration) (Time, error) {
+	e := now.Add(d)
+	for now.Before(e) {
 		select {
 		case <-ctx.Done():
-			return t, ctx.Err()
+			return now, ctx.Err()
 		default:
-			t = time.Now()
+			now = tsrc.Now(Monotonic)
 		}
 	}
-	return t, nil
+	return now, nil
 }
 
 func (bt *BusyTimer) String() string {
@@ -161,10 +164,11 @@ func (ht *HybridTimer) SleepFactor() float64 {
 }
 
 // Sleep selects on both a time.Timer channel and the done channel.
-func (ht *HybridTimer) Sleep(ctx context.Context, t time.Time, d time.Duration) (time.Time, error) {
-	e := t.Add(d)
+func (ht *HybridTimer) Sleep(ctx context.Context, tsrc TimeSource, now Time,
+	d time.Duration) (Time, error) {
+	e := now.Add(d)
 	d = time.Duration(float64(d) * ht.slfct)
-	t2, err := ht.ctimer.Sleep(ctx, t, d)
+	t2, err := ht.ctimer.Sleep(ctx, tsrc, now, d)
 	if err != nil {
 		return t2, err
 	}
@@ -173,7 +177,7 @@ func (ht *HybridTimer) Sleep(ctx context.Context, t time.Time, d time.Duration) 
 		case <-ctx.Done():
 			return t2, ctx.Err()
 		default:
-			t2 = time.Now()
+			t2 = tsrc.Now(Monotonic)
 		}
 	}
 	return t2, nil

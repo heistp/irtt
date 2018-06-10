@@ -178,8 +178,8 @@ type packet struct {
 	md5Hash hash.Hash
 	hmacKey []byte
 	raddr   *net.UDPAddr
-	tsent   time.Time
-	trcvd   time.Time
+	tsent   Time
+	trcvd   Time
 	srcIP   net.IP
 	dstIP   net.IP
 	dscp    int

@@ -100,7 +100,7 @@ func (s *Server) Shutdown() {
 }
 
 func (s *Server) makeListeners() ([]*listener, error) {
-	lconns, err := listenAll(s.IPVersion, s.Addrs, s.SetSrcIP)
+	lconns, err := listenAll(s.IPVersion, s.Addrs, s.SetSrcIP, s.TimeSource)
 	if err != nil {
 		return nil, err
 	}

@@ -59,6 +59,7 @@ const (
 	NoSuchAverager
 	NoSuchFiller
 	NoSuchTimer
+	NoSuchTimeSource
 	NoSuchWaiter
 	IntervalNonPositive
 	DurationNonPositive

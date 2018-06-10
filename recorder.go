@@ -16,11 +16,11 @@ import (
 // again. It is not possible to lock Recorder externally for write, since
 // all recording should be done internally.
 type Recorder struct {
-	Start                 time.Time       `json:"start_time"`
-	FirstSend             time.Time       `json:"-"`
-	LastSent              time.Time       `json:"-"`
-	FirstReceived         time.Time       `json:"-"`
-	LastReceived          time.Time       `json:"-"`
+	Start                 Time            `json:"start_time"`
+	FirstSend             Time            `json:"-"`
+	LastSent              Time            `json:"-"`
+	FirstReceived         Time            `json:"-"`
+	LastReceived          Time            `json:"-"`
 	SendCallStats         DurationStats   `json:"send_call"`
 	TimerErrorStats       DurationStats   `json:"timer_error"`
 	RTTStats              DurationStats   `json:"rtt"`
@@ -35,6 +35,7 @@ type Recorder struct {
 	RoundTripData         []RoundTripData `json:"-"`
 	RecorderHandler       RecorderHandler `json:"-"`
 	lastSeqno             Seqno
+	timeSource            TimeSource
 	mtx                   sync.RWMutex
 }
 
@@ -48,7 +49,7 @@ func (r *Recorder) RUnlock() {
 	r.mtx.RUnlock()
 }
 
-func newRecorder(rtrips uint, h RecorderHandler) (rec *Recorder, err error) {
+func newRecorder(rtrips uint, ts TimeSource, h RecorderHandler) (rec *Recorder, err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			err = Errorf(AllocateResultsPanic,
@@ -59,19 +60,20 @@ func newRecorder(rtrips uint, h RecorderHandler) (rec *Recorder, err error) {
 	rec = &Recorder{
 		RoundTripData:   make([]RoundTripData, 0, rtrips),
 		RecorderHandler: h,
+		timeSource:      ts,
 	}
 	return
 }
 
-func (r *Recorder) recordPreSend() time.Time {
+func (r *Recorder) recordPreSend() Time {
 	r.mtx.Lock()
 	defer r.mtx.Unlock()
 
 	// add round trip before timestamp, so any re-allocation happens before the
 	// time is set
 	r.RoundTripData = append(r.RoundTripData, RoundTripData{})
-	tsend := time.Now()
-	r.RoundTripData[len(r.RoundTripData)-1].Client.Send.set(tsend)
+	tsend := r.timeSource.Now(BothClocks)
+	r.RoundTripData[len(r.RoundTripData)-1].Client.Send = tsend
 	if r.FirstSend.IsZero() {
 		r.FirstSend = tsend
 	}
@@ -84,7 +86,7 @@ func (r *Recorder) removeLastStamps() {
 	r.RoundTripData = r.RoundTripData[:len(r.RoundTripData)-1]
 }
 
-func (r *Recorder) recordPostSend(tsend time.Time, tsent time.Time, n uint64) {
+func (r *Recorder) recordPostSend(tsend Time, tsent Time, n uint64) {
 	r.mtx.Lock()
 	defer r.mtx.Unlock()
 
@@ -147,7 +149,7 @@ func (r *Recorder) recordReceive(p *packet, sts *Timestamp) bool {
 	r.lastSeqno = seqno
 
 	// update client received times
-	rtd.Client.Receive.set(p.trcvd)
+	rtd.Client.Receive = p.trcvd
 
 	// update RTT and RTT stats
 	rtd.Server = *sts
@@ -210,14 +212,8 @@ func (ts *RoundTripData) RTT() (rtt time.Duration) {
 		return InvalidDuration
 	}
 	rtt = ts.Client.Receive.Mono - ts.Client.Send.Mono
-	spt := ts.ServerProcessingTime()
-	if spt != InvalidDuration {
+	if spt := ts.ServerProcessingTime(); spt != InvalidDuration {
 		rtt -= ts.ServerProcessingTime()
-	}
-	// TODO don't let RTT be negative, but this should also be flagged as a timer
-	// inconsistency
-	if rtt < 0 {
-		rtt = 0
 	}
 	return
 }

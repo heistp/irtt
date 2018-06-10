@@ -611,6 +611,7 @@
 <li><em>df</em> the do-not-fragment setting (0 == OS default, 1 == false, 2 == true)</li>
 <li><em>ttl</em> the IP <a href="https://en.wikipedia.org/wiki/Time_to_live">time-to-live</a> value</li>
 <li><em>timer</em> the timer used: simple, comp, hybrid or busy (irtt client --timer flag)</li>
+<li><em>time_source</em> the time source used: go or windows</li>
 <li><em>waiter</em> the waiter used: fixed duration, multiple of RTT or multiple of max RTT (irtt client <em>--wait</em> flag)</li>
 <li><em>filler</em> the packet filler used: none, rand or pattern (irtt client <em>--fill</em> flag)</li>
 <li><em>fill_one</em> whether to fill only once and repeat for all packets (irtt client <em>--fill-one</em> flag)</li>
@@ -625,7 +626,10 @@
 <h2 id="stats">stats</h2>
 <p>statistics for the results</p>
 <pre><code>&quot;stats&quot;: {
-    &quot;start_time&quot;: &quot;2017-10-16T21:05:23.502719056+02:00&quot;,
+    &quot;start_time&quot;: {
+        &quot;wall&quot;: 1528621979787034330,
+        &quot;monotonic&quot;: 5136247
+    },
     &quot;send_call&quot;: {
         &quot;total&quot;: 79547,
         &quot;n&quot;: 3,
@@ -751,7 +755,7 @@
 </ul>
 <p>The regular attributes in <em>stats</em> are as follows:</p>
 <ul>
-<li><em>start_time</em> the start time of the test, in TZ format</li>
+<li><em>start_time</em> the start time of the test (see <em>round_trips</em> Notes for descriptions of <em>wall</em> and <em>monotonic</em> values)</li>
 <li><em>send_call</em> a duration stats object for the call time when sending packets</li>
 <li><em>timer_error</em> a duration stats object for the observed sleep time error</li>
 <li><em>rtt</em> a duration stats object for the round-trip time</li>
@@ -873,7 +877,7 @@
     }
 ]</code></pre>
 <p><strong>Note:</strong> <em>wall</em> values are from Go’s <em>time.Time.UnixNano()</em>, the number of nanoseconds elapsed since January 1, 1970 UTC</p>
-<p><strong>Note:</strong> <em>monotonic</em> values are the number of nanoseconds since the start of the test for the client, and since start of the process for the server</p>
+<p><strong>Note:</strong> <em>monotonic</em> values are the number of nanoseconds since some arbitrary point in time, so can only be relied on to measure duration</p>
 <ul>
 <li><em>seqno</em> the sequence number</li>
 <li><em>lost</em> the lost status of the packet, which can be one of <em>false</em>, <em>true</em>, <em>true_down</em> or <em>true_up</em>. The <em>true_down</em> and <em>true_up</em> values are only possible if the <em>ReceivedStats</em> parameter includes <em>ReceivedStatsWindow</em> (irtt client <em>--stats</em> flag). Even then, if it could not be determined whether the packet was lost upstream or downstream, the value <em>true</em> is used.</li>
