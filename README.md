@@ -333,6 +333,7 @@ _Planned for v1.0.0..._
   - Find a better way to log warnings than fmt.Fprintf(os.Stderr) in timesrc_win.go
   - Rename Time.Mono to Monotonic, or others from Monotonic to Mono for
     consistency
+  - Document 100ns resolution for Windows
 - Improve diagnostic commands:
   - Change bench command to output in columns
   - Rename sleep command to timer and add --timesrc, --sleep, --timer and --tcomp
