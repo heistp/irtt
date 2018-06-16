@@ -326,6 +326,7 @@ See [CHANGES.md](CHANGES.md).
 
 _Planned for v1.0.0..._
 
+- Document irtt.openrc and public server
 - Solidify TimeSource, Time and new Windows timer support:
   - Add --timesrc to client and server
   - Fall back to Go functions as necessary for older Windows versions
