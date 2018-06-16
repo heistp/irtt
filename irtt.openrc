@@ -1,0 +1,13 @@
+#!/sbin/openrc-run
+
+command="/usr/bin/irtt"
+command_args="server $IRTT_OPTS"
+pidfile="/run/${RC_SVCNAME}.pid"
+
+command_background=true
+command_user="irtt"
+
+# Note: If you have specified a bind address or interface with the -b flag,
+# you may need to specify rc_need so irtt is started after the interface
+# is available, for example:
+# rc_need="net.eth0"
