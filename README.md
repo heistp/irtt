@@ -326,6 +326,10 @@ See [CHANGES.md](CHANGES.md).
 
 _Planned for v1.0.0..._
 
+- Add syslog support for server:
+  - Support three levels: info, warning and error
+  - Rename Codes to have Err and Warn prefixes as necessary
+  - Add --syslog flag with format protocol://host:port/tag
 - Document irtt.openrc and public server
 - Solidify TimeSource, Time and new Windows timer support:
   - Add --timesrc to client and server
@@ -340,7 +344,7 @@ _Planned for v1.0.0..._
   - Rename sleep command to timer and add --timesrc, --sleep, --timer and --tcomp
   - Rename timer command to resolution and add --timesrc
   - Rename clock command to drift and add --timesrc
-- Improve output flexibility:
+- Improve client output flexibility:
   - Allow specifying a format string for text output with optional units for times
   - Add format abbreviations for CSV, space delimited, etc.
   - Add a subcommand to the CLI to convert JSON to CSV
