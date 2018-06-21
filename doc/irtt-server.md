@@ -149,8 +149,7 @@ ns     | nanoseconds
 # SECURITY
 
 Running an IRTT server that's open to the outside world requires some additional
-attention. For starters, irtt server's command line flags should be used to, at
-a minimum:
+attention. For starters, the command line flags should be used to, at a minimum:
 
 - Restrict the duration (*-d*), interval (*-i*) and length (*-l*) of tests,
   particularly for public servers
@@ -158,12 +157,13 @@ a minimum:
   discovery and use
 
 In addition, there are various systemd(1) options available for securing
-services. The irtt.service file included with the distribution sets many
+services. The irtt.service file included with the distribution sets some
 commonly used options, but should not be considered exhaustive.
 
 To secure a server for public use, additional steps may be taken that are
 outside of the scope of this documentation, including but not limited to:
 
+- Installing irtt in an unprivileged container
 - Setting up an iptables firewall (only UDP port 2112 must be open)
 - Setting up a chroot jail
 

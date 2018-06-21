@@ -70,9 +70,9 @@ The goals of this project are to:
 	- [Bitrate](https://en.wikipedia.org/wiki/Bit_rate)
 	- Timer error, send call time and server processing time
 - Statistics: min, max, mean, median (for most quantities) and standard deviation
-- Nanosecond time precision (where available), and robustness in the face of
-	clock drift and NTP corrections through the use of both the wall and monotonic
-	clocks
+- One nanosecond time precision on Linux and OS/X, and 100ns on Windows
+- Robustness in the face of clock drift and NTP corrections through the use of
+  both wall and monotonic clocks
 - Binary protocol with negotiated format for test packet lengths down to 16 bytes (without timestamps)
 - HMAC support for private servers, preventing unauthorized discovery and use
 - Support for a wide range of Go supported [platforms](https://github.com/golang/go/wiki/MinimumRequirements)
@@ -162,8 +162,11 @@ sections to get started quickly:
 	 - IRTT has a three-way handshake to prevent test traffic redirection from
 		 spoofed source IPs.
 	 - IRTT can fill the payload (if included) with random or arbitrary data.
+   - On Windows, ping has a precision of 0.5ms, while IRTT uses high resolution
+     timer functions for a precision of 100ns (high resolution wall clock only
+     available on Windows 8 or Windows 2012 Server and later).
 
-2) In what way is IRTT's behavior different from that of ping?
+   Also note the following behavioral differences between ping and IRTT:
 
    - IRTT makes a stateful connection to the server, whereas ping is stateless.
    - By default, ping waits for a reply before sending its next request, while
@@ -173,59 +176,7 @@ sections to get started quickly:
      during the pause) will look like a single high RTT in ping, and multiple
      high then descending RTTs in irtt for the duration of the maximum RTT.
 
-3) Why does `irtt client` use `-l` for packet length instead of following ping
-   and using `-s` for size?
-
-   I felt it more appropriate to follow the
-   [RFC 768](https://tools.ietf.org/html/rfc768) term _length_ for UDP packets,
-   since IRTT uses UDP.
-
-4) Why is the send (or receive) delay negative or much larger than I expect?
-
-	 The client and server clocks must be synchronized for one-way delay values to
-	 be meaningful (although, the relative change of send and receive delay may be
-   useful to look at even without clock synchronization). Well-configured NTP
-   hosts may be able to synchronize to within a few milliseconds.
-	 [PTP](https://en.wikipedia.org/wiki/Precision_Time_Protocol)
-	 ([Linux](http://linuxptp.sourceforge.net) implementation here) is capable of
-   much higher precision. For example, using two
-   [PCEngines APU2](http://pcengines.ch/apu2.htm) boards (which support PTP
-   hardware timestamps) connected directly by Ethernet, the clocks
-   may be synchronized within a few microseconds.
-   
-	 Note that client and server synchronization is not needed for either RTT or
-	 IPDV (even send and receive IPDV) values to be correct. RTT is measured with
-	 client times only, and since IPDV is measuring differences between successive
-	 packets, it's not affected by time synchronization.
-
-5) Why is the receive rate 0 when a single packet is sent?
-
-   Receive rate is measured from the time the first packet is received to the time
-   the last packet is received. For a single packet, those times are the same.
-
-6) Why does a test with a one second duration and 200ms interval run for around
-   800ms and not one second?
-
-   The test duration is exclusive, meaning requests will not be sent exactly at
-   or after the test duration has elapsed. In this case, the interval is 200ms, and
-   the fifth and final request is sent at around 800ms from the start of the test.
-   The test ends when all replies have been received from the server, so it may
-	 end shortly after 800ms. If there are any outstanding packets, the wait time
-	 is observed, which by default is a multiple of the maximum RTT.
-
-7) Why is IPDV not reported when only one packet is received?
-
-   [IPDV](https://en.wikipedia.org/wiki/Packet_delay_variation) is the
-   difference in delay between successfully returned replies, so at least two
-   reply packets are required to make this calculation.
-
-8) Why does wait fall back to fixed duration when duration is less than RTT?
-
-   If a full RTT has not elapsed, there is no way to know how long an
-	 appropriate wait time would be, so the wait falls back to a default fixed
-	 time (default is 4 seconds, same as ping).
-
-9) Why can't the client connect to the server, and instead I get
+2) Why can't the client connect to the server, and instead I get
    `Error: no reply from server`?
 
    There are a number of possible reasons for this:
@@ -243,54 +194,98 @@ sections to get started quickly:
       not specified a key or it's incorrect. Make sure the client has the
       correct HMAC key, also specified with the `--hmac` flag.
    5) You're trying to connect to a listener that's listening on an unspecified
-      IP address, and return packets are not routing properly, which can happen in
-      some network configurations. Try running the server with the `--set-src-ip`
-      flag, which sets the source address on all reply packets from listeners
-      on unspecified IP addresses. This is not done by default in order to avoid
-      the additional per-packet heap allocations required by the
+      IP address, but reply packets are coming back on a different route from the
+      requests, or not coming back at all. This can happen for example in
+      network environments with [asymmetric routing and a firewall or NAT]
+      (https://www.cisco.com/web/services/news/ts_newsletter/tech/chalktalk/archives/200903.html).
+      The best solution may be to change the network configuration to avoid this
+      problem, but when this is not possible, try running the server with the
+      `--set-src-ip` flag, which explicitly sets the source address on all reply
+      packets from listeners on unspecified IP addresses to the destination
+      address that the request was received on. This is not done by default in
+      order to avoid the additional per-packet heap allocations required by the
       `golang.org/x/net` packages.
 
-10) Why can't the client connect to the server, and I either see `[Drop]
-    [UnknownParam] unknown negotiation param (0x8 = 0)` on the server, or a strange
-    message on the client like `[InvalidServerRestriction] server tried to reduce
-    interval to < 1s, from 1s to 92ns`?
+3) Why is the send (or receive) delay negative or much larger than I expect?
 
-    You're using a 0.1 development version of the server with a newer client.
-    Make sure both client and server are up to date. Going forward, the protocol
-    is versioned (independently from IRTT in general), and is checked when the
-    client connects to the server. For now, the protocol versions must match
-    exactly.
+	 The client and server clocks must be synchronized for one-way delay values to
+	 be meaningful (although, the relative change of send and receive delay may be
+   useful to look at even without clock synchronization). Well-configured NTP
+   hosts may be able to synchronize to within a few milliseconds.
+	 [PTP](https://en.wikipedia.org/wiki/Precision_Time_Protocol)
+	 ([Linux](http://linuxptp.sourceforge.net) implementation here) is capable of
+   much higher precision. For example, using two
+   [PCEngines APU2](http://pcengines.ch/apu2.htm) boards (which support PTP
+   hardware timestamps) connected directly by Ethernet, the clocks
+   may be synchronized within a few microseconds.
+   
+	 Note that client and server synchronization is not needed for either RTT or
+	 IPDV (even send and receive IPDV) values to be correct. RTT is measured with
+	 client times only, and since IPDV is measuring differences between successive
+	 packets, it's not affected by time synchronization.
 
-11) Why don't you include median values for send call time, timer error and
-    server processing time?
+4) Why is the receive rate 0 when a single packet is sent?
 
-    Those values aren't stored for each round trip, and it's difficult to do a
-	  running calculation of the median, although
-	  [this method](https://rhettinger.wordpress.com/2010/02/06/lost-knowledge/) of
-	  using skip lists appears to have promise. It's a possibility for the future,
-	  but so far it isn't a high priority. If it is for you, file an
-    [Issue](https://github.com/heistp/irtt/issues).
+   Receive rate is measured from the time the first packet is received to the time
+   the last packet is received. For a single packet, those times are the same.
 
-12) I see you use MD5 for the HMAC. Isn't that insecure?
+5) Why does a test with a one second duration and 200ms interval run for around
+   800ms and not one second?
+
+   The test duration is exclusive, meaning requests will not be sent exactly at
+   or after the test duration has elapsed. In this case, the interval is 200ms, and
+   the fifth and final request is sent at around 800ms from the start of the test.
+   The test ends when all replies have been received from the server, so it may
+	 end shortly after 800ms. If there are any outstanding packets, the wait time
+	 is observed, which by default is a multiple of the maximum RTT.
+
+6) Why is IPDV not reported when only one packet is received?
+
+   [IPDV](https://en.wikipedia.org/wiki/Packet_delay_variation) is the
+   difference in delay between successfully returned replies, so at least two
+   reply packets are required to make this calculation.
+
+7) Why does wait fall back to fixed duration when duration is less than RTT?
+
+   If a full RTT has not elapsed, there is no way to know how long an
+	 appropriate wait time would be, so the wait falls back to a default fixed
+	 time (default is 4 seconds, same as ping).
+
+8) Why can't the client connect to the server, and I either see `[Drop]
+   [UnknownParam] unknown negotiation param (0x8 = 0)` on the server, or a strange
+   message on the client like `[InvalidServerRestriction] server tried to reduce
+   interval to < 1s, from 1s to 92ns`?
+
+   You're using a 0.1 development version of the server with a newer client.
+   Make sure both client and server are up to date. Going forward, the protocol
+   is versioned (independently from IRTT in general), and is checked when the
+   client connects to the server. For now, the protocol versions must match
+   exactly.
+
+9) Why don't you include median values for send call time, timer error and
+   server processing time?
+
+   Those values aren't stored for each round trip, and it's difficult to do a
+   running calculation of the median, although
+   [this method](https://rhettinger.wordpress.com/2010/02/06/lost-knowledge/) of
+   using skip lists appears to have promise. It's a possibility for the future,
+   but so far it isn't a high priority. If it is for you, file an
+   [Issue](https://github.com/heistp/irtt/issues).
+
+10) I see you use MD5 for the HMAC. Isn't that insecure?
 
     MD5 should not have practical vulnerabilities when used in a message authenticate
     code. See
     [this page](https://en.wikipedia.org/wiki/Hash-based_message_authentication_code#Security)
     for more info.
 
-13) Will you add unit tests?
-
-    Maybe some. I feel that the most important thing for a project of this size
-    is that the design is clear enough that bugs are next to impossible. IRTT
-    is not there yet though, particularly when it comes to packet manipulation.
-
-14) Are there any plans for translation to other languages?
+11) Are there any plans for translation to other languages?
 
     While some parts of the API were designed to keep i18n possible, there is no
     support for i18n built in to the Go standard libraries. It should be possible,
     but could be a challenge, and is not something I'm likely to undertake myself.
 
-15) Why do I get `Error: failed to allocate results buffer for X round trips
+12) Why do I get `Error: failed to allocate results buffer for X round trips
     (runtime error: makeslice: cap out of range)`?
 
     Your test interval and duration probably require a results buffer that's
@@ -300,7 +295,7 @@ sections to get started quickly:
     `maxSliceCap` in [slice.go](https://golang.org/src/runtime/slice.go) and
     `_MaxMem` in [malloc.go](https://golang.org/src/runtime/malloc.go).
 
-16) Why is little endian byte order used in the packet format?
+13) Why is little endian byte order used in the packet format?
 
     As for Google's [protobufs](https://github.com/google/protobuf), this was
     chosen because the vast majority of modern processors use little-endian byte
@@ -309,12 +304,20 @@ sections to get started quickly:
     [unsafe](https://golang.org/pkg/unsafe/) package, but so far this
     optimization has not been shown to be necessary.
 
-17) Why is the virt size (vsz) memory usage for the server so high in Linux?
+14) Why does `irtt client` use `-l` for packet length instead of following ping
+    and using `-s` for size?
 
-    This has to do with the way Go allocates memory. See
-    [this article](https://deferpanic.com/blog/understanding-golang-memory-usage/)
-    for more information. File an Issue if your resident usage (rss/res) is high
-    or you feel that memory consumption is somehow a problem.
+    I felt it more appropriate to follow the
+    [RFC 768](https://tools.ietf.org/html/rfc768) term _length_ for UDP packets,
+    since IRTT uses UDP.
+
+15) Why is the virt size (vsz) memory usage for the server so high in Linux?
+
+    This has to do with the way Go allocates memory, but should not cause a
+    problem. See [this
+    article](https://deferpanic.com/blog/understanding-golang-memory-usage/) for
+    more information. File an Issue if your resident usage (rss/res) is high or
+    you feel that memory consumption is somehow a problem.
 
 ## Changes
 
@@ -402,7 +405,7 @@ _Collection area for the future..._
 - Prototype TCP throughput test and compare straight Go vs iperf/netperf
 - Support a range of server ports to improve concurrency and maybe defeat
   latency "slotting" on multi-queue interfaces
-- Add unit tests
+- Add more unit tests
 - Add support for load balanced conns (multiple source addresses for same conn)
 - Use unsafe package to speed up packet buffer manipulation
 - Add encryption
