@@ -176,7 +176,16 @@ sections to get started quickly:
      during the pause) will look like a single high RTT in ping, and multiple
      high then descending RTTs in irtt for the duration of the maximum RTT.
 
-2) How do I run the IRTT server at startup?
+2) Is there a public server I can use?
+
+   There is a test server running at `irtt.heistp.net` with an HMAC key of
+   `irttuser`. Please do not abuse it. To restrict bandwidth, the minimum
+   interval is set to 100ms, the max length to 256 bytes, and the max duration
+   to 60 seconds. Example usage:
+   
+   `irtt client --hmac=irttuser irtt.heistp.net`
+
+3) How do I run the IRTT server at startup?
 
    This depends on your OS and init system, but see:
    
@@ -186,7 +195,7 @@ sections to get started quickly:
    - the `irtt.openrc` file for [OpenRC](https://wiki.gentoo.org/wiki/OpenRC),
      used in Gentoo and Alpine
 
-3) Why can't the client connect to the server, and instead I get
+4) Why can't the client connect to the server, and instead I get
    `Error: no reply from server`?
 
    There are a number of possible reasons for this:
@@ -216,7 +225,7 @@ sections to get started quickly:
       order to avoid the additional per-packet heap allocations required by the
       `golang.org/x/net` packages.
 
-4) Why is the send (or receive) delay negative or much larger than I expect?
+5) Why is the send (or receive) delay negative or much larger than I expect?
 
 	 The client and server clocks must be synchronized for one-way delay values to
 	 be meaningful (although, the relative change of send and receive delay may be
@@ -234,12 +243,12 @@ sections to get started quickly:
 	 client times only, and since IPDV is measuring differences between successive
 	 packets, it's not affected by time synchronization.
 
-5) Why is the receive rate 0 when a single packet is sent?
+6) Why is the receive rate 0 when a single packet is sent?
 
    Receive rate is measured from the time the first packet is received to the time
    the last packet is received. For a single packet, those times are the same.
 
-6) Why does a test with a one second duration and 200ms interval run for around
+7) Why does a test with a one second duration and 200ms interval run for around
    800ms and not one second?
 
    The test duration is exclusive, meaning requests will not be sent exactly at
@@ -249,30 +258,30 @@ sections to get started quickly:
 	 end shortly after 800ms. If there are any outstanding packets, the wait time
 	 is observed, which by default is a multiple of the maximum RTT.
 
-7) Why is IPDV not reported when only one packet is received?
+8) Why is IPDV not reported when only one packet is received?
 
    [IPDV](https://en.wikipedia.org/wiki/Packet_delay_variation) is the
    difference in delay between successfully returned replies, so at least two
    reply packets are required to make this calculation.
 
-8) Why does wait fall back to fixed duration when duration is less than RTT?
+9) Why does wait fall back to fixed duration when duration is less than RTT?
 
    If a full RTT has not elapsed, there is no way to know how long an
 	 appropriate wait time would be, so the wait falls back to a default fixed
 	 time (default is 4 seconds, same as ping).
 
-9) Why can't the client connect to the server, and I either see `[Drop]
-   [UnknownParam] unknown negotiation param (0x8 = 0)` on the server, or a strange
-   message on the client like `[InvalidServerRestriction] server tried to reduce
-   interval to < 1s, from 1s to 92ns`?
+10) Why can't the client connect to the server, and I either see `[Drop]
+    [UnknownParam] unknown negotiation param (0x8 = 0)` on the server, or a strange
+    message on the client like `[InvalidServerRestriction] server tried to reduce
+    interval to < 1s, from 1s to 92ns`?
+ 
+    You're using a 0.1 development version of the server with a newer client.
+    Make sure both client and server are up to date. Going forward, the protocol
+    is versioned (independently from IRTT in general), and is checked when the
+    client connects to the server. For now, the protocol versions must match
+    exactly.
 
-   You're using a 0.1 development version of the server with a newer client.
-   Make sure both client and server are up to date. Going forward, the protocol
-   is versioned (independently from IRTT in general), and is checked when the
-   client connects to the server. For now, the protocol versions must match
-   exactly.
-
-10) Why don't you include median values for send call time, timer error and
+11) Why don't you include median values for send call time, timer error and
     server processing time?
 
     Those values aren't stored for each round trip, and it's difficult to do a
@@ -282,20 +291,20 @@ sections to get started quickly:
     but so far it isn't a high priority. If it is for you, file an
     [Issue](https://github.com/heistp/irtt/issues).
 
-11) I see you use MD5 for the HMAC. Isn't that insecure?
+12) I see you use MD5 for the HMAC. Isn't that insecure?
 
     MD5 should not have practical vulnerabilities when used in a message authenticate
     code. See
     [this page](https://en.wikipedia.org/wiki/Hash-based_message_authentication_code#Security)
     for more info.
 
-12) Are there any plans for translation to other languages?
+13) Are there any plans for translation to other languages?
 
     While some parts of the API were designed to keep i18n possible, there is no
     support for i18n built in to the Go standard libraries. It should be possible,
     but could be a challenge, and is not something I'm likely to undertake myself.
 
-13) Why do I get `Error: failed to allocate results buffer for X round trips
+14) Why do I get `Error: failed to allocate results buffer for X round trips
     (runtime error: makeslice: cap out of range)`?
 
     Your test interval and duration probably require a results buffer that's
@@ -305,7 +314,7 @@ sections to get started quickly:
     `maxSliceCap` in [slice.go](https://golang.org/src/runtime/slice.go) and
     `_MaxMem` in [malloc.go](https://golang.org/src/runtime/malloc.go).
 
-14) Why is little endian byte order used in the packet format?
+15) Why is little endian byte order used in the packet format?
 
     As for Google's [protobufs](https://github.com/google/protobuf), this was
     chosen because the vast majority of modern processors use little-endian byte
@@ -314,14 +323,14 @@ sections to get started quickly:
     [unsafe](https://golang.org/pkg/unsafe/) package, but so far this
     optimization has not been shown to be necessary.
 
-15) Why does `irtt client` use `-l` for packet length instead of following ping
+16) Why does `irtt client` use `-l` for packet length instead of following ping
     and using `-s` for size?
 
     I felt it more appropriate to follow the
     [RFC 768](https://tools.ietf.org/html/rfc768) term _length_ for UDP packets,
     since IRTT uses UDP.
 
-16) Why is the virt size (vsz) memory usage for the server so high in Linux?
+17) Why is the virt size (vsz) memory usage for the server so high in Linux?
 
     This has to do with the way Go allocates memory, but should not cause a
     problem. See [this
