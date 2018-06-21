@@ -8,6 +8,11 @@ import (
 // Code uniquely identifies events and errors to improve context.
 type Code int
 
+// IsError returns true if the code for an error (negative).
+func (c Code) IsError() bool {
+	return c < 0
+}
+
 //go:generate stringer -type=Code
 
 // Server event codes.
@@ -52,6 +57,11 @@ type Event struct {
 func Eventf(code Code, laddr *net.UDPAddr, raddr *net.UDPAddr, format string,
 	detail ...interface{}) *Event {
 	return &Event{code, laddr, raddr, format, detail}
+}
+
+// IsError returns true if the event is an error (its code is negative).
+func (e *Event) IsError() bool {
+	return e.Code.IsError()
 }
 
 func (e *Event) String() string {

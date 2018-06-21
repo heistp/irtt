@@ -1,6 +1,8 @@
 package irtt
 
 import (
+	"log/syslog"
+	"net/url"
 	"os"
 	"os/signal"
 	"strings"
@@ -8,6 +10,8 @@ import (
 
 	flag "github.com/ogier/pflag"
 )
+
+const defaultSyslogTag = "irtt"
 
 func serverUsage() {
 	setBufio()
@@ -30,6 +34,11 @@ func serverUsage() {
 	printf("--hmac=key     add HMAC with key (0x for hex) to all packets, provides:")
 	printf("               dropping of all packets without a correct HMAC")
 	printf("               protection for server against unauthorized discovery and use")
+	printf("--syslog=uri   log events to syslog (default don't use syslog)")
+	printf("               URI format: protocol://host:port/tag, examples:")
+	printf("               local: log to local syslog, default tag irtt")
+	printf("               udp://logsrv:514/irttsrv: UDP to logsrv:514, tag irttsrv")
+	printf("               tcp://logsrv:8514/: TCP to logsrv:8514, default tag irtt")
 	printf("--timeout=dur  timeout for closing connections if no requests received")
 	printf("               0 means no timeout (not recommended on public servers)")
 	printf("               max client interval will be restricted to timeout/%d", maxIntervalTimeoutFactor)
@@ -80,6 +89,7 @@ func runServerCLI(args []string) {
 	var maxLength = fs.IntP("l", "l", DefaultMaxLength, "max length")
 	var allowTimestampStr = fs.String("tstamp", DefaultAllowStamp.String(), "allow timestamp")
 	var hmacStr = fs.String("hmac", defaultHMACKey, "HMAC key")
+	var syslogStr = fs.String("syslog", "", "syslog uri")
 	var timeout = fs.Duration("timeout", DefaultServerTimeout, "timeout")
 	var packetBurst = fs.Int("pburst", DefaultPacketBurst, "packet burst")
 	var fillStr = fs.String("fill", DefaultServerFiller.String(), "fill")
@@ -123,6 +133,22 @@ func runServerCLI(args []string) {
 		exitOnError(err, exitCodeBadCommandLine)
 	}
 
+	// parse syslog URI
+	var syslogWriter *syslog.Writer
+	if *syslogStr != "" {
+		var suri *url.URL
+		suri, err = parseSyslogURI(*syslogStr)
+		exitOnError(err, exitCodeBadCommandLine)
+
+		if suri.Scheme == "local" {
+			syslogWriter, err = syslog.New(syslog.LOG_INFO, suri.Path)
+		} else {
+			syslogWriter, err = syslog.Dial(suri.Scheme, suri.Host,
+				syslog.LOG_INFO, suri.Path)
+		}
+		exitOnError(err, exitCodeRuntimeError)
+	}
+
 	// parse GC mode
 	gcMode, err := ParseGCMode(*gcModeStr)
 	exitOnError(err, exitCodeBadCommandLine)
@@ -141,7 +167,7 @@ func runServerCLI(args []string) {
 	cfg.AllowFills = strings.Split(*allowFillsStr, ",")
 	cfg.AllowDSCP = !*noDSCP
 	cfg.TTL = *ttl
-	cfg.Handler = &serverHandler{}
+	cfg.Handler = &serverHandler{syslogWriter}
 	cfg.IPVersion = ipVer
 	cfg.SetSrcIP = *setSrcIP
 	cfg.GCMode = gcMode
@@ -168,8 +194,30 @@ func runServerCLI(args []string) {
 }
 
 type serverHandler struct {
+	syslogWriter *syslog.Writer
 }
 
 func (s *serverHandler) OnEvent(ev *Event) {
 	println(ev.String())
+
+	if s.syslogWriter != nil {
+		if ev.IsError() {
+			s.syslogWriter.Err(ev.String())
+		} else {
+			s.syslogWriter.Info(ev.String())
+		}
+	}
+}
+
+func parseSyslogURI(suri string) (u *url.URL, err error) {
+	if u, err = url.Parse(suri); err != nil {
+		return
+	}
+	if u.Path[0] == '/' {
+		u.Path = u.Path[1:]
+	}
+	if u.Path == "" {
+		u.Path = defaultSyslogTag
+	}
+	return
 }

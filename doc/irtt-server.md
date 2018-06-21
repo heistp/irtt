@@ -47,6 +47,16 @@ irtt server [*args*]
     - Dropping of all packets without a correct HMAC
     - Protection for server against unauthorized discovery and use
 
+\--syslog=*uri*
+:   Log events to syslog (default don't use syslog). URI format:
+    protocol://host:port/tag. Examples:
+
+    URI                      | Result
+    ------------------------ | ------
+    local                    | Log to local syslog, default tag irtt
+    udp://logsrv:514/irttsrv | UDP to logsrv:514, tag irttsrv
+    tcp://logsrv:8514/       | TCP to logsrv:8514, default tag irtt
+
 \--timeout=*duration*
 :   Timeout for closing connections if no requests received on a
     connection (default 1m0s, see [Duration units](#duration-units) below).

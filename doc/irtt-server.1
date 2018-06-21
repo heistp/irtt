@@ -85,6 +85,39 @@ Dropping of all packets without a correct HMAC
 Protection for server against unauthorized discovery and use
 .RE
 .TP
+.B \-\-syslog=\f[I]uri\f[]
+Log events to syslog (default don't use syslog).
+URI format: protocol://host:port/tag.
+Examples:
+.RS
+.PP
+.TS
+tab(@);
+l l.
+T{
+URI
+T}@T{
+Result
+T}
+_
+T{
+local
+T}@T{
+Log to local syslog
+T}
+T{
+udp://logsrv:514/irttsrv
+T}@T{
+UDP to logsrv:514, tag irttsrv
+T}
+T{
+tcp://logsrv:8514/
+T}@T{
+TCP to logsrv:8514, default tag irtt
+T}
+.TE
+.RE
+.TP
 .B \-\-timeout=\f[I]duration\f[]
 Timeout for closing connections if no requests received on a connection
 (default 1m0s, see Duration units below).

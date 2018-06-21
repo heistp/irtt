@@ -326,10 +326,6 @@ See [CHANGES.md](CHANGES.md).
 
 _Planned for v1.0.0..._
 
-- Add syslog support for server:
-  - Support three levels: info, warning and error
-  - Rename Codes to have Err and Warn prefixes as necessary
-  - Add --syslog flag with format protocol://host:port/tag
 - Document irtt.openrc and public server
 - Solidify TimeSource, Time and new Windows timer support:
   - Add --timesrc to client and server
@@ -372,9 +368,15 @@ _Planned for v1.0.0..._
   - Make connref mechanism robust to listener failure
 	- Add per-IP limiting
   - Add a more secure way than cmdline flag to specify --hmac
+- Add [ping-pair](https://www.microsoft.com/en-us/research/wp-content/uploads/2017/09/PingPair-CoNEXT2017.pdf) functionality
 - Stabilize API:
   - Always return instance of irtt.Error? If so, look at exitOnError.
   - Use error code (if available) as exit code
+- Improve induced latency and jitter:
+  - Use Go profiling, scheduler tracing, strace and sar
+  - Do more thorough tests of `chrt -r 99`, `--thread` and `--gc`
+  - Find or file issue with Go team over scheduler performance, if needed
+  - Prototype doing thread scheduling or socket i/o for Linux in C
 - Show actual size of header in text and json, and add calculation to doc
 - Measure and document local differences between ping and irtt response times
 - Create a backports version for Debian stable
@@ -383,14 +385,6 @@ _Planned for v1.0.0..._
 
 _Collection area for the future..._
 
-- Add [ping-pair](https://www.microsoft.com/en-us/research/wp-content/uploads/2017/09/PingPair-CoNEXT2017.pdf) functionality
-- Add OWD compensation at results generation stage for shifting mean value to 0
-  to improve readability for clocks that are badly out of sync
-- Improve induced latency and jitter:
-  - Use Go profiling, scheduler tracing, strace and sar
-  - Do more thorough tests of `chrt -r 99`, `--thread` and `--gc`
-  - Find or file issue with Go team over scheduler performance, if needed
-  - Prototype doing thread scheduling or socket i/o for Linux in C
 - Add different server authentication modes:
 	- none (no conn token in header, for minimum packet sizes during local use)
 	- token (what we have today, 64-bit token in header)

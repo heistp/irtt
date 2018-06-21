@@ -116,6 +116,31 @@
 <li>Protection for server against unauthorized discovery and use</li>
 </ul>
 </dd>
+<dt>--syslog=<em>uri</em></dt>
+<dd><p>Log events to syslog (default don’t use syslog). URI format: protocol://host:port/tag. Examples:</p>
+<table class="pure-table pure-table-striped">
+<thead>
+<tr class="header">
+<th>URI</th>
+<th>Result</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>local</td>
+<td>Log to local syslog</td>
+</tr>
+<tr class="even">
+<td>udp://logsrv:514/irttsrv</td>
+<td>UDP to logsrv:514, tag irttsrv</td>
+</tr>
+<tr class="odd">
+<td>tcp://logsrv:8514/</td>
+<td>TCP to logsrv:8514, default tag irtt</td>
+</tr>
+</tbody>
+</table>
+</dd>
 <dt>--timeout=<em>duration</em></dt>
 <dd>Timeout for closing connections if no requests received on a connection (default 1m0s, see <a href="#duration-units">Duration units</a> below). 0 means no timeout (not recommended, especially on public servers). Max client interval will be restricted to timeout/4.
 </dd>
