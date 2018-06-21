@@ -128,7 +128,7 @@
 <tbody>
 <tr class="odd">
 <td>local</td>
-<td>Log to local syslog</td>
+<td>Log to local syslog, default tag irtt</td>
 </tr>
 <tr class="even">
 <td>udp://logsrv:514/irttsrv</td>
@@ -304,14 +304,15 @@
 </tbody>
 </table>
 <h1 id="security">SECURITY</h1>
-<p>Running an IRTT server that’s open to the outside world requires some additional attention. For starters, irtt server’s command line flags should be used to, at a minimum:</p>
+<p>Running an IRTT server that’s open to the outside world requires some additional attention. For starters, the command line flags should be used to, at a minimum:</p>
 <ul>
 <li>Restrict the duration (<em>-d</em>), interval (<em>-i</em>) and length (<em>-l</em>) of tests, particularly for public servers</li>
 <li>Set an HMAC key (<em>--hmac</em>) for private servers to prevent unauthorized discovery and use</li>
 </ul>
-<p>In addition, there are various systemd(1) options available for securing services. The irtt.service file included with the distribution sets many commonly used options, but should not be considered exhaustive.</p>
+<p>In addition, there are various systemd(1) options available for securing services. The irtt.service file included with the distribution sets some commonly used options, but should not be considered exhaustive.</p>
 <p>To secure a server for public use, additional steps may be taken that are outside of the scope of this documentation, including but not limited to:</p>
 <ul>
+<li>Installing irtt in an unprivileged container</li>
 <li>Setting up an iptables firewall (only UDP port 2112 must be open)</li>
 <li>Setting up a chroot jail</li>
 </ul>

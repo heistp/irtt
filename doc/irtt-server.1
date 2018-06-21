@@ -103,7 +103,7 @@ _
 T{
 local
 T}@T{
-Log to local syslog
+Log to local syslog, default tag irtt
 T}
 T{
 udp://logsrv:514/irttsrv
@@ -346,8 +346,7 @@ T}
 .PP
 Running an IRTT server that's open to the outside world requires some
 additional attention.
-For starters, irtt server's command line flags should be used to, at a
-minimum:
+For starters, the command line flags should be used to, at a minimum:
 .IP \[bu] 2
 Restrict the duration (\f[I]\-d\f[]), interval (\f[I]\-i\f[]) and length
 (\f[I]\-l\f[]) of tests, particularly for public servers
@@ -357,12 +356,14 @@ unauthorized discovery and use
 .PP
 In addition, there are various systemd(1) options available for securing
 services.
-The irtt.service file included with the distribution sets many commonly
+The irtt.service file included with the distribution sets some commonly
 used options, but should not be considered exhaustive.
 .PP
 To secure a server for public use, additional steps may be taken that
 are outside of the scope of this documentation, including but not
 limited to:
+.IP \[bu] 2
+Installing irtt in an unprivileged container
 .IP \[bu] 2
 Setting up an iptables firewall (only UDP port 2112 must be open)
 .IP \[bu] 2
