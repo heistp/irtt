@@ -140,11 +140,11 @@ func runServerCLI(args []string) {
 		suri, err = parseSyslogURI(*syslogStr)
 		exitOnError(err, exitCodeBadCommandLine)
 
+		prio := syslog.LOG_DAEMON | syslog.LOG_INFO
 		if suri.Scheme == "local" {
-			syslogWriter, err = syslog.New(syslog.LOG_INFO, suri.Path)
+			syslogWriter, err = syslog.New(prio, suri.Path)
 		} else {
-			syslogWriter, err = syslog.Dial(suri.Scheme, suri.Host,
-				syslog.LOG_INFO, suri.Path)
+			syslogWriter, err = syslog.Dial(suri.Scheme, suri.Host, prio, suri.Path)
 		}
 		exitOnError(err, exitCodeRuntimeError)
 	}
