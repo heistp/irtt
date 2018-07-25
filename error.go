@@ -71,6 +71,7 @@ const (
 	InvalidReceivedStatsString
 	OpenTimeoutTooShort
 	ServerFillTooLong
+	UnexpectedInitChannelClose
 )
 
 // Error is an IRTT error.

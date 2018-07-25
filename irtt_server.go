@@ -37,6 +37,7 @@ func serverUsage() {
 	printf("--syslog=uri   log events to syslog (default don't use syslog)")
 	printf("               URI format: protocol://host:port/tag, examples:")
 	printf("               local: log to local syslog, default tag irtt")
+	printf("               local:/irttsrv: log to local syslog, tag irttsrv")
 	printf("               udp://logsrv:514/irttsrv: UDP to logsrv:514, tag irttsrv")
 	printf("               tcp://logsrv:8514/: TCP to logsrv:8514, default tag irtt")
 	printf("--timeout=dur  timeout for closing connections if no requests received")

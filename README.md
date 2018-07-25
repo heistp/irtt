@@ -391,6 +391,7 @@ _Planned for v1.0.0..._
   - Add a more secure way than cmdline flag to specify --hmac
 - Add [ping-pair](https://www.microsoft.com/en-us/research/wp-content/uploads/2017/09/PingPair-CoNEXT2017.pdf) functionality
 - Stabilize API:
+  - Minimize exposed functions (remove timer, timer comp, etc)
   - Always return instance of irtt.Error? If so, look at exitOnError.
   - Use error code (if available) as exit code
 - Improve induced latency and jitter:

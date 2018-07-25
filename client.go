@@ -19,6 +19,7 @@ type Client struct {
 	rec     *Recorder
 	closed  bool
 	closedM sync.Mutex
+	initCh  chan (bool)
 }
 
 // NewClient returns a new client.
@@ -28,6 +29,7 @@ func NewClient(cfg *ClientConfig) *Client {
 	c.Supplied = cfg
 	return &Client{
 		ClientConfig: &c,
+		initCh:       make(chan (bool)),
 	}
 }
 
@@ -279,6 +281,10 @@ func (c *Client) checkParameters() (err error) {
 
 // send sends all packets for the test to the server (called in goroutine from Run)
 func (c *Client) send(ctx context.Context) error {
+	defer func() {
+		close(c.initCh)
+	}()
+
 	if c.ThreadLock {
 		runtime.LockOSThread()
 	}
@@ -293,7 +299,10 @@ func (c *Client) send(ctx context.Context) error {
 	p.zeroReceivedStats(c.ReceivedStats)
 	p.stampZeroes(c.StampAt, c.Clock)
 	p.setSeqno(seqno)
+
+	// set packet len and notify receive
 	c.Length = p.setLen(c.Length)
+	c.initCh <- true
 
 	// fill the first packet, if necessary
 	if c.Filler != nil {
@@ -385,6 +394,10 @@ func (c *Client) send(ctx context.Context) error {
 func (c *Client) receive() error {
 	if c.ThreadLock {
 		runtime.LockOSThread()
+	}
+
+	if _, ok := <-c.initCh; !ok {
+		return Errorf(UnexpectedInitChannelClose, "init channel closed unexpectedly")
 	}
 
 	p := c.conn.newPacket()
