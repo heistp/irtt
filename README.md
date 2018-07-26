@@ -344,9 +344,9 @@ See [CHANGES.md](CHANGES.md).
 
 ## Roadmap
 
-### v1.0.0
+### v0.9.1
 
-_Planned for v1.0.0..._
+_Planned for v0.9.1..._
 
 - Solidify TimeSource, Time and new Windows timer support:
   - Add --timesrc to client and server
@@ -361,6 +361,21 @@ _Planned for v1.0.0..._
   - Rename sleep command to timer and add --timesrc, --sleep, --timer and --tcomp
   - Rename timer command to resolution and add --timesrc
   - Rename clock command to drift and add --timesrc
+- Server: make connref mechanism robust to listener failure
+- Measure and document local differences between ping and irtt response times
+- Consider defaulting to receive timestamp only
+- Sync Debian package to history re-write and create backports version for Debian stable
+
+### v0.9.2
+
+_Planned for v0.9.2..._
+
+- Add [ping-pair](https://www.microsoft.com/en-us/research/wp-content/uploads/2017/09/PingPair-CoNEXT2017.pdf)-like functionality
+
+### v1.0.0
+
+_Planned for v1.0.0..._
+
 - Improve client output flexibility:
   - Allow specifying a format string for text output with optional units for times
   - Add format abbreviations for CSV, space delimited, etc.
@@ -369,12 +384,9 @@ _Planned for v1.0.0..._
   - Add a way to keep out "internal" info from JSON, like IP and hostname, and a
 	  subcommand to strip these out after the JSON is created
   - Add more info on outliers and possibly a textual histogram
-- Change some defaults:
-  - Use receive timestamp, as dual timestamps rarely improve accuracy
-  - Use wall clock timestamps, as send and receive IPDV are still close
-- Add DSCP text values and return an error when ECN bits are passed to --dscp
 - Refactor packet manipulation to improve readability, prevent multiple validations
   and support unit tests
+- Add DSCP text values and return an error when ECN bits are passed to --dscp
 - Improve open/close process:
   - Do Happy Eyeballs (RFC 8305) to better handle multiple address families and
     addresses
@@ -386,10 +398,8 @@ _Planned for v1.0.0..._
 	- Limit open requests rate and coordinate with sconn cleanup
   - Add separate, shorter timeout for open
   - Specify close timeout as param from client, which may be restricted
-  - Make connref mechanism robust to listener failure
 	- Add per-IP limiting
-  - Add a more secure way than cmdline flag to specify --hmac
-- Add [ping-pair](https://www.microsoft.com/en-us/research/wp-content/uploads/2017/09/PingPair-CoNEXT2017.pdf) functionality
+- Add a more secure way than cmdline flag to specify --hmac
 - Stabilize API:
   - Minimize exposed functions (remove timer, timer comp, etc)
   - Always return instance of irtt.Error? If so, look at exitOnError.
@@ -400,8 +410,6 @@ _Planned for v1.0.0..._
   - Find or file issue with Go team over scheduler performance, if needed
   - Prototype doing thread scheduling or socket i/o for Linux in C
 - Show actual size of header in text and json, and add calculation to doc
-- Measure and document local differences between ping and irtt response times
-- Create a backports version for Debian stable
 
 ### Inbox
 
