@@ -215,7 +215,7 @@ application:
 
 # AUTHOR
 
-Pete Heist <pete@eventide.io>
+Pete Heist <pete@heistp.net>
 
 Many thanks to both Toke Høiland-Jørgensen and Dave Täht from the
 [Bufferbloat project](https://www.bufferbloat.net/) for their valuable advice.
