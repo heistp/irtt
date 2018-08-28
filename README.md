@@ -361,6 +361,7 @@ _Planned for v0.9.1..._
   - Rename sleep command to timer and add --timesrc, --sleep, --timer and --tcomp
   - Rename timer command to resolution and add --timesrc
   - Rename clock command to drift and add --timesrc
+- Add a `late` flag to RoundTrip
 - Server: make connref mechanism robust to listener failure
 - Measure and document local differences between ping and irtt response times
 - Consider defaulting to receive timestamp only
