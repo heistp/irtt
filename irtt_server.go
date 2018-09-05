@@ -61,6 +61,8 @@ func serverUsage() {
 	printf("               single: allow a single timestamp (send, receive or midpoint)")
 	printf("               dual: allow dual timestamps")
 	printf("--no-dscp      don't allow setting dscp (default %t)", !DefaultAllowDSCP)
+	printf("-4             IPv4 only")
+	printf("-6             IPv6 only")
 	printf("--set-src-ip   set source IP address on all outgoing packets from listeners")
 	printf("               on unspecified IP addresses (use for more reliable reply")
 	printf("               routing, but increases per-packet heap allocations)")

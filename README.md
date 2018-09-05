@@ -348,6 +348,7 @@ See [CHANGES.md](CHANGES.md).
 
 _Planned for v0.9.1..._
 
+- Fix bug where irtt server doesn't start on Linux with kernel param `ipv6.disable=1`
 - Solidify TimeSource, Time and new Windows timer support:
   - Add --timesrc to client and server
   - Fall back to Go functions as necessary for older Windows versions

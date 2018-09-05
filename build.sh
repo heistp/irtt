@@ -42,6 +42,8 @@ for a in $*; do
 		;;
 		"linux-amd64"|"linux64") env="GOOS=linux GOARCH=amd64"
 		;;
+		"linux-alix") env="GOOS=linux GOARCH=386 GO386=387"
+		;;
 		"linux-arm"|"rpi") env="GOOS=linux GOARCH=arm"
 		;;
 		"linux-mips64"|"erl") env="GOOS=linux GOARCH=mips"
