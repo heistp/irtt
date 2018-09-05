@@ -38,11 +38,11 @@ for a in $*; do
 		;;
 		"prod") tags="$tags prod"
 		;;
-		"linux-386"|"linux") env="GOOS=linux GOARCH=386"
+		"linux-386"|"linux32") env="GOOS=linux GOARCH=386"
 		;;
-		"linux-amd64"|"linux64") env="GOOS=linux GOARCH=amd64"
+		"linux-387"|"linux-alix") env="GOOS=linux GOARCH=386 GO386=387"
 		;;
-		"linux-alix") env="GOOS=linux GOARCH=386 GO386=387"
+		"linux-amd64"|"linux") env="GOOS=linux GOARCH=amd64"
 		;;
 		"linux-arm"|"rpi") env="GOOS=linux GOARCH=arm"
 		;;
@@ -54,9 +54,9 @@ for a in $*; do
 		;;
 		"darwin-amd64"|"osx") env="GOOS=darwin GOARCH=amd64"
 		;;
-		"win"|"windows") env="GOOS=windows GOARCH=386"
+		"win32"|"windows32") env="GOOS=windows GOARCH=386"
 		;;
-		"win64"|"windows64") env="GOOS=windows GOARCH=amd64"
+		"win"|"windows") env="GOOS=windows GOARCH=amd64"
 		;;
 		*) echo "Unknown parameter: $a"
 		exit 1
