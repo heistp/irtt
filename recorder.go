@@ -17,10 +17,10 @@ import (
 // all recording should be done internally.
 type Recorder struct {
 	Start                 Time            `json:"start_time"`
-	FirstSend             Time            `json:"-"`
-	LastSent              Time            `json:"-"`
-	FirstReceived         Time            `json:"-"`
-	LastReceived          Time            `json:"-"`
+	FirstSend             Time            `json:"first_send"`
+	LastSent              Time            `json:"last_sent"`
+	FirstReceived         Time            `json:"first_received"`
+	LastReceived          Time            `json:"last_received"`
 	SendCallStats         DurationStats   `json:"send_call"`
 	TimerErrorStats       DurationStats   `json:"timer_error"`
 	RTTStats              DurationStats   `json:"rtt"`
