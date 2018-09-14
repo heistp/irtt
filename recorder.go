@@ -445,6 +445,34 @@ func (s *DurationStats) MarshalJSON() ([]byte, error) {
 	return json.Marshal(j)
 }
 
+// UnmarshalJSON implements the json.Unmarshaler interface.
+func (s *DurationStats) UnmarshalJSON(b []byte) error {
+	type Alias DurationStats
+	j := &struct {
+		*Alias
+		Mean     time.Duration `json:"mean"`
+		Median   time.Duration `json:"median,omitempty"`
+		Stddev   time.Duration `json:"stddev"`
+		Variance time.Duration `json:"variance"`
+	}{
+		Alias: (*Alias)(s),
+	}
+	if err := json.Unmarshal(b, &j); err != nil {
+		return err
+	}
+
+	s.mean = float64(j.Mean)
+	if (j.Median != 0.0) {
+		s.setMedian(float64(j.Median))
+	}
+	if (s.N > 1) {
+		s.s = float64(j.Variance) * float64(s.N -1)
+	} else {
+		s.s = 0.0
+	}
+	return nil
+}
+
 // AbsDuration returns the absolute value of a duration.
 func AbsDuration(d time.Duration) time.Duration {
 	if d > 0 {
