@@ -53,7 +53,7 @@
   </style>
 </head>
 <body>
-<header>
+<header id="title-block-header">
 <h1 class="title">IRTT-SERVER(1) v0.9.0 | IRTT Manual</h1>
 <p class="author"></p>
 <p class="date">February 11, 2018</p>
@@ -177,7 +177,7 @@
 <ul>
 <li>Patterns may contain * for matching</li>
 <li>Allowing non-random fills insecure on public servers</li>
-<li>Use <em>--allow-fills=&quot;&quot;</em> to disallow all fill requests</li>
+<li>Use <em>--allow-fills=""</em> to disallow all fill requests</li>
 </ul>
 </dd>
 <dt>--tstamp=<em>modes</em></dt>
@@ -350,7 +350,7 @@
 <dt>$ irtt server</dt>
 <dd>Starts the server and listens on all addresses (unspecified address)
 </dd>
-<dt>$ irtt server -d 30s -i 20ms -l 256 --fill=rand --allow-fills=&quot;&quot;</dt>
+<dt>$ irtt server -d 30s -i 20ms -l 256 --fill=rand --allow-fills=""</dt>
 <dd>Starts the server and listens on all addresses, setting the maximum test duration to 30 seconds, minimum interval to 20 ms, and maximum packet length to 256 bytes. Disallows fill requests and forces all return packets to be filled with random data.
 </dd>
 <dt>$ irtt server -b 192.168.100.11:64381 --hmac=secret</dt>
