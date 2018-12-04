@@ -176,8 +176,7 @@ func runServerCLI(args []string) {
 
 	// install signal handler to stop server
 	sigs := make(chan os.Signal, 1)
-	signal.Notify(sigs,
-		syscall.SIGHUP, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
+	signal.Notify(sigs, os.Interrupt, syscall.SIGTERM)
 	go func() {
 		sig := <-sigs
 		printf("%s", sig)

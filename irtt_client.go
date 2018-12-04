@@ -276,8 +276,7 @@ func runClientCLI(args []string) {
 
 	// install signal handler to cancel context, which stops the test
 	sigs := make(chan os.Signal, 1)
-	signal.Notify(sigs,
-		syscall.SIGHUP, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
+	signal.Notify(sigs, os.Interrupt, syscall.SIGTERM)
 	go func() {
 		sig := <-sigs
 		if !*reallyQuiet {
