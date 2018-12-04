@@ -500,8 +500,8 @@ func (c *clientHandler) OnReceived(seqno Seqno, rtd *RoundTripData,
 	}
 }
 
-func (c *clientHandler) OnEvent(ev *Event) {
+func (c *clientHandler) OnEvent(e *Event) {
 	if !c.reallyQuiet {
-		printf("%s", ev)
+		printf("%s", e)
 	}
 }

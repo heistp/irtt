@@ -37,6 +37,7 @@ const (
 	ShortInterval
 	LargeRequest
 	AddressMismatch
+	SyslogNotSupported
 )
 
 // Client error codes.

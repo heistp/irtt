@@ -77,3 +77,20 @@ type Handler interface {
 	// OnEvent is called when an event occurs.
 	OnEvent(e *Event)
 }
+
+// MultiHandler calls multiple event handlers.
+type MultiHandler struct {
+	Handlers []Handler
+}
+
+// AddHandler adds a handler.
+func (m *MultiHandler) AddHandler(h Handler) {
+	m.Handlers = append(m.Handlers, h)
+}
+
+// OnEvent calls all event handlers.
+func (m *MultiHandler) OnEvent(e *Event) {
+	for _, h := range m.Handlers {
+		h.OnEvent(e)
+	}
+}

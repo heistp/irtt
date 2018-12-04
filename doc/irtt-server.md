@@ -53,9 +53,12 @@ irtt server [*args*]
 
     URI                      | Result
     ------------------------ | ------
-    local                    | Log to local syslog, default tag irtt
+    local:                   | Log to local syslog, default tag irtt
+    local:/irttsrv           | Log to local syslog, tag irttsrv
     udp://logsrv:514/irttsrv | UDP to logsrv:514, tag irttsrv
     tcp://logsrv:8514/       | TCP to logsrv:8514, default tag irtt
+
+    **Note:** not available on Windows, Plan 9 or Google Native Client
 
 \--timeout=*duration*
 :   Timeout for closing connections if no requests received on a

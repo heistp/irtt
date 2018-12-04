@@ -95,9 +95,14 @@ Result
 T}
 _
 T{
-local
+local:
 T}@T{
 Log to local syslog, default tag irtt
+T}
+T{
+local:/irttsrv
+T}@T{
+Log to local syslog, tag irttsrv
 T}
 T{
 udp://logsrv:514/irttsrv
@@ -110,6 +115,8 @@ T}@T{
 TCP to logsrv:8514, default tag irtt
 T}
 .TE
+.PP
+\f[B]Note:\f[R] not available on Windows, Plan 9 or Google Native Client
 .RE
 .TP
 .B \-\-timeout=\f[I]duration\f[R]

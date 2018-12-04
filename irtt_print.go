@@ -47,3 +47,10 @@ func exitOnError(err error, code int) {
 		os.Exit(code)
 	}
 }
+
+type consoleHandler struct {
+}
+
+func (h *consoleHandler) OnEvent(e *Event) {
+	println(e.String())
+}
