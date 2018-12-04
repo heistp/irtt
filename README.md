@@ -338,6 +338,14 @@ sections to get started quickly:
     more information. File an Issue if your resident usage (rss/res) is high or
     you feel that memory consumption is somehow a problem.
 
+18) Why doesn't the server start on Linux when the kernel parameter
+    `ipv6.disable=1` is set?
+
+    By default, IRTT tries to listen on both IPv4 and IPv6 addresses, and for
+    safety, the server shuts down if there are failures on any of the
+    listeners for any of the addresses. In this case, the server may be
+    started with the `-4` flag.
+
 ## Changes
 
 See [CHANGES.md](CHANGES.md).
@@ -348,7 +356,7 @@ See [CHANGES.md](CHANGES.md).
 
 _Planned for v0.9.1..._
 
-- Fix bug where irtt server doesn't start on Linux with kernel param `ipv6.disable=1`
+- Server: remove GC mode support (unnecessary optimization)
 - Solidify TimeSource, Time and new Windows timer support:
   - Add --timesrc to client and server
   - Fall back to Go functions as necessary for older Windows versions
@@ -363,7 +371,6 @@ _Planned for v0.9.1..._
   - Rename timer command to resolution and add --timesrc
   - Rename clock command to drift and add --timesrc
 - Add a `late` flag to RoundTrip
-- Server: make connref mechanism robust to listener failure
 - Measure and document local differences between ping and irtt response times
 - Consider defaulting to receive timestamp only
 - Sync Debian package to history re-write and create backports version for Debian stable
