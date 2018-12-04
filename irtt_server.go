@@ -32,7 +32,7 @@ func serverUsage() {
 	printf("               protection for server against unauthorized discovery and use")
 	if syslogSupport {
 		printf("--syslog=uri   log events to syslog (default don't use syslog)")
-		printf("               URI format: protocol://host:port/tag, examples:")
+		printf("               URI format: scheme://host:port/tag, examples:")
 		printf("               local: log to local syslog, default tag irtt")
 		printf("               local:/irttsrv: log to local syslog, tag irttsrv")
 		printf("               udp://logsrv:514/irttsrv: UDP to logsrv:514, tag irttsrv")
@@ -90,9 +90,9 @@ func runServerCLI(args []string) {
 	var maxLength = fs.IntP("l", "l", DefaultMaxLength, "max length")
 	var allowTimestampStr = fs.String("tstamp", DefaultAllowStamp.String(), "allow timestamp")
 	var hmacStr = fs.String("hmac", defaultHMACKey, "HMAC key")
-	var syslogStr = ""
+	var syslogStr *string
 	if syslogSupport {
-		syslogStr = *fs.String("syslog", "", "syslog uri")
+		syslogStr = fs.String("syslog", "", "syslog uri")
 	}
 	var timeout = fs.Duration("timeout", DefaultServerTimeout, "timeout")
 	var packetBurst = fs.Int("pburst", DefaultPacketBurst, "packet burst")
@@ -141,8 +141,8 @@ func runServerCLI(args []string) {
 	handler := &MultiHandler{[]Handler{&consoleHandler{}}}
 
 	// add syslog event handler
-	if syslogStr != "" {
-		sh, err := newSyslogHandler(syslogStr)
+	if syslogStr != nil && *syslogStr != "" {
+		sh, err := newSyslogHandler(*syslogStr)
 		exitOnError(err, exitCodeRuntimeError)
 		handler.AddHandler(sh)
 	}

@@ -5,6 +5,7 @@ package irtt
 import (
 	"log/syslog"
 	"net/url"
+	"strings"
 )
 
 const syslogSupport = true
@@ -16,12 +17,10 @@ type syslogHandler struct {
 }
 
 func (s *syslogHandler) OnEvent(e *Event) {
-	if s.syslogWriter != nil {
-		if e.IsError() {
-			s.syslogWriter.Err(e.String())
-		} else {
-			s.syslogWriter.Info(e.String())
-		}
+	if e.IsError() {
+		s.syslogWriter.Err(e.String())
+	} else {
+		s.syslogWriter.Info(e.String())
 	}
 }
 
@@ -47,11 +46,12 @@ func parseSyslogURI(suri string) (u *url.URL, err error) {
 	if u, err = url.Parse(suri); err != nil {
 		return
 	}
-	if u.Path[0] == '/' {
-		u.Path = u.Path[1:]
-	}
+	u.Path = strings.Trim(u.Path, "/")
 	if u.Path == "" {
 		u.Path = defaultSyslogTag
+	}
+	if u.Scheme == "" {
+		err = Errorf(InvalidSyslogURI, "missing colon after scheme")
 	}
 	return
 }
