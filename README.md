@@ -356,7 +356,7 @@ See [CHANGES.md](CHANGES.md).
 
 _Planned for v0.9.1..._
 
-- Server: remove GC mode support (unnecessary optimization)
+- Server: remove or improve GC mode support (unnecessary optimization)
 - Solidify TimeSource, Time and new Windows timer support:
   - Add --timesrc to client and server
   - Fall back to Go functions as necessary for older Windows versions
@@ -380,6 +380,7 @@ _Planned for v0.9.1..._
 _Planned for v0.9.2..._
 
 - Add [ping-pair](https://www.microsoft.com/en-us/research/wp-content/uploads/2017/09/PingPair-CoNEXT2017.pdf)-like functionality
+- Add `report` command, or similar, to print results from an existing JSON file
 
 ### v1.0.0
 
