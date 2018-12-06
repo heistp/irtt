@@ -4,6 +4,34 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## Unreleased
+
+### Added
+
+- Improve Windows time support by using `QueryPerformanceCounter` and
+  `GetSystemTimePreciseAsFileTime`. Time precision on Windows 10 can now
+  reach 100ns.
+- Add syslog support for the server (`--syslog` flag).
+- Add a [SmokePing](https://oss.oetiker.ch/smokeping/) probe, available from
+  SmokePing 2.7.2. It's possible to copy the
+  [code](https://github.com/oetiker/SmokePing/blob/master/lib/Smokeping/probes/IRTT.pm)
+  into older versions.
+- Update OM2P build to use the new
+  [MIPS softfloat support](https://github.com/golang/go/issues/18162) in Go 1.10.
+
+### Changed
+
+- Re-write git history with new email address.
+
+### Fixed
+
+- Fix potential client race at startup.
+- Fix issue on platforms with timer resolution not accurate enough
+  to measure server processing time (closes #13).
+- Change handled interrupt signals to only `os.Interrupt` and `syscall.SIGTERM`
+  to fix Plan 9 build.
+- Various documentation fixes.
+
 ## 0.9.0 - 2018-02-11
 
 ### Added
