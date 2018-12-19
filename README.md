@@ -87,8 +87,7 @@ The goals of this project are to:
 	- Packet payload filling to prevent relaying of arbitrary traffic
 - Output to JSON
 - An available [SmokePing](https://oss.oetiker.ch/smokeping/) probe
-  ([code](https://github.com/heistp/SmokePing/blob/master/lib/Smokeping/probes/IRTT.pm),
-  [pull request](https://github.com/oetiker/SmokePing/pull/110))
+  ([code](https://github.com/oetiker/SmokePing/blob/master/lib/Smokeping/probes/IRTT.pm)
 
 ## Limitations
 
