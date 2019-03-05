@@ -109,11 +109,14 @@ func (c *Client) Run(ctx context.Context) (r *Result, err error) {
 	// wait group for goroutine completion
 	wg := sync.WaitGroup{}
 
-	// collect before test
-	runtime.GC()
+	// if requested, act on runtime GC
+	if c.GCMode == GCOff {
+		// collect before test
+		runtime.GC()
 
-	// disable GC
-	debug.SetGCPercent(-1)
+		// disable GC
+		debug.SetGCPercent(-1)
+	}
 
 	// start receive
 	var rerr error

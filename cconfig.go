@@ -25,6 +25,7 @@ type ClientConfig struct {
 	FillOne    bool
 	HMACKey    []byte
 	Handler    ClientHandler
+	GCMode     GCMode
 	ThreadLock bool
 	Supplied   *ClientConfig
 }
@@ -50,6 +51,7 @@ func NewClientConfig() *ClientConfig {
 		Timer:      DefaultTimer,
 		TimeSource: DefaultTimeSource,
 		Waiter:     DefaultWait,
+		GCMode:     DefaultGCMode,
 		ThreadLock: DefaultThreadLock,
 	}
 }
@@ -92,6 +94,7 @@ func (c *ClientConfig) MarshalJSON() ([]byte, error) {
 		Filler        string        `json:"filler"`
 		FillOne       bool          `json:"fill_one"`
 		ServerFill    string        `json:"server_fill"`
+		GCMode        string        `json:"gc_mode"`
 		ThreadLock    bool          `json:"thread_lock"`
 		Supplied      *ClientConfig `json:"supplied,omitempty"`
 	}{
@@ -109,6 +112,7 @@ func (c *ClientConfig) MarshalJSON() ([]byte, error) {
 		Filler:        fstr,
 		FillOne:       c.FillOne,
 		ServerFill:    c.ServerFill,
+		GCMode:        c.GCMode.String(),
 		ThreadLock:    c.ThreadLock,
 		Supplied:      c.Supplied,
 	}

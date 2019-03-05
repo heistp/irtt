@@ -11,6 +11,7 @@ const (
 	DefaultPortInt    = 2112
 	DefaultTTL        = 0
 	DefaultThreadLock = false
+	DefaultGCMode     = GCOn
 )
 
 // Client defaults.
@@ -73,7 +74,6 @@ const (
 	DefaultAllowStamp    = DualStamps
 	DefaultAllowDSCP     = true
 	DefaultSetSrcIP      = false
-	DefaultGCMode        = GCOn
 )
 
 // DefaultBindAddrs are the default bind addresses.

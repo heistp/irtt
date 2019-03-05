@@ -107,6 +107,9 @@ func clientUsage() {
 	printf("--ttl=ttl      time to live (default %d, meaning use OS default)", DefaultTTL)
 	printf("--loose        accept and use any server restricted test parameters instead")
 	printf("               of exiting with nonzero status")
+	printf("--gc=mode      sets garbage collection mode (default %s)", DefaultGCMode)
+	printf("               on: garbage collector always on")
+	printf("               off: garbage collector always off")
 	printf("--thread       lock sending and receiving goroutines to OS threads")
 	printf("-h             show help")
 	printf("-v             show version")
@@ -178,6 +181,7 @@ func runClientCLI(args []string) {
 	var timeoutsStr = fs.String("timeouts", DefaultOpenTimeouts.String(), "open timeouts")
 	var ttl = fs.Int("ttl", DefaultTTL, "IP time to live")
 	var loose = fs.Bool("loose", DefaultLoose, "loose")
+	var gcModeStr = fs.String("gc", DefaultGCMode.String(), "gc mode")
 	var threadLock = fs.Bool("thread", DefaultThreadLock, "thread")
 	var version = fs.BoolP("version", "v", false, "version")
 	err := fs.Parse(args)
@@ -291,6 +295,9 @@ func runClientCLI(args []string) {
 		os.Exit(exitCodeDoubleSignal)
 	}()
 
+	// parse GC mode
+	gcMode, err := ParseGCMode(*gcModeStr)
+
 	// create config
 	cfg := NewClientConfig()
 	cfg.LocalAddress = *laddrStr
@@ -316,6 +323,7 @@ func runClientCLI(args []string) {
 	cfg.HMACKey = hmacKey
 	cfg.Handler = &clientHandler{*quiet, *reallyQuiet}
 	cfg.ThreadLock = *threadLock
+	cfg.GCMode = gcMode
 
 	// run test
 	c := NewClient(cfg)
