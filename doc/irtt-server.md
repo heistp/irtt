@@ -104,15 +104,6 @@ irtt server [*args*]
     unspecified IP addresses (use for more reliable reply routing, but
     increases per-packet heap allocations)
 
-\--gc=*mode*
-:   Sets garbage collection mode (default on). Possible values:
-
-    Value  | Meaning
-    ------ | ------------------
-    *on*   | Garbage collector always on
-    *off*  | Garbage collector always off
-    *idle* | Garbage collector enabled only when idle
-
 \--thread
 :   Lock request handling goroutines to OS threads
 

@@ -20,7 +20,6 @@ type ServerConfig struct {
 	Handler     Handler
 	SetSrcIP    bool
 	TimeSource  TimeSource
-	GCMode      GCMode
 	ThreadLock  bool
 }
 
@@ -41,7 +40,6 @@ func NewServerConfig() *ServerConfig {
 		IPVersion:   DefaultIPVersion,
 		SetSrcIP:    DefaultSetSrcIP,
 		TimeSource:  DefaultTimeSource,
-		GCMode:      DefaultGCMode,
 		ThreadLock:  DefaultThreadLock,
 	}
 }

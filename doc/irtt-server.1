@@ -213,38 +213,6 @@ Set source IP address on all outgoing packets from listeners on
 unspecified IP addresses (use for more reliable reply routing, but
 increases per-packet heap allocations)
 .TP
-.B --gc=\f[I]mode\f[R]
-Sets garbage collection mode (default on).
-Possible values:
-.RS
-.PP
-.TS
-tab(@);
-l l.
-T{
-Value
-T}@T{
-Meaning
-T}
-_
-T{
-\f[I]on\f[R]
-T}@T{
-Garbage collector always on
-T}
-T{
-\f[I]off\f[R]
-T}@T{
-Garbage collector always off
-T}
-T{
-\f[I]idle\f[R]
-T}@T{
-Garbage collector enabled only when idle
-T}
-.TE
-.RE
-.TP
 .B --thread
 Lock request handling goroutines to OS threads
 .TP

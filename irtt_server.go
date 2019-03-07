@@ -64,10 +64,6 @@ func serverUsage() {
 	printf("--set-src-ip   set source IP address on all outgoing packets from listeners")
 	printf("               on unspecified IP addresses (use for more reliable reply")
 	printf("               routing, but increases per-packet heap allocations)")
-	printf("--gc=mode      sets garbage collection mode (default %s)", DefaultGCMode)
-	printf("               on: garbage collector always on")
-	printf("               off: garbage collector always off")
-	printf("               idle: garbage collector enabled only when idle")
 	printf("--thread       lock request handling goroutines to OS threads")
 	printf("-h             show help")
 	printf("-v             show version")
@@ -103,7 +99,6 @@ func runServerCLI(args []string) {
 	var ttl = fs.Int("ttl", DefaultTTL, "IP time to live")
 	var noDSCP = fs.Bool("no-dscp", !DefaultAllowDSCP, "no DSCP")
 	var setSrcIP = fs.Bool("set-src-ip", DefaultSetSrcIP, "set source IP")
-	var gcModeStr = fs.String("gc", DefaultGCMode.String(), "gc mode")
 	var lockOSThread = fs.Bool("thread", DefaultThreadLock, "thread")
 	var version = fs.BoolP("version", "v", false, "version")
 	fs.Parse(args)
@@ -147,10 +142,6 @@ func runServerCLI(args []string) {
 		handler.AddHandler(sh)
 	}
 
-	// parse GC mode
-	gcMode, err := ParseGCMode(*gcModeStr)
-	exitOnError(err, exitCodeBadCommandLine)
-
 	// create server config
 	cfg := NewServerConfig()
 	cfg.Addrs = strings.Split(*baddrsStr, ",")
@@ -168,7 +159,6 @@ func runServerCLI(args []string) {
 	cfg.Handler = handler
 	cfg.IPVersion = ipVer
 	cfg.SetSrcIP = *setSrcIP
-	cfg.GCMode = gcMode
 	cfg.ThreadLock = *lockOSThread
 
 	// create server

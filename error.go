@@ -30,7 +30,6 @@ const (
 	NoMatchingInterfaces Code = -1 * (iota + 1*1024)
 	NoMatchingInterfacesUp
 	UnspecifiedWithSpecifiedAddresses
-	InvalidGCModeString
 	UnexpectedReplyFlag
 	NoSuitableAddressFound
 	InvalidConnToken

@@ -73,7 +73,6 @@ const (
 	DefaultAllowStamp    = DualStamps
 	DefaultAllowDSCP     = true
 	DefaultSetSrcIP      = false
-	DefaultGCMode        = GCOn
 )
 
 // DefaultBindAddrs are the default bind addresses.

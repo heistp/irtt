@@ -23,6 +23,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 - Re-write git history with new email address.
 
+### Removed
+
+- Stop disabling GC on client and remove `--gc` flag from server as disabling GC
+  no longer offers a demonstrable performance benefit. See
+  [The Journey of Go's Garbage Collector](https://blog.golang.org/ismmkeynote).
+
 ### Fixed
 
 - Fix potential client race at startup.

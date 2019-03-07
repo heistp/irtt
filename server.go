@@ -5,7 +5,6 @@ import (
 	"math/rand"
 	"net"
 	"runtime"
-	"runtime/debug"
 	"sync"
 	"time"
 )
@@ -14,8 +13,6 @@ import (
 type Server struct {
 	*ServerConfig
 	start       time.Time
-	connRefs    int
-	connRefMtx  sync.Mutex
 	shutdown    bool
 	shutdownMtx sync.Mutex
 	shutdownC   chan struct{}
@@ -57,11 +54,6 @@ func (s *Server) ListenAndServe() error {
 			l.conn.localAddr())
 
 		go l.listenAndServe(errC)
-	}
-
-	// disable GC, if requested
-	if s.GCMode == GCOff {
-		debug.SetGCPercent(-1)
 	}
 
 	// wait on shutdown chan
@@ -106,31 +98,9 @@ func (s *Server) makeListeners() ([]*listener, error) {
 	}
 	ls := make([]*listener, 0, len(lconns))
 	for _, lconn := range lconns {
-		ls = append(ls, newListener(s.ServerConfig, lconn, s.connRef))
+		ls = append(ls, newListener(s.ServerConfig, lconn))
 	}
 	return ls, nil
-}
-
-func (s *Server) connRef(b bool) {
-	s.connRefMtx.Lock()
-	defer s.connRefMtx.Unlock()
-	if b {
-		s.connRefs++
-		if s.connRefs == 1 {
-			runtime.GC()
-			if s.GCMode == GCIdle {
-				debug.SetGCPercent(-1)
-			}
-		}
-	} else {
-		s.connRefs--
-		if s.connRefs == 0 {
-			if s.GCMode == GCIdle {
-				debug.SetGCPercent(100)
-			}
-			runtime.GC()
-		}
-	}
 }
 
 // listener is a server listener.
@@ -143,7 +113,7 @@ type listener struct {
 	closedMtx sync.Mutex
 }
 
-func newListener(cfg *ServerConfig, lc *lconn, cref func(bool)) *listener {
+func newListener(cfg *ServerConfig, lc *lconn) *listener {
 	cap, _ := detectMTU(lc.localAddr().IP)
 
 	pp := newPacketPool(func() *packet {
@@ -154,7 +124,7 @@ func newListener(cfg *ServerConfig, lc *lconn, cref func(bool)) *listener {
 		ServerConfig: cfg,
 		conn:         lc,
 		pktPool:      pp,
-		cmgr:         newConnMgr(cfg, cref),
+		cmgr:         newConnMgr(cfg),
 	}
 }
 
@@ -354,14 +324,12 @@ func (po *pktPool) put(p *packet) {
 // connmgr manages server connections
 type connmgr struct {
 	*ServerConfig
-	ref    func(bool)
 	sconns map[ctoken]*sconn
 }
 
-func newConnMgr(cfg *ServerConfig, ref func(bool)) *connmgr {
+func newConnMgr(cfg *ServerConfig) *connmgr {
 	return &connmgr{
 		ServerConfig: cfg,
-		ref:          ref,
 		sconns:       make(map[ctoken]*sconn, sconnsInitSize),
 	}
 }
@@ -371,7 +339,6 @@ func (cm *connmgr) put(sc *sconn) {
 	ct := cm.newCtoken()
 	sc.ctoken = ct
 	cm.sconns[ct] = sc
-	cm.ref(true)
 }
 
 func (cm *connmgr) get(ct ctoken) (sc *sconn) {
@@ -425,5 +392,4 @@ func (cm *connmgr) newCtoken() ctoken {
 
 func (cm *connmgr) delete(ct ctoken) {
 	delete(cm.sconns, ct)
-	cm.ref(false)
 }
