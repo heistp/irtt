@@ -173,7 +173,7 @@ sections to get started quickly:
      or not replies are received. The effect of this, for example, is that a
      fixed-length pause in server packet processing (with packets buffered
      during the pause) will look like a single high RTT in ping, and multiple
-     high then descending RTTs in irtt for the duration of the maximum RTT.
+     high then descending RTTs in IRTT for the duration of the maximum RTT.
 
 2) Is there a public server I can use?
 
@@ -213,16 +213,18 @@ sections to get started quickly:
       correct HMAC key, also specified with the `--hmac` flag.
    5) You're trying to connect to a listener that's listening on an unspecified
       IP address, but reply packets are coming back on a different route from the
-      requests, or not coming back at all. This can happen for example in
-      network environments with [asymmetric routing and a firewall or NAT]
+      requests, or not coming back at all. This can happen in network
+      environments with [asymmetric routing and a firewall or NAT]
       (https://www.cisco.com/web/services/news/ts_newsletter/tech/chalktalk/archives/200903.html).
-      The best solution may be to change the network configuration to avoid this
-      problem, but when this is not possible, try running the server with the
-      `--set-src-ip` flag. This explicitly sets the source address on all reply
-      packets from listeners on unspecified IP addresses to the destination
-      address that the request was received on. It's not done by default in
-      order to avoid the additional per-packet heap allocations required by the
-      `golang.org/x/net` packages.
+      There are several possible solutions to this:
+      - Change your network configuration to avoid the problem.
+      - Have the IRTT server listen on specific addresses with the `-b` flag.
+      - Use the `--set-src-ip` flag on the server, which explicitly sets the
+        source address on all reply packets from listeners on unspecified IP
+        addresses to the destination address that the request was received on.
+        The only reason this is not done by default is to avoid the extra
+        per-packet heap allocations required by the `golang.org/x/net` packege
+        to do so.
 
 5) Why is the send (or receive) delay negative or much larger than I expect?
 
@@ -421,8 +423,9 @@ _Planned for v1.0.0..._
 
 ### Inbox
 
-_Collection area for the future..._
+_Collection area..._
 
+- Add UDP-lite support to allow partially damaged packets to be received
 - Add different server authentication modes:
 	- none (no conn token in header, for minimum packet sizes during local use)
 	- token (what we have today, 64-bit token in header)
