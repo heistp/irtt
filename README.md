@@ -55,6 +55,7 @@ The goals of this project are to:
 - Support small enough packet sizes for [VoIP](https://www.cisco.com/c/en/us/support/docs/voice/voice-quality/7934-bwidth-consume.html) simulation
 - Support relevant socket options, including DSCP
 - Use a single UDP port for deployment simplicity
+- Keep the executable size small enough for use on embedded devices
 - Provide an API for embedding and extensibility
 
 ## Features:
@@ -347,6 +348,11 @@ sections to get started quickly:
     listeners for any of the addresses. In this case, the server may be
     started with the `-4` flag.
 
+19) Why don't you make use of `x` library?
+
+    We need to keep the executable size as small as possible for embedded
+    devices, and most external libaries are not compatible with this.
+
 ## Changes
 
 See [CHANGES.md](CHANGES.md).
@@ -372,7 +378,6 @@ _Planned for v0.9.1..._
   - Rename clock command to drift and add --timesrc
 - Add a `late` flag to RoundTrip
 - Measure and document local differences between ping and irtt response times
-- Consider defaulting to receive timestamp only
 - Sync Debian package to history re-write and create backports version for Debian stable
 
 ### v0.9.2
