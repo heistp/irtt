@@ -227,6 +227,7 @@ func (c *cconn) open(ctx context.Context) (err error) {
 	}
 	sp.setPayload(params.bytes())
 	sp.updateHMAC()
+	sp.dscp = c.cfg.DSCP
 	var received bool
 	for _, to := range c.cfg.OpenTimeouts {
 		err = c.send(sp)
