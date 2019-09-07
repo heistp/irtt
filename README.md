@@ -391,6 +391,8 @@ _Planned for v0.9.2..._
 
 _Planned for v1.0.0..._
 
+- Refactor handshake params to use signed values and straight bytes as
+  appropriate.
 - Improve client output flexibility:
   - Allow specifying a format string for text output with optional units for times
   - Add format abbreviations for CSV, space delimited, etc.

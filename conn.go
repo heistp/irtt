@@ -339,8 +339,7 @@ type lconn struct {
 func listen(laddr *net.UDPAddr, setSrcIP bool, ts TimeSource) (l *lconn, err error) {
 	ipVer := IPVersionFromUDPAddr(laddr)
 	var conn *net.UDPConn
-	conn, err = net.ListenUDP(ipVer.udpNetwork(), laddr)
-	if err != nil {
+	if conn, err = net.ListenUDP(ipVer.udpNetwork(), laddr); err != nil {
 		return
 	}
 	l = &lconn{nconn: &nconn{}, setSrcIP: setSrcIP && laddr.IP.IsUnspecified()}
