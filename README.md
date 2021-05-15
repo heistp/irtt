@@ -133,6 +133,15 @@ then from the `github.com/heistp/irtt` directory, do:
 3. `go install ./cmd/irtt` or `./build.sh` and move resulting `irtt` executable
    to install location
 
+Building for iOS:
+
+I have no way to verify this, but I received a report that the following is
+"close to but not quite the right command" to cross-compile for iOS:
+
+``GOOS=ios GOARCH=arm64  IPHONEOS_DEPLOYMENT_TARGET=14.0 CGO_ENABLED=1 CGO_CFLAGS="-arch arm64 -isysroot `xcrun --sdk iphoneos --show-sdk-path` -mios-version-min=10.0" CGO_LDFLAGS="-arch arm64 -isysroot `xcrun --sdk iphoneos --show-sdk-path`" go build -o irtt cmd/irtt/main.go``
+
+Please file an issue if you get this working so I can update the doc.
+
 ## Documentation
 
 After installing IRTT, see the man pages and their corresponding EXAMPLES
