@@ -6,6 +6,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## Unreleased
 
+## 0.9.1 - 2021-05-18
+
 ### Added
 
 - Improve Windows time support by using `QueryPerformanceCounter` and
@@ -22,6 +24,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Changed
 
 - Re-write git history with new email address.
+- Re-licensed to GPLv2.
 
 ### Removed
 

@@ -7,5 +7,4 @@ require (
 	github.com/pkg/profile v1.3.0
 	golang.org/x/net v0.0.0-20210405180319-a5a99cb37ef4
 	golang.org/x/sys v0.0.0-20210514084401-e8d321eab015
-	golang.org/x/tools v0.1.1 // indirect
 )

@@ -1,7 +1,7 @@
 package irtt
 
 // Version is the IRTT version number (replaced during build).
-var Version = "0.9.0"
+var Version = "0.9.1"
 
 // ProtocolVersion is the protocol version number, which must match between client
 // and server.

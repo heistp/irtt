@@ -4,8 +4,7 @@ IRTT measures round-trip time, one-way delay and other metrics using UDP
 packets sent on a fixed period, and produces both user and machine parseable
 output.
 
-IRTT has reached version 0.9.0, and is usable today, but needs more work until
-version 1.0.0 can be released. I would appreciate any feedback, which you can
+IRTT has reached version 0.9.1. I would appreciate any feedback, which you can
 send under Issues. However, it could be useful to first review the
 [Roadmap](#roadmap) section of the documentation before submitting a new bug or
 feature request.
@@ -368,9 +367,9 @@ See [CHANGES.md](CHANGES.md).
 
 ## Roadmap
 
-### v0.9.1
+### v0.9.2
 
-_Planned for v0.9.1..._
+_Planned for v0.9.2..._
 
 - Solidify TimeSource, Time and new Windows timer support:
   - Add --timesrc to client and server
@@ -388,12 +387,6 @@ _Planned for v0.9.1..._
 - Add a `late` flag to RoundTrip
 - Measure and document local differences between ping and irtt response times
 - Sync Debian package to history re-write and create backports version for Debian stable
-
-### v0.9.2
-
-_Planned for v0.9.2..._
-
-- Add [ping-pair](https://www.microsoft.com/en-us/research/wp-content/uploads/2017/09/PingPair-CoNEXT2017.pdf)-like functionality
 - Add `report` command, or similar, to print results from an existing JSON file
 
 ### v1.0.0
@@ -441,6 +434,7 @@ _Planned for v1.0.0..._
 
 _Collection area..._
 
+- Add [ping-pair](https://www.microsoft.com/en-us/research/wp-content/uploads/2017/09/PingPair-CoNEXT2017.pdf)-like functionality
 - Add UDP-lite support to allow partially damaged packets to be received
 - Add different server authentication modes:
 	- none (no conn token in header, for minimum packet sizes during local use)
