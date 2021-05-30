@@ -12,6 +12,7 @@ type ClientConfig struct {
 	LocalAddr     net.Addr
 	RemoteAddr    net.Addr
 	OpenTimeouts  Durations
+	LogCSV        bool
 	NoTest        bool
 	Params
 	Loose      bool

@@ -40,6 +40,7 @@ func clientUsage() {
 	printf("-Q             really quiet, suppress all output except errors to stderr")
 	printf("-n             no test, connect to the server and validate test parameters")
 	printf("               but don't run the test")
+	printf("-c             log in CSV")
 	printf("--stats=stats  server stats on received packets (default %s)", DefaultReceivedStats.String())
 	printf("               none: no server stats on received packets")
 	printf("               count: total count of received packets")
@@ -156,6 +157,7 @@ func runClientCLI(args []string) {
 	var intervalStr = fs.StringP("i", "i", DefaultInterval.String(), "send interval")
 	var length = fs.IntP("l", "l", DefaultLength, "packet length")
 	var noTest = fs.BoolP("n", "n", false, "no test")
+	var logCSV = fs.BoolP("c", "c", false, "log in CSV")
 	var rsStr = fs.String("stats", DefaultReceivedStats.String(), "received stats")
 	var tsatStr = fs.String("tstamp", DefaultStampAt.String(), "stamp at")
 	var clockStr = fs.String("clock", DefaultClock.String(), "clock")
@@ -296,6 +298,7 @@ func runClientCLI(args []string) {
 	cfg.LocalAddress = *laddrStr
 	cfg.RemoteAddress = raddrStr
 	cfg.OpenTimeouts = timeouts
+	cfg.LogCSV = true
 	cfg.NoTest = *noTest
 	cfg.Duration = duration
 	cfg.Interval = interval
@@ -314,7 +317,7 @@ func runClientCLI(args []string) {
 	cfg.Filler = filler
 	cfg.FillOne = *fillOne
 	cfg.HMACKey = hmacKey
-	cfg.Handler = &clientHandler{*quiet, *reallyQuiet}
+	cfg.Handler = &clientHandler{*quiet, *reallyQuiet, *logCSV}
 	cfg.ThreadLock = *threadLock
 
 	// run test
@@ -460,6 +463,7 @@ func writeResultJSON(r *Result, output string, cancelled bool) error {
 type clientHandler struct {
 	quiet       bool
 	reallyQuiet bool
+	logCSV      bool
 }
 
 func (c *clientHandler) OnSent(seqno Seqno, rtd *RoundTripData) {
@@ -467,6 +471,17 @@ func (c *clientHandler) OnSent(seqno Seqno, rtd *RoundTripData) {
 
 func (c *clientHandler) OnReceived(seqno Seqno, rtd *RoundTripData,
 	prtd *RoundTripData, late bool, dup bool) {
+	json := [3]string{" rd=%s", " sd=%s", "seq=%d rtt=%s%s%s ipdv=%s%s"}
+	csv := [3]string{"%s,", "%s,", "%d,%s%s%s,%s%s"}
+	var fmts [3]string
+	if c.logCSV {
+		if seqno == 0 {
+			printf("seq,rd,sd,seq,rtt,ipdv")
+		}
+		fmts = csv
+	} else {
+		fmts = json
+	}
 	if !c.reallyQuiet {
 		if dup {
 			printf("DUP! seq=%d", seqno)
@@ -483,17 +498,17 @@ func (c *clientHandler) OnReceived(seqno Seqno, rtd *RoundTripData,
 			}
 			rd := ""
 			if rtd.ReceiveDelay() != InvalidDuration {
-				rd = fmt.Sprintf(" rd=%s", rdur(rtd.ReceiveDelay()))
+				rd = fmt.Sprintf(fmts[0], rdur(rtd.ReceiveDelay()))
 			}
 			sd := ""
 			if rtd.SendDelay() != InvalidDuration {
-				sd = fmt.Sprintf(" sd=%s", rdur(rtd.SendDelay()))
+				sd = fmt.Sprintf(fmts[1], rdur(rtd.SendDelay()))
 			}
 			sl := ""
 			if late {
 				sl = " (LATE)"
 			}
-			printf("seq=%d rtt=%s%s%s ipdv=%s%s", seqno, rdur(rtd.RTT()),
+			printf(fmts[2], seqno, rdur(rtd.RTT()),
 				rd, sd, ipdv, sl)
 		}
 	}
