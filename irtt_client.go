@@ -471,12 +471,12 @@ func (c *clientHandler) OnSent(seqno Seqno, rtd *RoundTripData) {
 
 func (c *clientHandler) OnReceived(seqno Seqno, rtd *RoundTripData,
 	prtd *RoundTripData, late bool, dup bool) {
-	json := [3]string{" rd=%s", " sd=%s", "seq=%d rtt=%s%s%s ipdv=%s%s"}
-	csv := [3]string{"%s,", "%s,", "%d,%s%s%s,%s%s"}
-	var fmts [3]string
+	json := `{"seq":"%d", "rtt":"%s", "rd":"%s", "sd":"%s", "ipdv":"%s", "late":%v}`
+	csv := "%d, %s, %s, %s, %s, %s"
+	var fmts string
 	if c.logCSV {
 		if seqno == 0 {
-			printf("seq,rd,sd,seq,rtt,ipdv")
+			printf("seq,rd,sd,seq,rtt,ipdv,late")
 		}
 		fmts = csv
 	} else {
@@ -498,18 +498,13 @@ func (c *clientHandler) OnReceived(seqno Seqno, rtd *RoundTripData,
 			}
 			rd := ""
 			if rtd.ReceiveDelay() != InvalidDuration {
-				rd = fmt.Sprintf(fmts[0], rdur(rtd.ReceiveDelay()))
+				rd = fmt.Sprintf("%s", rdur(rtd.ReceiveDelay()))
 			}
 			sd := ""
 			if rtd.SendDelay() != InvalidDuration {
-				sd = fmt.Sprintf(fmts[1], rdur(rtd.SendDelay()))
+				sd = fmt.Sprintf("%s", rdur(rtd.SendDelay()))
 			}
-			sl := ""
-			if late {
-				sl = " (LATE)"
-			}
-			printf(fmts[2], seqno, rdur(rtd.RTT()),
-				rd, sd, ipdv, sl)
+			printf(fmts, seqno, rdur(rtd.RTT()), rd, sd, ipdv, late)
 		}
 	}
 }
