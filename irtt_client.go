@@ -470,7 +470,7 @@ func (c *clientHandler) OnSent(seqno Seqno, rtd *RoundTripData) {
 }
 
 func (c *clientHandler) OnReceived(seqno Seqno, rtd *RoundTripData,
-	prtd *RoundTripData, late bool, dup bool) {
+	prtd *RoundTripData, dup bool) {
 	json := `{"seq":"%d", "rtt":"%s", "rd":"%s", "sd":"%s", "ipdv":"%s", "late":%v}`
 	csv := "%d, %s, %s, %s, %s, %s"
 	var fmts string
@@ -504,7 +504,7 @@ func (c *clientHandler) OnReceived(seqno Seqno, rtd *RoundTripData,
 			if rtd.SendDelay() != InvalidDuration {
 				sd = fmt.Sprintf("%s", rdur(rtd.SendDelay()))
 			}
-			printf(fmts, seqno, rdur(rtd.RTT()), rd, sd, ipdv, late)
+			printf(fmts, seqno, rdur(rtd.RTT()), rd, sd, ipdv, rtd.Late)
 		}
 	}
 }

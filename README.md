@@ -384,7 +384,6 @@ _Planned for v0.9.2..._
   - Rename sleep command to timer and add --timesrc, --sleep, --timer and --tcomp
   - Rename timer command to resolution and add --timesrc
   - Rename clock command to drift and add --timesrc
-- Add a `late` flag to RoundTrip
 - Measure and document local differences between ping and irtt response times
 - Sync Debian package to history re-write and create backports version for Debian stable
 - Add `report` command, or similar, to print results from an existing JSON file

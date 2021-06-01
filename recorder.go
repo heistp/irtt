@@ -130,20 +130,20 @@ func (r *Recorder) recordReceive(p *packet, sts *Timestamp) bool {
 	}
 
 	// check for lateness
-	late := seqno < r.lastSeqno
+	rtd.Late = seqno < r.lastSeqno
 
 	// check for duplicate (don't update stats for duplicates)
 	if !rtd.Client.Receive.IsZero() {
 		r.Duplicates++
 		// call recorder handler
 		if r.RecorderHandler != nil {
-			r.RecorderHandler.OnReceived(p.seqno(), rtd, prtd, late, true)
+			r.RecorderHandler.OnReceived(p.seqno(), rtd, prtd, true)
 		}
 		return true
 	}
 
 	// record late packet
-	if late {
+	if rtd.Late {
 		r.LatePackets++
 	}
 	r.lastSeqno = seqno
@@ -184,7 +184,7 @@ func (r *Recorder) recordReceive(p *packet, sts *Timestamp) bool {
 
 	// call recorder handler
 	if r.RecorderHandler != nil {
-		r.RecorderHandler.OnReceived(p.seqno(), rtd, prtd, late, false)
+		r.RecorderHandler.OnReceived(p.seqno(), rtd, prtd, false)
 	}
 
 	return true
@@ -196,6 +196,7 @@ type RoundTripData struct {
 	Client         Timestamp `json:"client"`
 	Server         Timestamp `json:"server"`
 	receivedWindow ReceivedWindow
+	Late           bool // Set after comparison with previous RTD
 }
 
 // ReplyReceived returns true if a reply was received from the server.
@@ -466,5 +467,5 @@ type RecorderHandler interface {
 	OnSent(seqno Seqno, rtd *RoundTripData)
 
 	// OnReceived is called when a packet is received.
-	OnReceived(seqno Seqno, rtd *RoundTripData, pred *RoundTripData, late bool, dup bool)
+	OnReceived(seqno Seqno, rtd *RoundTripData, pred *RoundTripData, dup bool)
 }
