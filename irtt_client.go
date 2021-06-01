@@ -41,6 +41,7 @@ func clientUsage() {
 	printf("-n             no test, connect to the server and validate test parameters")
 	printf("               but don't run the test")
 	printf("-c             log in CSV")
+	printf("-j             log in JSON")
 	printf("--stats=stats  server stats on received packets (default %s)", DefaultReceivedStats.String())
 	printf("               none: no server stats on received packets")
 	printf("               count: total count of received packets")
@@ -158,6 +159,7 @@ func runClientCLI(args []string) {
 	var length = fs.IntP("l", "l", DefaultLength, "packet length")
 	var noTest = fs.BoolP("n", "n", false, "no test")
 	var logCSV = fs.BoolP("c", "c", false, "log in CSV")
+	var logJSON = fs.BoolP("j", "j", false, "log in JSON")
 	var rsStr = fs.String("stats", DefaultReceivedStats.String(), "received stats")
 	var tsatStr = fs.String("tstamp", DefaultStampAt.String(), "stamp at")
 	var clockStr = fs.String("clock", DefaultClock.String(), "clock")
@@ -317,7 +319,7 @@ func runClientCLI(args []string) {
 	cfg.Filler = filler
 	cfg.FillOne = *fillOne
 	cfg.HMACKey = hmacKey
-	cfg.Handler = &clientHandler{*quiet, *reallyQuiet, *logCSV}
+	cfg.Handler = &clientHandler{*quiet, *reallyQuiet, *logCSV, *logJSON}
 	cfg.ThreadLock = *threadLock
 
 	// run test
@@ -464,6 +466,7 @@ type clientHandler struct {
 	quiet       bool
 	reallyQuiet bool
 	logCSV      bool
+	logJSON     bool
 }
 
 func (c *clientHandler) OnSent(seqno Seqno, rtd *RoundTripData) {
@@ -471,19 +474,13 @@ func (c *clientHandler) OnSent(seqno Seqno, rtd *RoundTripData) {
 
 func (c *clientHandler) OnReceived(seqno Seqno, rtd *RoundTripData,
 	prtd *RoundTripData, dup bool) {
-	json := `{"seq":"%d", "rtt":"%s", "rd":"%s", "sd":"%s", "ipdv":"%s", "late":%v}`
-	csv := "%d, %s, %s, %s, %s, %s"
-	var fmts string
 	if c.logCSV {
 		if seqno == 0 {
 			printf("seq,rd,sd,seq,rtt,ipdv,late")
 		}
-		fmts = csv
-	} else {
-		fmts = json
 	}
 	if !c.reallyQuiet {
-		if dup {
+		if dup && !(c.logCSV || c.logJSON) {
 			printf("DUP! seq=%d", seqno)
 			return
 		}
@@ -504,7 +501,20 @@ func (c *clientHandler) OnReceived(seqno Seqno, rtd *RoundTripData,
 			if rtd.SendDelay() != InvalidDuration {
 				sd = fmt.Sprintf("%s", rdur(rtd.SendDelay()))
 			}
-			printf(fmts, seqno, rdur(rtd.RTT()), rd, sd, ipdv, rtd.Late)
+			if c.logCSV {
+				printf("%d, %s, %s, %s, %s, %v",
+					seqno, rdur(rtd.RTT()), rd, sd, ipdv, rtd.Late)
+			} else if c.logJSON {
+				printf(`{"seq":"%d", "rtt":"%s", "rd":"%s", "sd":"%s", "ipdv":"%s", "late":%v}`,
+					seqno, rdur(rtd.RTT()), rd, sd, ipdv, rtd.Late)
+			} else {
+				sl := ""
+				if rtd.Late {
+					sl = " (LATE)"
+				}
+				printf("seq=%d rtt=%s%s%s ipdv=%s%s", seqno, rdur(rtd.RTT()),
+					rd, sd, ipdv, sl)
+			}
 		}
 	}
 }
