@@ -486,28 +486,49 @@ func (c *clientHandler) OnReceived(seqno Seqno, rtd *RoundTripData,
 		}
 
 		if !c.quiet {
-			ipdv := "n/a"
-			if prtd != nil {
-				dv := rtd.IPDVSince(prtd)
-				if dv != InvalidDuration {
-					ipdv = rdur(AbsDuration(dv)).String()
+			cdur := func(dur time.Duration) string {
+				out := "nil"
+				if dur != InvalidDuration {
+					out = fmt.Sprintf("%d", dur*time.Nanosecond)
 				}
-			}
-			rd := ""
-			if rtd.ReceiveDelay() != InvalidDuration {
-				rd = fmt.Sprintf("%s", rdur(rtd.ReceiveDelay()))
-			}
-			sd := ""
-			if rtd.SendDelay() != InvalidDuration {
-				sd = fmt.Sprintf("%s", rdur(rtd.SendDelay()))
+				return out
 			}
 			if c.logCSV {
-				printf("%d, %s, %s, %s, %s, %v",
-					seqno, rdur(rtd.RTT()), rd, sd, ipdv, rtd.Late)
+				dv := InvalidDuration
+				if prtd != nil {
+					dv = rtd.IPDVSince(prtd)
+				}
+				printf("%d, %d, %s, %s, %v, %v",
+					seqno, rtd.RTT(),
+					cdur(rtd.ReceiveDelay()), cdur(rtd.SendDelay()),
+					cdur(AbsDuration(dv)),
+					rtd.Late)
 			} else if c.logJSON {
-				printf(`{"seq":"%d", "rtt":"%s", "rd":"%s", "sd":"%s", "ipdv":"%s", "late":%v}`,
-					seqno, rdur(rtd.RTT()), rd, sd, ipdv, rtd.Late)
+				dv := InvalidDuration
+				if prtd != nil {
+					dv = rtd.IPDVSince(prtd)
+				}
+				printf(`{"seq":%d, "rtt":%d, "rd":%s, "sd":%s, "ipdv":%s, "late":%v}`,
+					seqno, rtd.RTT(),
+					cdur(rtd.ReceiveDelay()), cdur(rtd.SendDelay()),
+					cdur(AbsDuration(dv)),
+					rtd.Late)
 			} else {
+				ipdv := "n/a"
+				if prtd != nil {
+					dv := rtd.IPDVSince(prtd)
+					if dv != InvalidDuration {
+						ipdv = rdur(AbsDuration(dv)).String()
+					}
+				}
+				rd := ""
+				if rtd.ReceiveDelay() != InvalidDuration {
+					rd = fmt.Sprintf(" rd=%s", rdur(rtd.ReceiveDelay()))
+				}
+				sd := ""
+				if rtd.SendDelay() != InvalidDuration {
+					sd = fmt.Sprintf(" sd=%s", rdur(rtd.SendDelay()))
+				}
 				sl := ""
 				if rtd.Late {
 					sl = " (LATE)"
