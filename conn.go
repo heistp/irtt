@@ -400,6 +400,7 @@ func (l *lconn) send(p *packet) (err error) {
 
 func (l *lconn) receive(p *packet) (err error) {
 	var n int
+	p.ecnValid = false
 	if !l.setSrcIP {
 		n, p.raddr, err = l.conn.ReadFromUDP(p.readTo())
 		p.dstIP = nil
@@ -424,6 +425,8 @@ func (l *lconn) receive(p *packet) (err error) {
 		}
 		if cm != nil {
 			p.dstIP = cm.Dst
+			p.ecnValid = true
+			p.ecn = cm.TrafficClass & 0x03
 		} else {
 			p.dstIP = nil
 		}

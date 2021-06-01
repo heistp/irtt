@@ -175,14 +175,16 @@ func (t *Time) monoToBytes(b []byte) {
 
 type packet struct {
 	*fbuf
-	md5Hash hash.Hash
-	hmacKey []byte
-	raddr   *net.UDPAddr
-	tsent   Time
-	trcvd   Time
-	srcIP   net.IP
-	dstIP   net.IP
-	dscp    int
+	md5Hash  hash.Hash
+	hmacKey  []byte
+	raddr    *net.UDPAddr
+	tsent    Time
+	trcvd    Time
+	srcIP    net.IP
+	dstIP    net.IP
+	dscp     int
+	ecnValid bool
+	ecn      int
 }
 
 func newPacket(tlen int, cap int, hmacKey []byte) *packet {
