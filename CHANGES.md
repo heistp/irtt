@@ -6,6 +6,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## Unreleased
 
+- Added --ecn server option to ship ECN bits (currently IPv6 only)
+
 ## 0.9.1 - 2021-05-18
 
 ### Added

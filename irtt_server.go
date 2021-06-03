@@ -64,6 +64,7 @@ func serverUsage() {
 	printf("--set-src-ip   set source IP address on all outgoing packets from listeners")
 	printf("               on unspecified IP addresses (use for more reliable reply")
 	printf("               routing, but increases per-packet heap allocations)")
+	printf("--ecn          Ship ECN bits to be logged by the client.  Forces --set-src-ip, disables UDP replies")
 	printf("--thread       lock request handling goroutines to OS threads")
 	printf("-h             show help")
 	printf("-v             show version")
@@ -99,6 +100,7 @@ func runServerCLI(args []string) {
 	var ttl = fs.Int("ttl", DefaultTTL, "IP time to live")
 	var noDSCP = fs.Bool("no-dscp", !DefaultAllowDSCP, "no DSCP")
 	var setSrcIP = fs.Bool("set-src-ip", DefaultSetSrcIP, "set source IP")
+	var ecn = fs.Bool("ecn", DefaultSetECN, "enable ECN capture - disables UDP replies from server")
 	var lockOSThread = fs.Bool("thread", DefaultThreadLock, "thread")
 	var version = fs.BoolP("version", "v", false, "version")
 	fs.Parse(args)
@@ -158,7 +160,7 @@ func runServerCLI(args []string) {
 	cfg.TTL = *ttl
 	cfg.Handler = handler
 	cfg.IPVersion = ipVer
-	cfg.SetSrcIP = *setSrcIP
+	cfg.SetSrcIP = *setSrcIP || *ecn
 	cfg.ThreadLock = *lockOSThread
 
 	// create server
