@@ -371,6 +371,7 @@ See [CHANGES.md](CHANGES.md).
 
 _Planned for v0.9.2..._
 
+- Refactor lconn, and make the srcSrcIP/ecn flag stuff independent.
 - Solidify TimeSource, Time and new Windows timer support:
   - Add --timesrc to client and server
   - Fall back to Go functions as necessary for older Windows versions
