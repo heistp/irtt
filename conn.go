@@ -42,6 +42,7 @@ func (n *nconn) init(conn *net.UDPConn, ipVer IPVersion, ts TimeSource) {
 		n.ip6conn = ipv6.NewPacketConn(n.conn)
 		n.dscpError = n.ip6conn.SetTrafficClass(1)
 		n.ip6conn.SetTrafficClass(0)
+		n.ip6conn.SetControlMessage(ipv6.FlagTrafficClass, true)
 	}
 
 	n.dscpSupport = (n.dscpError == nil)
@@ -269,7 +270,16 @@ func (c *cconn) send(p *packet) (err error) {
 
 func (c *cconn) receive(p *packet) (err error) {
 	var n int
-	n, err = c.conn.Read(p.readTo())
+	if c.ip6conn != nil {
+		var cm *ipv6.ControlMessage
+		n, cm, _, err = c.ip6conn.ReadFrom(p.readTo())
+		if cm != nil {
+			//p.dscp = cm.TrafficClass >> 2
+			p.ecn = cm.TrafficClass & 0x3
+		}
+	} else {
+		n, err = c.conn.Read(p.readTo())
+	}
 	p.trcvd = c.timeSource.Now(BothClocks)
 	p.tsent = Time{}
 	p.dscp = 0
@@ -400,6 +410,7 @@ func (l *lconn) send(p *packet) (err error) {
 
 func (l *lconn) receive(p *packet) (err error) {
 	var n int
+	p.ecn = 0
 	if !l.setSrcIP {
 		n, p.raddr, err = l.conn.ReadFromUDP(p.readTo())
 		p.dstIP = nil
@@ -424,6 +435,8 @@ func (l *lconn) receive(p *packet) (err error) {
 		}
 		if cm != nil {
 			p.dstIP = cm.Dst
+			//p.dscp = cm.TrafficClass >> 2
+			p.ecn = cm.TrafficClass // For test purposes
 		} else {
 			p.dstIP = nil
 		}

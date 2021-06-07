@@ -73,6 +73,7 @@ const (
 	DefaultAllowStamp    = DualStamps
 	DefaultAllowDSCP     = true
 	DefaultSetSrcIP      = false
+	DefaultSetECN        = false
 )
 
 // DefaultBindAddrs are the default bind addresses.

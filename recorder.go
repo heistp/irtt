@@ -132,6 +132,9 @@ func (r *Recorder) recordReceive(p *packet, sts *Timestamp) bool {
 	// check for lateness
 	late := seqno < r.lastSeqno
 
+	// Transfer ECN from packet so it will be dumped
+	rtd.Ecn = p.ecn
+
 	// check for duplicate (don't update stats for duplicates)
 	if !rtd.Client.Receive.IsZero() {
 		r.Duplicates++
@@ -196,6 +199,7 @@ type RoundTripData struct {
 	Client         Timestamp `json:"client"`
 	Server         Timestamp `json:"server"`
 	receivedWindow ReceivedWindow
+	Ecn            int
 }
 
 // ReplyReceived returns true if a reply was received from the server.
