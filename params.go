@@ -2,6 +2,7 @@ package irtt
 
 import (
 	"encoding/binary"
+	"encoding/json"
 	"time"
 )
 
@@ -195,4 +196,27 @@ func putString(b []byte, s string, maxLen int) (n int) {
 	n += binary.PutUvarint(b[n:], uint64(l))
 	n += copy(b[n:], s[:l])
 	return
+}
+
+func (p *Params) UnmarshalJSON(b []byte) error {
+	var f map[string] *json.RawMessage
+	json.Unmarshal(b, &f)
+
+	var v map[string]interface{}
+	json.Unmarshal(*f["params"], &v)
+
+	p.ProtocolVersion = int(v["proto_version"].(float64))
+	p.Duration = time.Duration(v["duration"].(float64))
+	p.Interval = time.Duration(v["interval"].(float64))
+	p.Length = int(v["length"].(float64))
+	rs, _:= ParseReceivedStats(v["received_stats"].(string))
+	p.ReceivedStats = rs
+	stamp, _:= ParseStampAt(v["stamp_at"].(string))
+	p.StampAt = stamp
+	clock, _ := ParseClock(v["clock"].(string))
+	p.Clock = clock
+	p.DSCP = int(v["dscp"].(float64))
+	p.ServerFill = v["server_fill"].(string)
+
+	return nil
 }

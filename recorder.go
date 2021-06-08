@@ -17,10 +17,10 @@ import (
 // all recording should be done internally.
 type Recorder struct {
 	Start                 Time            `json:"start_time"`
-	FirstSend             Time            `json:"-"`
-	LastSent              Time            `json:"-"`
-	FirstReceived         Time            `json:"-"`
-	LastReceived          Time            `json:"-"`
+	FirstSend             Time            `json:"first_send"`
+	LastSent              Time            `json:"last_sent"`
+	FirstReceived         Time            `json:"first_received"`
+	LastReceived          Time            `json:"last_received"`
 	SendCallStats         DurationStats   `json:"send_call"`
 	TimerErrorStats       DurationStats   `json:"timer_error"`
 	RTTStats              DurationStats   `json:"rtt"`
@@ -447,6 +447,34 @@ func (s *DurationStats) MarshalJSON() ([]byte, error) {
 		j.Median = m
 	}
 	return json.Marshal(j)
+}
+
+// UnmarshalJSON implements the json.Unmarshaler interface.
+func (s *DurationStats) UnmarshalJSON(b []byte) error {
+	type Alias DurationStats
+	j := &struct {
+		*Alias
+		Mean     time.Duration `json:"mean"`
+		Median   time.Duration `json:"median,omitempty"`
+		Stddev   time.Duration `json:"stddev"`
+		Variance time.Duration `json:"variance"`
+	}{
+		Alias: (*Alias)(s),
+	}
+	if err := json.Unmarshal(b, &j); err != nil {
+		return err
+	}
+
+	s.mean = float64(j.Mean)
+	if (j.Median != 0.0) {
+		s.setMedian(float64(j.Median))
+	}
+	if (s.N > 1) {
+		s.s = float64(j.Variance) * float64(s.N -1)
+	} else {
+		s.s = 0.0
+	}
+	return nil
 }
 
 // AbsDuration returns the absolute value of a duration.

@@ -41,6 +41,7 @@ func getCommand(name string) *command {
 func init() {
 	registerCommand("client", "runs the client", runClientCLI, clientUsage)
 	registerCommand("server", "runs the server", runServerCLI, serverUsage)
+	registerCommand("report", "read output data and display the result", runReport, reportUsage)
 	registerCommand("bench", "runs HMAC and fill benchmarks", runBench, nil)
 	registerCommand("timer", "runs timer resolution test", runTimer, nil)
 	registerCommand("clock", "runs wall vs monotonic clock test", runClock, nil)
