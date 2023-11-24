@@ -114,3 +114,33 @@ func (c *ClientConfig) MarshalJSON() ([]byte, error) {
 	}
 	return json.Marshal(j)
 }
+
+func (c *ClientConfig) UnmarshalJSON(b []byte) error {
+	j := &struct {
+		LocalAddress  string `json:"local_address"`
+		RemoteAddress string `json:"remote_address"`
+		OpenTimeouts  string `json:"open_timeouts"`
+		Params        `json:"params"`
+		Loose         bool          `json:"loose"`
+		IPVersion     IPVersion     `json:"ip_version"`
+		DF            DF            `json:"df"`
+		TTL           int           `json:"ttl"`
+		Timer         string        `json:"timer"`
+		TimeSource    string        `json:"time_source"`
+		Waiter        string        `json:"waiter"`
+		Filler        string        `json:"filler"`
+		FillOne       bool          `json:"fill_one"`
+		ServerFill    string        `json:"server_fill"`
+		ThreadLock    bool          `json:"thread_lock"`
+		Supplied      *ClientConfig `json:"supplied,omitempty"`
+	}{
+
+	}
+
+	if err := json.Unmarshal(b, &j); err != nil {
+		return err
+	}
+
+	c.Params = j.Params
+	return nil
+}
