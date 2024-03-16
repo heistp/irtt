@@ -303,6 +303,7 @@ func newPacketPool(new func() *packet, cap int) *pktPool {
 	return pp
 }
 
+// func (*pktPool).get is unused (U1000)
 func (po *pktPool) get() *packet {
 	po.mtx.Lock()
 	defer po.mtx.Unlock()
@@ -315,6 +316,7 @@ func (po *pktPool) get() *packet {
 	return p
 }
 
+// func (*pktPool).get is unused (U1000)
 func (po *pktPool) put(p *packet) {
 	po.mtx.Lock()
 	defer po.mtx.Unlock()

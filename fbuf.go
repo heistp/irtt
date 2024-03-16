@@ -185,9 +185,9 @@ func (fb *fbuf) length() int {
 	return len(fb.buf)
 }
 
-func (fb *fbuf) capacity() int {
-	return cap(fb.buf)
-}
+// func (fb *fbuf) capacity() int {
+// 	return cap(fb.buf)
+// }
 
 func (fb *fbuf) setLen(tlen int) int {
 	fb.tlen = tlen

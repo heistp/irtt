@@ -21,7 +21,7 @@ type sconn struct {
 	receivedCount  ReceivedCount
 	receivedWindow ReceivedWindow
 	rwinValid      bool
-	bytes          uint64
+	//bytes          uint64
 }
 
 func newSconn(l *listener, raddr *net.UDPAddr) *sconn {

@@ -361,11 +361,11 @@ func (ts *RoundTripData) ServerProcessingTime() (d time.Duration) {
 // add standard deviation and variance for timer error and send call time, and
 // running standard deviation for all packet times.
 type DurationStats struct {
-	Total    time.Duration `json:"total"`
-	N        uint          `json:"n"`
-	Min      time.Duration `json:"min"`
-	Max      time.Duration `json:"max"`
-	m        float64
+	Total time.Duration `json:"total"`
+	N     uint          `json:"n"`
+	Min   time.Duration `json:"min"`
+	Max   time.Duration `json:"max"`
+	//m        float64
 	s        float64
 	mean     float64
 	median   float64

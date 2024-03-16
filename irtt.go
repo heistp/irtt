@@ -2,19 +2,21 @@ package irtt
 
 import "os"
 
-const exitCodeSuccess = 0
+const (
+	exitCodeSuccess = 0
 
-const exitCodeRuntimeError = 1
+	exitCodeRuntimeError = 1
 
-const exitCodeBadCommandLine = 2
+	exitCodeBadCommandLine = 2
 
-const exitCodeDoubleSignal = 3
+	exitCodeDoubleSignal = 3
 
-const defaultQuiet = false
+	defaultQuiet = false
 
-const defaultReallyQuiet = false
+	defaultReallyQuiet = false
 
-const defaultHMACKey = ""
+	defaultHMACKey = ""
+)
 
 type command struct {
 	name  string
@@ -68,6 +70,7 @@ func RunCLI(args []string) {
 		if c == nil {
 			unknownCommandAndExit(args[2])
 		}
+		// TODO possible nil pointer dereference (SA5011)
 		if c.usage == nil {
 			printf("%s: %s", c.name, c.desc)
 			os.Exit(exitCodeSuccess)
@@ -79,6 +82,7 @@ func RunCLI(args []string) {
 	if c == nil {
 		unknownCommandAndExit(args[1])
 	}
+	// TODO possible nil pointer dereference (SA5011)
 	c.run(args[2:])
 }
 
