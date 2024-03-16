@@ -7,10 +7,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ## Unreleased
 
 - Added --ecn server option to ship ECN bits (currently IPv6 only)
+- Upgrade go1.22 and update dependancies
+- Makefile for /cmd/irtt
+- lint improvements
 
 ## 0.9.1 - 2021-05-18
 
-### Added
+### Added 0.9.1
 
 - Improve Windows time support by using `QueryPerformanceCounter` and
   `GetSystemTimePreciseAsFileTime`. Time precision on Windows 10 can now
@@ -23,18 +26,18 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Update OM2P build to use the new
   [MIPS softfloat support](https://github.com/golang/go/issues/18162) in Go 1.10.
 
-### Changed
+### Changed 0.9.1
 
 - Re-write git history with new email address.
 - Re-licensed to GPLv2.
 
-### Removed
+### Removed 0.9.1
 
 - Stop disabling GC on client and remove `--gc` flag from server as disabling GC
   no longer offers a demonstrable performance benefit. See
   [The Journey of Go's Garbage Collector](https://blog.golang.org/ismmkeynote).
 
-### Fixed
+### Fixed 0.9.1
 
 - Fix potential client race at startup.
 - Fix issue on platforms with timer resolution not accurate enough
@@ -45,7 +48,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## 0.9.0 - 2018-02-11
 
-### Added
+### Added 0.9.0
 
 - Server fills are now supported, and may be restricted on the server. See
   `--sfill` for the client and `--allow-fills` on the server. As an example, one
@@ -55,7 +58,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
   appears under `params` in the JSON.
 - Version information has been added to the JSON output.
 
-### Changed
+### Changed 0.9.0
 
 - Due to adoption of the [pflag](https://github.com/ogier/pflag) package, all long
   options now start with -- and must use = with values (e.g. `--fill=rand`).
@@ -83,6 +86,6 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## 0.1.0 - 2017-10-15
 
-### Added
+### Added 0.1.0
 
 - Initial, untagged development release.
