@@ -103,6 +103,7 @@ func TestReplyPacket(t *testing.T) {
 	}
 }
 
+// func byteArrayLiteral is unused (U1000)
 func byteArrayLiteral(b []byte) string {
 	buf := bytes.NewBufferString("")
 	fmt.Fprint(buf, "[]byte{")

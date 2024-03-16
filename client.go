@@ -3,6 +3,7 @@ package irtt
 import (
 	"context"
 	"fmt"
+	"log"
 	"math/rand"
 	"net"
 	"runtime"
@@ -285,7 +286,10 @@ func (c *Client) send(ctx context.Context) error {
 	if c.conn.dscpSupport {
 		p.dscp = c.DSCP
 	}
-	p.addFields(fechoRequest, true)
+	afErr := p.addFields(fechoRequest, true)
+	if afErr != nil {
+		log.Fatal("p.addFields(fechoRequest, true) err:", afErr)
+	}
 	p.zeroReceivedStats(c.ReceivedStats)
 	p.stampZeroes(c.StampAt, c.Clock)
 	p.setSeqno(seqno)
@@ -405,7 +409,10 @@ func (c *Client) receive() error {
 		}
 
 		// add expected echo reply fields
-		p.addFields(fechoReply, false)
+		afErr := p.addFields(fechoReply, false)
+		if afErr != nil {
+			log.Fatal("receive()p.addFields(fechoReply, false) afErr", afErr)
+		}
 
 		// return an error if reply packet was too small
 		if p.length() < c.Length {

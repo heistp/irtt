@@ -6,11 +6,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"os"
-	"os/signal"
 	"strconv"
 	"strings"
-	"syscall"
 	"text/tabwriter"
 	"time"
 
@@ -152,35 +151,40 @@ func runClientCLI(args []string) {
 	fs.Usage = func() {
 		usageAndExit(clientUsage, exitCodeBadCommandLine)
 	}
-	var durationStr = fs.StringP("d", "d", DefaultDuration.String(), "total time to send")
-	var intervalStr = fs.StringP("i", "i", DefaultInterval.String(), "send interval")
-	var length = fs.IntP("l", "l", DefaultLength, "packet length")
-	var noTest = fs.BoolP("n", "n", false, "no test")
-	var rsStr = fs.String("stats", DefaultReceivedStats.String(), "received stats")
-	var tsatStr = fs.String("tstamp", DefaultStampAt.String(), "stamp at")
-	var clockStr = fs.String("clock", DefaultClock.String(), "clock")
-	var outputStr = fs.StringP("o", "o", "", "output file")
-	var quiet = fs.BoolP("q", "q", defaultQuiet, "quiet")
-	var reallyQuiet = fs.BoolP("Q", "Q", defaultReallyQuiet, "really quiet")
-	var dscpStr = fs.String("dscp", strconv.Itoa(DefaultDSCP), "dscp value")
-	var dfStr = fs.String("df", DefaultDF.String(), "do not fragment")
-	var waitStr = fs.String("wait", DefaultWait.String(), "wait")
-	var timerStr = fs.String("timer", DefaultTimer.String(), "timer")
-	var tcompStr = fs.String("tcomp", DefaultCompTimerAverage.String(),
-		"timer compensation algorithm")
-	var fillStr = fs.String("fill", "none", "fill")
-	var fillOne = fs.Bool("fill-one", false, "fill one")
-	var sfillStr = fs.String("sfill", "", "sfill")
-	var laddrStr = fs.String("local", DefaultLocalAddress, "local address")
-	var hmacStr = fs.String("hmac", defaultHMACKey, "HMAC key")
-	var ipv4 = fs.BoolP("4", "4", false, "IPv4 only")
-	var ipv6 = fs.BoolP("6", "6", false, "IPv6 only")
-	var timeoutsStr = fs.String("timeouts", DefaultOpenTimeouts.String(), "open timeouts")
-	var ttl = fs.Int("ttl", DefaultTTL, "IP time to live")
-	var loose = fs.Bool("loose", DefaultLoose, "loose")
-	var threadLock = fs.Bool("thread", DefaultThreadLock, "thread")
-	var version = fs.BoolP("version", "v", false, "version")
+	var (
+		durationStr = fs.StringP("d", "d", DefaultDuration.String(), "total time to send")
+		intervalStr = fs.StringP("i", "i", DefaultInterval.String(), "send interval")
+		length      = fs.IntP("l", "l", DefaultLength, "packet length")
+		noTest      = fs.BoolP("n", "n", false, "no test")
+		rsStr       = fs.String("stats", DefaultReceivedStats.String(), "received stats")
+		tsatStr     = fs.String("tstamp", DefaultStampAt.String(), "stamp at")
+		clockStr    = fs.String("clock", DefaultClock.String(), "clock")
+		outputStr   = fs.StringP("o", "o", "", "output file")
+		quiet       = fs.BoolP("q", "q", defaultQuiet, "quiet")
+		reallyQuiet = fs.BoolP("Q", "Q", defaultReallyQuiet, "really quiet")
+		dscpStr     = fs.String("dscp", strconv.Itoa(DefaultDSCP), "dscp value")
+		dfStr       = fs.String("df", DefaultDF.String(), "do not fragment")
+		waitStr     = fs.String("wait", DefaultWait.String(), "wait")
+		timerStr    = fs.String("timer", DefaultTimer.String(), "timer")
+		tcompStr    = fs.String("tcomp",
+			DefaultCompTimerAverage.String(), "timer compensation algorithm")
+		fillStr     = fs.String("fill", "none", "fill")
+		fillOne     = fs.Bool("fill-one", false, "fill one")
+		sfillStr    = fs.String("sfill", "", "sfill")
+		laddrStr    = fs.String("local", DefaultLocalAddress, "local address")
+		hmacStr     = fs.String("hmac", defaultHMACKey, "HMAC key")
+		ipv4        = fs.BoolP("4", "4", false, "IPv4 only")
+		ipv6        = fs.BoolP("6", "6", false, "IPv6 only")
+		timeoutsStr = fs.String("timeouts", DefaultOpenTimeouts.String(), "open timeouts")
+		ttl         = fs.Int("ttl", DefaultTTL, "IP time to live")
+		loose       = fs.Bool("loose", DefaultLoose, "loose")
+		threadLock  = fs.Bool("thread", DefaultThreadLock, "thread")
+		version     = fs.BoolP("version", "v", false, "version")
+	)
 	err := fs.Parse(args)
+	if err != nil {
+		log.Fatal("runClientCLI fs.Parse(args) err:", err)
+	}
 
 	// start profiling, if enabled in build
 	if profileEnabled {
@@ -273,23 +277,9 @@ func runClientCLI(args []string) {
 
 	// create context
 	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
 
-	// install signal handler to cancel context, which stops the test
-	sigs := make(chan os.Signal, 1)
-	signal.Notify(sigs, os.Interrupt, syscall.SIGTERM)
-	go func() {
-		sig := <-sigs
-		if !*reallyQuiet {
-			printf("%s", sig)
-		}
-		cancel()
-
-		sig = <-sigs
-		if !*reallyQuiet {
-			printf("second interrupt, exiting")
-		}
-		os.Exit(exitCodeDoubleSignal)
-	}()
+	go initSignalHandler(cancel, *reallyQuiet)
 
 	// create config
 	cfg := NewClientConfig()

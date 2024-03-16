@@ -1,10 +1,10 @@
 package irtt
 
 import (
+	"context"
+	"log"
 	"os"
-	"os/signal"
 	"strings"
-	"syscall"
 
 	flag "github.com/ogier/pflag"
 )
@@ -81,29 +81,35 @@ func runServerCLI(args []string) {
 	fs.Usage = func() {
 		usageAndExit(serverUsage, exitCodeBadCommandLine)
 	}
-	var baddrsStr = fs.StringP("b", "b", strings.Join(DefaultBindAddrs, ","), "bind addresses")
-	var maxDuration = fs.DurationP("d", "d", DefaultMaxDuration, "max duration")
-	var minInterval = fs.DurationP("i", "i", DefaultMinInterval, "min interval")
-	var maxLength = fs.IntP("l", "l", DefaultMaxLength, "max length")
-	var allowTimestampStr = fs.String("tstamp", DefaultAllowStamp.String(), "allow timestamp")
-	var hmacStr = fs.String("hmac", defaultHMACKey, "HMAC key")
+	var (
+		baddrsStr         = fs.StringP("b", "b", strings.Join(DefaultBindAddrs, ","), "bind addresses")
+		maxDuration       = fs.DurationP("d", "d", DefaultMaxDuration, "max duration")
+		minInterval       = fs.DurationP("i", "i", DefaultMinInterval, "min interval")
+		maxLength         = fs.IntP("l", "l", DefaultMaxLength, "max length")
+		allowTimestampStr = fs.String("tstamp", DefaultAllowStamp.String(), "allow timestamp")
+		hmacStr           = fs.String("hmac", defaultHMACKey, "HMAC key")
+		timeout           = fs.Duration("timeout", DefaultServerTimeout, "timeout")
+		packetBurst       = fs.Int("pburst", DefaultPacketBurst, "packet burst")
+		fillStr           = fs.String("fill", DefaultServerFiller.String(), "fill")
+		allowFillsStr     = fs.String("allow-fills", strings.Join(DefaultAllowFills, ","), "sfill")
+		ipv4              = fs.BoolP("4", "4", false, "IPv4 only")
+		ipv6              = fs.BoolP("6", "6", false, "IPv6 only")
+		ttl               = fs.Int("ttl", DefaultTTL, "IP time to live")
+		noDSCP            = fs.Bool("no-dscp", !DefaultAllowDSCP, "no DSCP")
+		setSrcIP          = fs.Bool("set-src-ip", DefaultSetSrcIP, "set source IP")
+		ecn               = fs.Bool("ecn", DefaultSetECN, "enable ECN capture - disables UDP replies from server")
+		lockOSThread      = fs.Bool("thread", DefaultThreadLock, "thread")
+		version           = fs.BoolP("version", "v", false, "version")
+	)
 	var syslogStr *string
 	if syslogSupport {
 		syslogStr = fs.String("syslog", "", "syslog uri")
 	}
-	var timeout = fs.Duration("timeout", DefaultServerTimeout, "timeout")
-	var packetBurst = fs.Int("pburst", DefaultPacketBurst, "packet burst")
-	var fillStr = fs.String("fill", DefaultServerFiller.String(), "fill")
-	var allowFillsStr = fs.String("allow-fills", strings.Join(DefaultAllowFills, ","), "sfill")
-	var ipv4 = fs.BoolP("4", "4", false, "IPv4 only")
-	var ipv6 = fs.BoolP("6", "6", false, "IPv6 only")
-	var ttl = fs.Int("ttl", DefaultTTL, "IP time to live")
-	var noDSCP = fs.Bool("no-dscp", !DefaultAllowDSCP, "no DSCP")
-	var setSrcIP = fs.Bool("set-src-ip", DefaultSetSrcIP, "set source IP")
-	var ecn = fs.Bool("ecn", DefaultSetECN, "enable ECN capture - disables UDP replies from server")
-	var lockOSThread = fs.Bool("thread", DefaultThreadLock, "thread")
-	var version = fs.BoolP("version", "v", false, "version")
-	fs.Parse(args)
+
+	err := fs.Parse(args)
+	if err != nil {
+		log.Fatal("runServerCLI fs.Parse(args) err:", err)
+	}
 
 	// start profiling, if enabled in build
 	if profileEnabled {
@@ -166,17 +172,11 @@ func runServerCLI(args []string) {
 	// create server
 	s := NewServer(cfg)
 
-	// install signal handler to stop server
-	sigs := make(chan os.Signal, 1)
-	signal.Notify(sigs, os.Interrupt, syscall.SIGTERM)
-	go func() {
-		sig := <-sigs
-		printf("%s", sig)
-		s.Shutdown()
+	// create context
+	_, cancel := context.WithCancel(context.Background())
+	defer cancel()
 
-		sig = <-sigs
-		os.Exit(exitCodeDoubleSignal)
-	}()
+	go initSignalHandler(cancel, false)
 
 	err = s.ListenAndServe()
 	exitOnError(err, exitCodeRuntimeError)

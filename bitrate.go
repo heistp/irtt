@@ -39,7 +39,7 @@ func (r Bitrate) String() string {
 
 // MarshalJSON implements the json.Marshaler interface.
 func (r Bitrate) MarshalJSON() ([]byte, error) {
-	type Alias DurationStats
+	//type Alias DurationStats
 	j := &struct {
 		BPS    uint64 `json:"bps"`
 		String string `json:"string"`

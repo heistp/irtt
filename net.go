@@ -56,11 +56,11 @@ func (v IPVersion) udpNetwork() string {
 
 // 28 == 20 (min IPv4 header) + 8 (UDP header)
 // 48 == 40 (min IPv4 header) + 8 (UDP header)
-var muhs = [...]int{28, 48, 28}
+//var muhs = [...]int{28, 48, 28}
 
-func (v IPVersion) minUDPHeaderSize() int {
-	return muhs[v-1]
-}
+// func (v IPVersion) minUDPHeaderSize() int {
+// 	return muhs[v-1]
+// }
 
 var ipvs = [...]string{"IPv4", "IPv6", "IPv4+6"}
 
@@ -71,7 +71,7 @@ func (v IPVersion) String() string {
 	return ipvs[v-1]
 }
 
-var ipvi = [...]int{4, 6, 46}
+//var ipvi = [...]int{4, 6, 46}
 
 // Separate returns a slice of IPVersions, separating DualStack into IPv4 and
 // IPv6 if necessary.

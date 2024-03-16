@@ -67,9 +67,9 @@ func (f flags) clear(fcl flags) flags {
 	return f &^ fcl
 }
 
-func (f flags) isset(fl flags) bool {
-	return f&fl != 0
-}
+// func (f flags) isset(fl flags) bool {
+// 	return f&fl != 0
+// }
 
 const (
 	// flOpen is set when opening a new conn, both in the initial request from
@@ -108,33 +108,36 @@ const (
 	fSMono
 )
 
-const fcount = fSMono + 1
+const (
+	fcount  = fSMono + 1
+	foptidx = fHMAC
+)
 
-const foptidx = fHMAC
+var (
+	// field capacities (sync with field constants)
+	fcaps = []int{3, 1, md5.Size, 8, 4, 4, 8, 8, 8, 8, 8, 8, 8}
 
-// field capacities (sync with field constants)
-var fcaps = []int{3, 1, md5.Size, 8, 4, 4, 8, 8, 8, 8, 8, 8, 8}
+	// field index definitions
+	finit = []fidx{fMagic, fFlags}
 
-// field index definitions
-var finit = []fidx{fMagic, fFlags}
+	finitHMAC = []fidx{fMagic, fFlags, fHMAC}
 
-var finitHMAC = []fidx{fMagic, fFlags, fHMAC}
+	fopenReply = []fidx{fMagic, fFlags, fConnToken}
 
-var fopenReply = []fidx{fMagic, fFlags, fConnToken}
+	fRequest = []fidx{fMagic, fFlags, fConnToken}
 
-var fRequest = []fidx{fMagic, fFlags, fConnToken}
+	fcloseRequest = []fidx{fMagic, fFlags, fConnToken}
 
-var fcloseRequest = []fidx{fMagic, fFlags, fConnToken}
+	fechoRequest = []fidx{fMagic, fFlags, fConnToken, fSeqno}
 
-var fechoRequest = []fidx{fMagic, fFlags, fConnToken, fSeqno}
+	fechoReply = []fidx{fMagic, fFlags, fConnToken, fSeqno}
 
-var fechoReply = []fidx{fMagic, fFlags, fConnToken, fSeqno}
+	// minHeaderLen is the minimum header length (set in init).
+	minHeaderLen int
 
-// minHeaderLen is the minimum header length (set in init).
-var minHeaderLen int
-
-// maxHeaderLen is the maximum header length (set in init).
-var maxHeaderLen int
+	// maxHeaderLen is the maximum header length (set in init).
+	maxHeaderLen int
+)
 
 func init() {
 	for i := fidx(0); i < fcount; i++ {

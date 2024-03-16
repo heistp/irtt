@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-type paramType int
+//type paramType int
 
 const paramsMaxLen = 128
 
