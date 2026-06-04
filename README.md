@@ -371,28 +371,20 @@ See [CHANGES.md](CHANGES.md).
 
 _Planned for v0.9.2..._
 
-- Refactor lconn, and make the srcSrcIP/ecn flag stuff independent.
-- Solidify TimeSource, Time and new Windows timer support:
-  - Add --timesrc to client and server
-  - Fall back to Go functions as necessary for older Windows versions
-  - Make sure all calls to TimeSource.Now pass in only needed clocks
-  - Find a better way to log warnings than fmt.Fprintf(os.Stderr) in timesrc_win.go
-  - Rename Time.Mono to Monotonic, or others from Monotonic to Mono for
-    consistency
-  - Document 100ns resolution for Windows
-- Improve diagnostic commands:
-  - Change bench command to output in columns
-  - Rename sleep command to timer and add --timesrc, --sleep, --timer and --tcomp
-  - Rename timer command to resolution and add --timesrc
-  - Rename clock command to drift and add --timesrc
-- Add a `late` flag to RoundTrip
-- Measure and document local differences between ping and irtt response times
-- Sync Debian package to history re-write and create backports version for Debian stable
-- Add `report` command, or similar, to print results from an existing JSON file
+- Allow infinite duration tests that stream output
+- Add support for fixed-units output to stdout during test
+- Move to recent Go version and pull in new x/sys and x/net libs
+- Record out of order info per-packet with a `late` flag on RoundTrip
+- Add report command that reads and emits saved results
+- Allow IPv6 addresses without brackets
+- Switch to Lookup* methods for name resolution
+- Measure and document difference between ping and irtt response times
+- Allow sending *all* packets with a DSCP (currently the handshake uses DSCP 0)
+- Refresh documentation
 
-### v1.0.0
+### Inbox
 
-_Planned for v1.0.0..._
+_Collection area..._
 
 - Refactor handshake params to use signed values and straight bytes as
   appropriate.
@@ -430,11 +422,21 @@ _Planned for v1.0.0..._
   - Find or file issue with Go team over scheduler performance, if needed
   - Prototype doing thread scheduling or socket i/o for Linux in C
 - Show actual size of header in text and json, and add calculation to doc
-
-### Inbox
-
-_Collection area..._
-
+- Refactor lconn, and make the srcSrcIP/ecn flag stuff independent.
+- Solidify TimeSource, Time and new Windows timer support:
+  - Add --timesrc to client and server
+  - Fall back to Go functions as necessary for older Windows versions
+  - Make sure all calls to TimeSource.Now pass in only needed clocks
+  - Find a better way to log warnings than fmt.Fprintf(os.Stderr) in timesrc_win.go
+  - Rename Time.Mono to Monotonic, or others from Monotonic to Mono for
+    consistency
+  - Document 100ns resolution for Windows
+- Improve diagnostic commands:
+  - Change bench command to output in columns
+  - Rename sleep command to timer and add --timesrc, --sleep, --timer and --tcomp
+  - Rename timer command to resolution and add --timesrc
+  - Rename clock command to drift and add --timesrc
+- Sync Debian package to history re-write and create backports version for Debian stable
 - Add [ping-pair](https://www.microsoft.com/en-us/research/wp-content/uploads/2017/09/PingPair-CoNEXT2017.pdf)-like functionality
 - Add UDP-lite support to allow partially damaged packets to be received
 - Add different server authentication modes:
