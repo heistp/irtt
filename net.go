@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net"
+	"net/netip"
 )
 
 // IPVersion is an IP version, or dual stack for IPv4 and IPv6.
@@ -102,9 +103,10 @@ func (v IPVersion) MarshalJSON() ([]byte, error) {
 // addPort adds the default port to a string, if the string does not
 // already contain a port.
 func addPort(hostport, port string) string {
+	if a, err := netip.ParseAddr(hostport); err == nil && a.Is6() {
+		hostport = fmt.Sprintf("[%s]", hostport)
+	}
 	if _, _, err := net.SplitHostPort(hostport); err != nil {
-		// JoinHostPort doesn't seem to work with IPv6 addresses with [], so I
-		// join manually.
 		return fmt.Sprintf("%s:%s", hostport, port)
 	}
 	return hostport

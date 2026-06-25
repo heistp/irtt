@@ -121,14 +121,14 @@ func hostUsage() {
 	printf("-------------")
 	printf("")
 	printf("Hosts may be either hostnames (for IPv4 or IPv6) or IP addresses. IPv6")
-	printf("addresses must be surrounded by brackets and may include a zone after the %%")
-	printf("character. Examples:")
+	printf("addresses must be surrounded by brackets if a port is included. Examples:")
 	printf("")
 	printf("IPv4 IP: 192.168.1.10")
-	printf("IPv6 IP: [fe80::426c:8fff:fe13:9feb%%en0]")
+	printf("IPv6 IP: ::1")
+	printf("IPv6 IP/port: [fe80::426c:8fff:fe13:9feb%en0]:2112")
 	printf("IPv4/6 hostname: localhost")
 	printf("")
-	printf("Note: IPv6 addresses must be quoted in most shells.")
+	printf("Note: IPv6 addresses may need to be quoted in your shell.")
 }
 
 func durationUsage() {
