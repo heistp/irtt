@@ -2,7 +2,7 @@
 
 # This script may be used during development for making builds and generating doc.
 # Requirements:
-# - stringer (go get -u -a golang.org/x/tools/cmd/stringer)
+# - stringer (go install golang.org/x/tools/cmd/stringer@latest)
 # - pandoc (apt-get install pandoc OR brew install pandoc)
 
 action="build"
