@@ -37,6 +37,7 @@ const (
 // Client event codes.
 const (
 	Connecting Code = iota + 2*1024
+	MultipleServerAddresses
 	Connected
 	WaitForPackets
 	ServerRestriction

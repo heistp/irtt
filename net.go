@@ -55,6 +55,15 @@ func (v IPVersion) udpNetwork() string {
 	return udpNets[v-1]
 }
 
+var ipNets = [...]string{"ip4", "ip6", "ip"}
+
+func (v IPVersion) ipNetwork() string {
+	if int(v-1) < 0 || int(v-1) > len(ipNets) {
+		return fmt.Sprintf("IPVersion.ipNetwork:%d", v)
+	}
+	return ipNets[v-1]
+}
+
 // 28 == 20 (min IPv4 header) + 8 (UDP header)
 // 48 == 40 (min IPv4 header) + 8 (UDP header)
 var muhs = [...]int{28, 48, 28}

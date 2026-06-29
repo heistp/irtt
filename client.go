@@ -46,7 +46,7 @@ func (c *Client) Run(ctx context.Context) (r *Result, err error) {
 	c.eventf(Connecting, "connecting to %s", c.RemoteAddress)
 
 	// dial server
-	if c.conn, err = dial(ctx, c.ClientConfig); err != nil {
+	if c.conn, err = dial(ctx, c); err != nil {
 		return
 	}
 	defer c.close()

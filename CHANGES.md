@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Added --ecn server option to ship ECN bits (currently IPv6 only)
 - Move to Go 1.25, x/net 0.56 and x/sys 0.46
 - Allow IPv6 addresses without brackets
+- Use LookupIP for client hostname lookups and log on multiple addresses
+- Use LookupIP for server bind addresses
 
 ## 0.9.1 - 2021-05-18
 

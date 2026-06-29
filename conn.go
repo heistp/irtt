@@ -120,27 +120,43 @@ type cconn struct {
 	ctoken ctoken
 }
 
-func dial(ctx context.Context, cfg *ClientConfig) (cc *cconn, err error) {
-	// resolve (could support trying multiple addresses in succession)
+func dial(ctx context.Context, client *Client) (cc *cconn, err error) {
+	cfg := client.ClientConfig
+
+	// use standard ResolveUDPAddr for local address
 	cfg.LocalAddress = addPort(cfg.LocalAddress, DefaultLocalPort)
-	laddr, err := net.ResolveUDPAddr(cfg.IPVersion.udpNetwork(),
-		cfg.LocalAddress)
-	if err != nil {
+	var laddr *net.UDPAddr
+	if laddr, err = net.ResolveUDPAddr(cfg.IPVersion.udpNetwork(),
+		cfg.LocalAddress); err != nil {
 		return
 	}
 
-	// add default port, if necessary, and resolve server
-	cfg.RemoteAddress = addPort(cfg.RemoteAddress, DefaultPort)
-	raddr, err := net.ResolveUDPAddr(cfg.IPVersion.udpNetwork(),
-		cfg.RemoteAddress)
-	if err != nil {
+	// use LookupIP for remote address and warn on multiple addresses
+	var h, p, hp string
+	hp = addPort(cfg.RemoteAddress, DefaultPort)
+	if h, p, err = net.SplitHostPort(hp); err != nil {
+		return
+	}
+	var ip []net.IP
+	if ip, err = net.DefaultResolver.LookupIP(ctx, cfg.IPVersion.ipNetwork(),
+		h); err != nil {
+		return
+	}
+	if len(ip) > 1 {
+		client.eventf(MultipleServerAddresses, "using first address from %v", ip)
+	}
+	cfg.RemoteAddress = net.JoinHostPort(ip[0].String(), p)
+	var raddr *net.UDPAddr
+	if raddr, err = net.ResolveUDPAddr(cfg.IPVersion.udpNetwork(),
+		cfg.RemoteAddress); err != nil {
 		return
 	}
 
 	// dial, using explicit network from remote address
 	cfg.IPVersion = IPVersionFromUDPAddr(raddr)
-	conn, err := net.DialUDP(cfg.IPVersion.udpNetwork(), laddr, raddr)
-	if err != nil {
+	var conn *net.UDPConn
+	if conn, err = net.DialUDP(cfg.IPVersion.udpNetwork(), laddr,
+		raddr); err != nil {
 		return
 	}
 
@@ -575,19 +591,31 @@ func resolveIfaceListenAddr(ifaceName string, service string,
 
 // resolveListenAddr resolves a listen address string into a slice of UDP
 // addresses.
-func resolveListenAddr(addr string, ipVer IPVersion) (laddrs []*net.UDPAddr,
+func resolveListenAddr(hostport string, ipVer IPVersion) (laddrs []*net.UDPAddr,
 	err error) {
-	laddrs = make([]*net.UDPAddr, 0, 2)
-	for _, v := range ipVer.Separate() {
-		addr = addPort(addr, DefaultPort)
-		laddr, err := net.ResolveUDPAddr(v.udpNetwork(), addr)
-		if err != nil {
-			continue
+	hostport = addPort(hostport, DefaultPort)
+	var h, p string
+	if h, p, err = net.SplitHostPort(hostport); err != nil {
+		return
+	}
+	var ip []net.IP
+	if h != "" {
+		if ip, err = net.DefaultResolver.LookupIP(context.Background(),
+			ipVer.ipNetwork(), h); err != nil {
+			return
 		}
-		if laddr.IP == nil {
-			laddr.IP = v.ZeroIP()
+	} else {
+		for _, v := range ipVer.Separate() {
+			ip = append(ip, v.ZeroIP())
 		}
-		laddrs = append(laddrs, laddr)
+	}
+	for _, i := range ip {
+		var a *net.UDPAddr
+		if a, err = net.ResolveUDPAddr("udp",
+			net.JoinHostPort(i.String(), p)); err != nil {
+			return
+		}
+		laddrs = append(laddrs, a)
 	}
 	return
 }

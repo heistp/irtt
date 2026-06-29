@@ -87,11 +87,12 @@ func _() {
 	_ = x[RemoveNoConn-1037]
 	_ = x[InvalidServerFill-1038]
 	_ = x[Connecting-2048]
-	_ = x[Connected-2049]
-	_ = x[WaitForPackets-2050]
-	_ = x[ServerRestriction-2051]
-	_ = x[NoTest-2052]
-	_ = x[ConnectedClosed-2053]
+	_ = x[MultipleServerAddresses-2049]
+	_ = x[Connected-2050]
+	_ = x[WaitForPackets-2051]
+	_ = x[ServerRestriction-2052]
+	_ = x[NoTest-2053]
+	_ = x[ConnectedClosed-2054]
 }
 
 const (
@@ -99,7 +100,7 @@ const (
 	_Code_name_1 = "InvalidSyslogURISyslogNotSupportedAddressMismatchLargeRequestShortIntervalInvalidConnTokenNoSuitableAddressFoundUnexpectedReplyFlagUnspecifiedWithSpecifiedAddressesNoMatchingInterfacesUpNoMatchingInterfaces"
 	_Code_name_2 = "ProtocolVersionMismatchInvalidParamValueParamOverflowShortParamBufferInvalidFlagBitsSetDFNotSupportedInconsistentClocksNonexclusiveMidpointTStampUnexpectedHMACBadHMACNoHMACBadMagicInvalidClockIntInvalidClockStringInvalidAllowStampStringInvalidStampAtIntInvalidStampAtStringFieldsCapacityTooLargeFieldsLengthTooLargeInvalidDFStringShortWrite"
 	_Code_name_3 = "MultipleAddressesServerStartServerStopListenerStartListenerStopListenerErrorDropNewConnOpenCloseCloseConnNoDSCPSupportExceededDurationNoReceiveDstAddrSupportRemoveNoConnInvalidServerFill"
-	_Code_name_4 = "ConnectingConnectedWaitForPacketsServerRestrictionNoTestConnectedClosed"
+	_Code_name_4 = "ConnectingMultipleServerAddressesConnectedWaitForPacketsServerRestrictionNoTestConnectedClosed"
 )
 
 var (
@@ -107,7 +108,7 @@ var (
 	_Code_index_1 = [...]uint8{0, 16, 34, 49, 61, 74, 90, 112, 131, 164, 186, 206}
 	_Code_index_2 = [...]uint16{0, 23, 40, 53, 69, 87, 101, 119, 145, 159, 166, 172, 180, 195, 213, 236, 253, 273, 295, 315, 330, 340}
 	_Code_index_3 = [...]uint8{0, 17, 28, 38, 51, 63, 76, 80, 87, 96, 105, 118, 134, 157, 169, 186}
-	_Code_index_4 = [...]uint8{0, 10, 19, 33, 50, 56, 71}
+	_Code_index_4 = [...]uint8{0, 10, 33, 42, 56, 73, 79, 94}
 )
 
 func (i Code) String() string {
@@ -124,7 +125,7 @@ func (i Code) String() string {
 	case 1024 <= i && i <= 1038:
 		i -= 1024
 		return _Code_name_3[_Code_index_3[i]:_Code_index_3[i+1]]
-	case 2048 <= i && i <= 2053:
+	case 2048 <= i && i <= 2054:
 		i -= 2048
 		return _Code_name_4[_Code_index_4[i]:_Code_index_4[i+1]]
 	default:
