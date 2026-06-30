@@ -42,6 +42,24 @@ irtt client [*args*]
     .gz       | output is gzipped, extension changed to .json.gz
     .json     | output is not gzipped
 
+-r
+:   Raw mode, emit space delimited data to stdout, and events to stderr. Each
+    line has the following fields:
+
+    seqno rtt receive-delay send-delay ipdv late dup
+
+    - seqno is an integer, the sequence number
+    - rtt is the round-trip time, in milliseconds
+    - receive-delay is the one-way receive delay, in milliseconds (may be NaN)
+    - send-delay is the one-way send delay, in milliseconds (may be NaN)
+    - ipdv is the Instantaneous Packet Delay Variation, in milliseconds (may be NaN)
+    - late is a 0/1 boolean, 1 if late (may be NaN)
+    - dup is a 0/1 boolean, 1 if a duplicate
+
+    All milliseconds values are floats. Parsers should be prepared for NaN in
+    any of the fields indicated, either because the data wasn't collected, or it
+    isn't available in this case.
+
 -q
 :   Quiet, suppress per-packet output
 

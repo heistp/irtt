@@ -9,9 +9,6 @@
   <title>IRTT-CLIENT(1) v0.9.0 | IRTT Manual</title>
   <style>
     html {
-      line-height: 1.5;
-      font-family: Georgia, serif;
-      font-size: 20px;
       color: #1a1a1a;
       background-color: #fdfdfd;
     }
@@ -23,17 +20,23 @@
       padding-top: 50px;
       padding-bottom: 50px;
       hyphens: auto;
-      word-wrap: break-word;
+      overflow-wrap: break-word;
       text-rendering: optimizeLegibility;
       font-kerning: normal;
     }
     @media (max-width: 600px) {
       body {
         font-size: 0.9em;
-        padding: 1em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
       }
     }
     @media print {
+      html {
+        background-color: white;
+      }
       body {
         background-color: transparent;
         color: black;
@@ -57,6 +60,10 @@
       color: #1a1a1a;
     }
     img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
       max-width: 100%;
     }
     h1, h2, h3, h4, h5, h6 {
@@ -83,9 +90,10 @@
       color: #606060;
     }
     code {
-      font-family: Menlo, Monaco, 'Lucida Console', Consolas, monospace;
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
       font-size: 85%;
       margin: 0;
+      hyphens: manual;
     }
     pre {
       margin: 1em 0;
@@ -94,6 +102,7 @@
     pre code {
       padding: 0;
       overflow: visible;
+      overflow-wrap: normal;
     }
     .sourceCode {
      background-color: transparent;
@@ -135,20 +144,31 @@
     #TOC li {
       list-style: none;
     }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
     #TOC a:not(:hover) {
       text-decoration: none;
     }
     code{white-space: pre-wrap;}
     span.smallcaps{font-variant: small-caps;}
-    span.underline{text-decoration: underline;}
-    div.column{display: inline-block; vertical-align: top; width: 50%;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
     div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
-    ul.task-list{list-style: none;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
     .display.math{display: block; text-align: center; margin: 0.5rem auto;}
   </style>
-  <!--[if lt IE 9]>
-    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
-  <![endif]-->
   <meta name=viewport content="width=device-width, initial-scale=1">
   <link rel="stylesheet" href="https://unpkg.com/purecss@1.0.0/build/pure-min.css"
   	integrity="sha384-nn4HPE8lTHyVtfCBi5yW9d20FjT8BJwUXyWZT9InLYax14RDjBj46LmSztkmNP9w"
@@ -196,83 +216,120 @@
 <h1 id="synopsis">SYNOPSIS</h1>
 <p>irtt client [<em>args</em>]</p>
 <h1 id="description">DESCRIPTION</h1>
-<p><em>irtt client</em> is the client for <a href="irtt.html">irtt(1)</a>.</p>
+<p><em>irtt client</em> is the client for <a
+href="irtt.html">irtt(1)</a>.</p>
 <h1 id="options">OPTIONS</h1>
 <dl>
 <dt>-d <em>duration</em></dt>
-<dd>Total time to send (default 1m0s, see <a href="#duration-units">Duration units</a> below)
+<dd>
+Total time to send (default 1m0s, see <a href="#duration-units">Duration
+units</a> below)
 </dd>
 <dt>-i <em>interval</em></dt>
-<dd>Send interval (default 1s, see <a href="#duration-units">Duration units</a> below)
+<dd>
+Send interval (default 1s, see <a href="#duration-units">Duration
+units</a> below)
 </dd>
 <dt>-l <em>length</em></dt>
-<dd><p>Length of packet (default 0, increased as necessary for required headers), common values:</p>
+<dd>
+<p>Length of packet (default 0, increased as necessary for required
+headers), common values:</p>
 <ul>
 <li>1472 (max unfragmented size of IPv4 datagram for 1500 byte MTU)</li>
 <li>1452 (max unfragmented size of IPv6 datagram for 1500 byte MTU)</li>
 </ul>
 </dd>
 <dt>-o <em>file</em></dt>
-<dd><p>Write JSON output to file (use ‘-’ for stdout). The extension used for <em>file</em> controls the gzip behavior as follows (output to stdout is not gzipped):</p>
+<dd>
+<p>Write JSON output to file (use ‘-’ for stdout). The extension used
+for <em>file</em> controls the gzip behavior as follows (output to
+stdout is not gzipped):</p>
 <table class="pure-table pure-table-striped">
 <thead>
-<tr class="header">
+<tr>
 <th>Extension</th>
 <th>Behavior</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>none</td>
 <td>extension .json.gz is added, output is gzipped</td>
 </tr>
-<tr class="even">
+<tr>
 <td>.json.gz</td>
 <td>output is gzipped</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>.gz</td>
 <td>output is gzipped, extension changed to .json.gz</td>
 </tr>
-<tr class="even">
+<tr>
 <td>.json</td>
 <td>output is not gzipped</td>
 </tr>
 </tbody>
 </table>
 </dd>
+<dt>-r</dt>
+<dd>
+<p>Raw mode, emit space delimited data to stdout, and events to stderr.
+Each line has the following fields:</p>
+<p>seqno rtt receive-delay send-delay ipdv late dup</p>
+<ul>
+<li>seqno is an integer, the sequence number</li>
+<li>rtt is the round-trip time, in milliseconds</li>
+<li>receive-delay is the one-way receive delay, in milliseconds (may be
+NaN)</li>
+<li>send-delay is the one-way send delay, in milliseconds (may be
+NaN)</li>
+<li>ipdv is the Instantaneous Packet Delay Variation, in milliseconds
+(may be NaN)</li>
+<li>late is a 0/1 boolean, 1 if late (may be NaN)</li>
+<li>dup is a 0/1 boolean, 1 if a duplicate</li>
+</ul>
+<p>All milliseconds values are floats. Parsers should be prepared for
+NaN in any of the fields indicated, either because the data wasn’t
+collected, or it isn’t available in this case.</p>
+</dd>
 <dt>-q</dt>
-<dd>Quiet, suppress per-packet output
+<dd>
+Quiet, suppress per-packet output
 </dd>
 <dt>-Q</dt>
-<dd>Really quiet, suppress all output except errors to stderr
+<dd>
+Really quiet, suppress all output except errors to stderr
 </dd>
 <dt>-n</dt>
-<dd>No test, connect to the server and validate test parameters but don’t run the test
+<dd>
+No test, connect to the server and validate test parameters but don’t
+run the test
 </dd>
 <dt>--stats=<em>stats</em></dt>
-<dd><p>Server stats on received packets (default <em>both</em>). Possible values:</p>
+<dd>
+<p>Server stats on received packets (default <em>both</em>). Possible
+values:</p>
 <table class="pure-table pure-table-striped">
 <thead>
-<tr class="header">
+<tr>
 <th>Value</th>
 <th>Meaning</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><em>none</em></td>
 <td>no server stats on received packets</td>
 </tr>
-<tr class="even">
+<tr>
 <td><em>count</em></td>
 <td>total count of received packets</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><em>window</em></td>
 <td>receipt status of last 64 packets with each reply</td>
 </tr>
-<tr class="even">
+<tr>
 <td><em>both</em></td>
 <td>both count and window</td>
 </tr>
@@ -280,32 +337,33 @@
 </table>
 </dd>
 <dt>--tstamp=<em>mode</em></dt>
-<dd><p>Server timestamp mode (default <em>both</em>). Possible values:</p>
+<dd>
+<p>Server timestamp mode (default <em>both</em>). Possible values:</p>
 <table class="pure-table pure-table-striped">
 <thead>
-<tr class="header">
+<tr>
 <th>Value</th>
 <th>Meaning</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><em>none</em></td>
 <td>request no timestamps</td>
 </tr>
-<tr class="even">
+<tr>
 <td><em>send</em></td>
 <td>request timestamp at server send</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><em>receive</em></td>
 <td>request timestamp at server receive</td>
 </tr>
-<tr class="even">
+<tr>
 <td><em>both</em></td>
 <td>request both send and receive timestamps</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><em>midpoint</em></td>
 <td>request midpoint timestamp (send/receive avg)</td>
 </tr>
@@ -313,24 +371,26 @@
 </table>
 </dd>
 <dt>--clock=<em>clock</em></dt>
-<dd><p>Clock/s used for server timestamps (default <em>both</em>). Possible values:</p>
+<dd>
+<p>Clock/s used for server timestamps (default <em>both</em>). Possible
+values:</p>
 <table class="pure-table pure-table-striped">
 <thead>
-<tr class="header">
+<tr>
 <th>Value</th>
 <th>Meaning</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><em>wall</em></td>
 <td>wall clock only</td>
 </tr>
-<tr class="even">
+<tr>
 <td><em>monotonic</em></td>
 <td>monotonic clock only</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><em>both</em></td>
 <td>both clocks</td>
 </tr>
@@ -338,28 +398,29 @@
 </table>
 </dd>
 <dt>--dscp=<em>dscp</em></dt>
-<dd><p>DSCP (ToS) value (default 0, 0x prefix for hex). Common values:</p>
+<dd>
+<p>DSCP (ToS) value (default 0, 0x prefix for hex). Common values:</p>
 <table class="pure-table pure-table-striped">
 <thead>
-<tr class="header">
+<tr>
 <th>Value</th>
 <th>Meaning</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>0</td>
 <td>Best effort</td>
 </tr>
-<tr class="even">
+<tr>
 <td>8</td>
 <td>CS1- Bulk</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>40</td>
 <td>CS5- Video</td>
 </tr>
-<tr class="even">
+<tr>
 <td>46</td>
 <td>EF- Expedited forwarding</td>
 </tr>
@@ -368,24 +429,26 @@
 <p><a href="https://www.tucny.com/Home/dscp-tos">DSCP &amp; ToS</a></p>
 </dd>
 <dt>--df=<em>DF</em></dt>
-<dd><p>Setting for do not fragment (DF) bit in all packets. Possible values:</p>
+<dd>
+<p>Setting for do not fragment (DF) bit in all packets. Possible
+values:</p>
 <table class="pure-table pure-table-striped">
 <thead>
-<tr class="header">
+<tr>
 <th>Value</th>
 <th>Meaning</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><em>default</em></td>
 <td>OS default</td>
 </tr>
-<tr class="even">
+<tr>
 <td><em>false</em></td>
 <td>DF bit not set</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><em>true</em></td>
 <td>DF bit set</td>
 </tr>
@@ -393,43 +456,50 @@
 </table>
 </dd>
 <dt>--wait=<em>wait</em></dt>
-<dd><p>Wait time at end of test for unreceived replies (default 3x4s). Possible values:</p>
+<dd>
+<p>Wait time at end of test for unreceived replies (default 3x4s).
+Possible values:</p>
 <table class="pure-table pure-table-striped">
+<colgroup>
+<col style="width: 63%" />
+<col style="width: 36%" />
+</colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>Format</th>
 <th>Meaning</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>#<em>x</em>duration</td>
 <td># times max RTT, or duration if no response</td>
 </tr>
-<tr class="even">
+<tr>
 <td>#<em>r</em>duration</td>
 <td># times RTT, or duration if no response</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>duration</td>
-<td>fixed duration (see <a href="#duration-units">Duration units</a> below)</td>
+<td>fixed duration (see <a href="#duration-units">Duration units</a>
+below)</td>
 </tr>
 </tbody>
 </table>
 <p>Examples:</p>
 <table class="pure-table pure-table-striped">
 <thead>
-<tr class="header">
+<tr>
 <th>Example</th>
 <th>Meaning</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>3x4s</td>
 <td>3 times max RTT, or 4 seconds if no response</td>
 </tr>
-<tr class="even">
+<tr>
 <td>1500ms</td>
 <td>fixed 1500 milliseconds</td>
 </tr>
@@ -437,28 +507,30 @@
 </table>
 </dd>
 <dt>--timer=<em>timer</em></dt>
-<dd><p>Timer for waiting to send packets (default comp). Possible values:</p>
+<dd>
+<p>Timer for waiting to send packets (default comp). Possible
+values:</p>
 <table class="pure-table pure-table-striped">
 <thead>
-<tr class="header">
+<tr>
 <th>Value</th>
 <th>Meaning</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><em>simple</em></td>
 <td>Go’s standard time.Timer</td>
 </tr>
-<tr class="even">
+<tr>
 <td><em>comp</em></td>
 <td>Simple timer with error compensation (see -tcomp)</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><em>hybrid:</em>#</td>
 <td>Hybrid comp/busy timer with sleep factor (default 0.95)</td>
 </tr>
-<tr class="even">
+<tr>
 <td><em>busy</em></td>
 <td>busy wait loop (high precision and CPU, blasphemy)</td>
 </tr>
@@ -466,24 +538,26 @@
 </table>
 </dd>
 <dt>--tcomp=<em>alg</em></dt>
-<dd><p>Comp timer averaging algorithm (default exp:0.10). Possible values:</p>
+<dd>
+<p>Comp timer averaging algorithm (default exp:0.10). Possible
+values:</p>
 <table class="pure-table pure-table-striped">
 <thead>
-<tr class="header">
+<tr>
 <th>Value</th>
 <th>Meaning</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><em>avg</em></td>
 <td>Cumulative average error</td>
 </tr>
-<tr class="even">
+<tr>
 <td><em>win:</em>#</td>
 <td>Moving average error with window # (default 5)</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><em>exp:</em>#</td>
 <td>Exponential average with alpha # (default 0.10)</td>
 </tr>
@@ -491,24 +565,25 @@
 </table>
 </dd>
 <dt>--fill=<em>fill</em></dt>
-<dd><p>Fill payload with given data (default none). Possible values:</p>
+<dd>
+<p>Fill payload with given data (default none). Possible values:</p>
 <table class="pure-table pure-table-striped">
 <thead>
-<tr class="header">
+<tr>
 <th>Value</th>
 <th>Meaning</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><em>none</em></td>
 <td>Leave payload as all zeroes</td>
 </tr>
-<tr class="even">
+<tr>
 <td><em>rand</em></td>
 <td>Use random bytes from Go’s math.rand</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><em>pattern:</em>XX</td>
 <td>Use repeating pattern of hex (default 69727474)</td>
 </tr>
@@ -516,120 +591,149 @@
 </table>
 </dd>
 <dt>--fill-one</dt>
-<dd>Fill only once and repeat for all packets
+<dd>
+Fill only once and repeat for all packets
 </dd>
 <dt>--sfill=fill</dt>
-<dd>Request server fill (default not specified). See values for –fill. Server must support and allow this fill with –allow-fills.
+<dd>
+Request server fill (default not specified). See values for –fill.
+Server must support and allow this fill with –allow-fills.
 </dd>
 <dt>--local=addr</dt>
-<dd><p>Local address (default from OS). Possible values:</p>
+<dd>
+<p>Local address (default from OS). Possible values:</p>
 <table class="pure-table pure-table-striped">
+<colgroup>
+<col style="width: 61%" />
+<col style="width: 38%" />
+</colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>Value</th>
 <th>Meaning</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><em>:port</em></td>
 <td>Unspecified address (all IPv4/IPv6 addresses) with port</td>
 </tr>
-<tr class="even">
+<tr>
 <td><em>host</em></td>
-<td>Host with dynamic port, see <a href="#host-formats">Host formats</a> below</td>
+<td>Host with dynamic port, see <a href="#host-formats">Host formats</a>
+below</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><em>host:port</em></td>
-<td>Host with specified port, see <a href="#host-formats">Host formats</a> below</td>
+<td>Host with specified port, see <a href="#host-formats">Host
+formats</a> below</td>
 </tr>
 </tbody>
 </table>
 </dd>
 <dt>--hmac=key</dt>
-<dd><p>Add HMAC with key (0x for hex) to all packets, provides:</p>
+<dd>
+<p>Add HMAC with key (0x for hex) to all packets, provides:</p>
 <ul>
 <li>Dropping of all packets without a correct HMAC</li>
 <li>Protection for server against unauthorized discovery and use</li>
 </ul>
 </dd>
 <dt>-4</dt>
-<dd>IPv4 only
+<dd>
+IPv4 only
 </dd>
 <dt>-6</dt>
-<dd>IPv6 only
+<dd>
+IPv6 only
 </dd>
 <dt>--timeouts=<em>durations</em></dt>
-<dd>Timeouts used when connecting to server (default 1s,2s,4s,8s). Comma separated list of durations (see <a href="#duration-units">Duration units</a> below). Total wait time will be up to the sum of these Durations. Max packets sent is up to the number of Durations. Minimum timeout duration is 200ms.
+<dd>
+Timeouts used when connecting to server (default 1s,2s,4s,8s). Comma
+separated list of durations (see <a href="#duration-units">Duration
+units</a> below). Total wait time will be up to the sum of these
+Durations. Max packets sent is up to the number of Durations. Minimum
+timeout duration is 200ms.
 </dd>
 <dt>--ttl=<em>ttl</em></dt>
-<dd>Time to live (default 0, meaning use OS default)
+<dd>
+Time to live (default 0, meaning use OS default)
 </dd>
 <dt>--loose</dt>
-<dd>Accept and use any server restricted test parameters instead of exiting with nonzero status.
+<dd>
+Accept and use any server restricted test parameters instead of exiting
+with nonzero status.
 </dd>
 <dt>--thread</dt>
-<dd>Lock sending and receiving goroutines to OS threads
+<dd>
+Lock sending and receiving goroutines to OS threads
 </dd>
 <dt>-h</dt>
-<dd>Show help
+<dd>
+Show help
 </dd>
 <dt>-v</dt>
-<dd>Show version
+<dd>
+Show version
 </dd>
 </dl>
 <h2 id="host-formats">Host formats</h2>
-<p>Hosts may be either hostnames (for IPv4 or IPv6) or IP addresses. IPv6 addresses must be surrounded by brackets and may include a zone after the % character. Examples:</p>
+<p>Hosts may be either hostnames (for IPv4 or IPv6) or IP addresses.
+IPv6 addresses must be surrounded by brackets and may include a zone
+after the % character. Examples:</p>
 <table class="pure-table pure-table-striped">
 <thead>
-<tr class="header">
+<tr>
 <th>Type</th>
 <th>Example</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>IPv4 IP</td>
 <td>192.168.1.10</td>
 </tr>
-<tr class="even">
+<tr>
 <td>IPv6 IP</td>
 <td>[2001:db8:8f::2/32]</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>IPv4/6 hostname</td>
 <td>localhost</td>
 </tr>
 </tbody>
 </table>
-<p><strong>Note:</strong> IPv6 addresses must be quoted in most shells.</p>
+<p><strong>Note:</strong> IPv6 addresses must be quoted in most
+shells.</p>
 <h2 id="duration-units">Duration units</h2>
-<p>Durations are a sequence of decimal numbers, each with optional fraction, and unit suffix, such as: “300ms”, “1m30s” or “2.5m”. Sanity not enforced.</p>
+<p>Durations are a sequence of decimal numbers, each with optional
+fraction, and unit suffix, such as: “300ms”, “1m30s” or “2.5m”. Sanity
+not enforced.</p>
 <table class="pure-table pure-table-striped">
 <thead>
-<tr class="header">
+<tr>
 <th>Suffix</th>
 <th>Unit</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>h</td>
 <td>hours</td>
 </tr>
-<tr class="even">
+<tr>
 <td>m</td>
 <td>minutes</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>s</td>
 <td>seconds</td>
 </tr>
-<tr class="even">
+<tr>
 <td>ms</td>
 <td>milliseconds</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>ns</td>
 <td>nanoseconds</td>
 </tr>
@@ -644,7 +748,8 @@
 <li><a href="#stats">stats</a></li>
 <li><a href="#round_trips">round_trips</a></li>
 </ol>
-<p>These are documented through the examples below. All attributes are present unless otherwise <strong>noted</strong>.</p>
+<p>These are documented through the examples below. All attributes are
+present unless otherwise <strong>noted</strong>.</p>
 <h2 id="version">version</h2>
 <p>version information</p>
 <pre><code>&quot;version&quot;: {
@@ -654,8 +759,10 @@
 },</code></pre>
 <ul>
 <li><em>irtt</em> the IRTT version number</li>
-<li><em>protocol</em> the protocol version number (increments mean incompatible changes)</li>
-<li><em>json_format</em> the JSON format number (increments mean incompatible changes)</li>
+<li><em>protocol</em> the protocol version number (increments mean
+incompatible changes)</li>
+<li><em>json_format</em> the JSON format number (increments mean
+incompatible changes)</li>
 </ul>
 <h2 id="system_info">system_info</h2>
 <p>a few basic pieces of system information</p>
@@ -666,9 +773,14 @@
     &quot;hostname&quot;: &quot;tron.local&quot;
 },</code></pre>
 <ul>
-<li><em>os</em> the Operating System from Go’s <em>runtime.GOOS</em></li>
-<li><em>cpus</em> the number of CPUs reported by Go’s <em>runtime.NumCPU()</em>, which reflects the number of logical rather than physical CPUs. In the example below, the number 8 is reported for a Core i7 (quad core) with hyperthreading (2 threads per core).</li>
-<li><em>go_version</em> the version of Go the executable was built with</li>
+<li><em>os</em> the Operating System from Go’s
+<em>runtime.GOOS</em></li>
+<li><em>cpus</em> the number of CPUs reported by Go’s
+<em>runtime.NumCPU()</em>, which reflects the number of logical rather
+than physical CPUs. In the example below, the number 8 is reported for a
+Core i7 (quad core) with hyperthreading (2 threads per core).</li>
+<li><em>go_version</em> the version of Go the executable was built
+with</li>
 <li><em>hostname</em> the local hostname</li>
 </ul>
 <h2 id="config">config</h2>
@@ -724,36 +836,63 @@
     }
 },</code></pre>
 <ul>
-<li><em>local_address</em> the local address (IP:port) for the client</li>
-<li><em>remote_address</em> the remote address (IP:port) for the server</li>
-<li><em>open_timeouts</em> a list of timeout durations used after an open packet is sent</li>
-<li><em>params</em> are the parameters that were negotiated with the server, including:
+<li><em>local_address</em> the local address (IP:port) for the
+client</li>
+<li><em>remote_address</em> the remote address (IP:port) for the
+server</li>
+<li><em>open_timeouts</em> a list of timeout durations used after an
+open packet is sent</li>
+<li><em>params</em> are the parameters that were negotiated with the
+server, including:
 <ul>
 <li><em>proto_version</em> protocol version number</li>
 <li><em>duration</em> duration of the test, in nanoseconds</li>
 <li><em>interval</em> send interval, in nanoseconds</li>
 <li><em>length</em> packet length</li>
-<li><em>received_stats</em> statistics for packets received by server (none, count, window or both, <em>--stats</em> flag for irtt client)</li>
-<li><em>stamp_at</em> timestamp selection parameter (none, send, receive, both or midpoint, <em>--tstamp</em> flag for irtt client)</li>
-<li><em>clock</em> clock selection parameter (wall or monotonic, <em>--clock</em> flag for irtt client)</li>
-<li><em>dscp</em> the <a href="https://en.wikipedia.org/wiki/Differentiated_services">DSCP</a> value</li>
-<li><em>server_fill</em> the requested server fill (<em>--sfill</em> flag for irtt client)</li>
+<li><em>received_stats</em> statistics for packets received by server
+(none, count, window or both, <em>--stats</em> flag for irtt
+client)</li>
+<li><em>stamp_at</em> timestamp selection parameter (none, send,
+receive, both or midpoint, <em>--tstamp</em> flag for irtt client)</li>
+<li><em>clock</em> clock selection parameter (wall or monotonic,
+<em>--clock</em> flag for irtt client)</li>
+<li><em>dscp</em> the <a
+href="https://en.wikipedia.org/wiki/Differentiated_services">DSCP</a>
+value</li>
+<li><em>server_fill</em> the requested server fill (<em>--sfill</em>
+flag for irtt client)</li>
 </ul></li>
-<li><em>loose</em> if true, client accepts and uses restricted server parameters, with a warning</li>
+<li><em>loose</em> if true, client accepts and uses restricted server
+parameters, with a warning</li>
 <li><em>ip_version</em> the IP version used (IPv4 or IPv6)</li>
-<li><em>df</em> the do-not-fragment setting (0 == OS default, 1 == false, 2 == true)</li>
-<li><em>ttl</em> the IP <a href="https://en.wikipedia.org/wiki/Time_to_live">time-to-live</a> value</li>
-<li><em>timer</em> the timer used: simple, comp, hybrid or busy (irtt client --timer flag)</li>
+<li><em>df</em> the do-not-fragment setting (0 == OS default, 1 ==
+false, 2 == true)</li>
+<li><em>ttl</em> the IP <a
+href="https://en.wikipedia.org/wiki/Time_to_live">time-to-live</a>
+value</li>
+<li><em>timer</em> the timer used: simple, comp, hybrid or busy (irtt
+client --timer flag)</li>
 <li><em>time_source</em> the time source used: go or windows</li>
-<li><em>waiter</em> the waiter used: fixed duration, multiple of RTT or multiple of max RTT (irtt client <em>--wait</em> flag)</li>
-<li><em>filler</em> the packet filler used: none, rand or pattern (irtt client <em>--fill</em> flag)</li>
-<li><em>fill_one</em> whether to fill only once and repeat for all packets (irtt client <em>--fill-one</em> flag)</li>
-<li><em>thread_lock</em> whether to lock packet handling goroutines to OS threads</li>
-<li><em>supplied</em> a nested <em>config</em> object with the configuration as originally supplied to the API or <em>irtt</em> command. The supplied configuration can differ from the final configuration in the following ways:
+<li><em>waiter</em> the waiter used: fixed duration, multiple of RTT or
+multiple of max RTT (irtt client <em>--wait</em> flag)</li>
+<li><em>filler</em> the packet filler used: none, rand or pattern (irtt
+client <em>--fill</em> flag)</li>
+<li><em>fill_one</em> whether to fill only once and repeat for all
+packets (irtt client <em>--fill-one</em> flag)</li>
+<li><em>thread_lock</em> whether to lock packet handling goroutines to
+OS threads</li>
+<li><em>supplied</em> a nested <em>config</em> object with the
+configuration as originally supplied to the API or <em>irtt</em>
+command. The supplied configuration can differ from the final
+configuration in the following ways:
 <ul>
-<li><em>local_address</em> and <em>remote_address</em> may have hostnames or named ports before being resolved to an IP and numbered port</li>
-<li><em>ip_version</em> may be IPv4+6 before it is determined after address resolution</li>
-<li><em>params</em> may be different before the server applies restrictions based on its configuration</li>
+<li><em>local_address</em> and <em>remote_address</em> may have
+hostnames or named ports before being resolved to an IP and numbered
+port</li>
+<li><em>ip_version</em> may be IPv4+6 before it is determined after
+address resolution</li>
+<li><em>params</em> may be different before the server applies
+restrictions based on its configuration</li>
 </ul></li>
 </ul>
 <h2 id="stats">stats</h2>
@@ -876,7 +1015,10 @@
         &quot;string&quot;: &quot;3.8 Kbps&quot;
     }
 },</code></pre>
-<p><strong>Note:</strong> In the <em>stats</em> object, a <em>duration stats</em> class of object repeats and will not be repeated in the individual descriptions. It contains statistics about nanosecond duration values and has the following attributes:</p>
+<p><strong>Note:</strong> In the <em>stats</em> object, a <em>duration
+stats</em> class of object repeats and will not be repeated in the
+individual descriptions. It contains statistics about nanosecond
+duration values and has the following attributes:</p>
 <ul>
 <li><em>total</em> the total of the duration values</li>
 <li><em>n</em> the number of duration values</li>
@@ -888,35 +1030,85 @@
 </ul>
 <p>The regular attributes in <em>stats</em> are as follows:</p>
 <ul>
-<li><em>start_time</em> the start time of the test (see <em>round_trips</em> Notes for descriptions of <em>wall</em> and <em>monotonic</em> values)</li>
-<li><em>send_call</em> a duration stats object for the call time when sending packets</li>
-<li><em>timer_error</em> a duration stats object for the observed sleep time error</li>
+<li><em>start_time</em> the start time of the test (see
+<em>round_trips</em> Notes for descriptions of <em>wall</em> and
+<em>monotonic</em> values)</li>
+<li><em>send_call</em> a duration stats object for the call time when
+sending packets</li>
+<li><em>timer_error</em> a duration stats object for the observed sleep
+time error</li>
 <li><em>rtt</em> a duration stats object for the round-trip time</li>
-<li><em>send_delay</em> a duration stats object for the one-way send delay <strong>(only available if server timestamps are enabled)</strong></li>
-<li><em>receive_delay</em> a duration stats object for the one-way receive delay <strong>(only available if server timestamps are enabled)</strong></li>
-<li><em>server_packets_received</em> the number of packets received by the server, including duplicates (always present, but only valid if the <em>ReceivedStats</em> parameter includes <em>ReceivedStatsCount</em>, or the <em>--stats</em> flag to the irtt client is <em>count</em> or <em>both</em>)</li>
-<li><em>bytes_sent</em> the number of UDP payload bytes sent during the test</li>
-<li><em>bytes_received</em> the number of UDP payload bytes received during the test</li>
-<li><em>duplicates</em> the number of packets received with the same sequence number</li>
-<li><em>late_packets</em> the number of packets received with a sequence number lower than the previously received sequence number (one simple metric for out-of-order packets)</li>
-<li><em>wait</em> the actual time spent waiting for final packets, in nanoseconds</li>
-<li><em>duration</em> the actual duration of the test, in nanoseconds, from the time just before the first packet was sent to the time after the last packet was received and results are starting to be calculated</li>
+<li><em>send_delay</em> a duration stats object for the one-way send
+delay <strong>(only available if server timestamps are
+enabled)</strong></li>
+<li><em>receive_delay</em> a duration stats object for the one-way
+receive delay <strong>(only available if server timestamps are
+enabled)</strong></li>
+<li><em>server_packets_received</em> the number of packets received by
+the server, including duplicates (always present, but only valid if the
+<em>ReceivedStats</em> parameter includes <em>ReceivedStatsCount</em>,
+or the <em>--stats</em> flag to the irtt client is <em>count</em> or
+<em>both</em>)</li>
+<li><em>bytes_sent</em> the number of UDP payload bytes sent during the
+test</li>
+<li><em>bytes_received</em> the number of UDP payload bytes received
+during the test</li>
+<li><em>duplicates</em> the number of packets received with the same
+sequence number</li>
+<li><em>late_packets</em> the number of packets received with a sequence
+number lower than the previously received sequence number (one simple
+metric for out-of-order packets)</li>
+<li><em>wait</em> the actual time spent waiting for final packets, in
+nanoseconds</li>
+<li><em>duration</em> the actual duration of the test, in nanoseconds,
+from the time just before the first packet was sent to the time after
+the last packet was received and results are starting to be
+calculated</li>
 <li><em>packets_sent</em> the number of packets sent to the server</li>
-<li><em>packets_received</em> the number of packets received from the server</li>
-<li><em>packet_loss_percent</em> 100 * (<em>packets_sent</em> - <em>packets_received</em>) / <em>packets_sent</em></li>
-<li><em>upstream_loss_percent</em> 100 * (<em>packets_sent</em> - <em>server_packets_received</em> / <em>packets_sent</em>) (always present, but only valid if <em>server_packets_received</em> is valid)</li>
-<li><em>downstream_loss_percent</em> 100 * (<em>server_packets_received</em> - <em>packets_received</em> / <em>server_packets_received</em>) (always present, but only valid if <em>server_packets_received</em> is valid)</li>
-<li><em>duplicate_percent</em> 100 * <em>duplicates</em> / <em>packets_received</em></li>
-<li><em>late_packets_percent</em> 100 * <em>late_packets</em> / <em>packets_received</em></li>
-<li><em>ipdv_send</em> a duration stats object for the send <a href="https://en.wikipedia.org/wiki/Packet_delay_variation">IPDV</a> <strong>(only available if server timestamps are enabled)</strong></li>
-<li><em>ipdv_receive</em> a duration stats object for the receive <a href="https://en.wikipedia.org/wiki/Packet_delay_variation">IPDV</a> <strong>(only available if server timestamps are enabled)</strong></li>
-<li><em>ipdv_round_trip</em> a duration stats object for the round-trip <a href="https://en.wikipedia.org/wiki/Packet_delay_variation">IPDV</a> <strong>(available regardless of whether server timestamps are enabled or not)</strong></li>
-<li><em>server_processing_time</em> a duration stats object for the time the server took after it received the packet to when it sent the response <strong>(only available when both send and receive timestamps are enabled)</strong></li>
-<li><em>timer_err_percent</em> the mean of the absolute values of the timer error, as a percentage of the interval</li>
-<li><em>timer_misses</em> the number of times the timer missed the interval (was at least 50% over the scheduled time)</li>
-<li><em>timer_miss_percent</em> 100 * <em>timer_misses</em> / expected packets sent</li>
-<li><em>send_rate</em> the send bitrate (bits-per-second and corresponding string), calculated using the number of UDP payload bytes sent between the time right before the first send call and the time right after the last send call</li>
-<li><em>receive_rate</em> the receive bitrate (bits-per-second and corresponding string), calculated using the number of UDP payload bytes received between the time right after the first receive call and the time right after the last receive call</li>
+<li><em>packets_received</em> the number of packets received from the
+server</li>
+<li><em>packet_loss_percent</em> 100 * (<em>packets_sent</em> -
+<em>packets_received</em>) / <em>packets_sent</em></li>
+<li><em>upstream_loss_percent</em> 100 * (<em>packets_sent</em> -
+<em>server_packets_received</em> / <em>packets_sent</em>) (always
+present, but only valid if <em>server_packets_received</em> is
+valid)</li>
+<li><em>downstream_loss_percent</em> 100 *
+(<em>server_packets_received</em> - <em>packets_received</em> /
+<em>server_packets_received</em>) (always present, but only valid if
+<em>server_packets_received</em> is valid)</li>
+<li><em>duplicate_percent</em> 100 * <em>duplicates</em> /
+<em>packets_received</em></li>
+<li><em>late_packets_percent</em> 100 * <em>late_packets</em> /
+<em>packets_received</em></li>
+<li><em>ipdv_send</em> a duration stats object for the send <a
+href="https://en.wikipedia.org/wiki/Packet_delay_variation">IPDV</a>
+<strong>(only available if server timestamps are enabled)</strong></li>
+<li><em>ipdv_receive</em> a duration stats object for the receive <a
+href="https://en.wikipedia.org/wiki/Packet_delay_variation">IPDV</a>
+<strong>(only available if server timestamps are enabled)</strong></li>
+<li><em>ipdv_round_trip</em> a duration stats object for the round-trip
+<a href="https://en.wikipedia.org/wiki/Packet_delay_variation">IPDV</a>
+<strong>(available regardless of whether server timestamps are enabled
+or not)</strong></li>
+<li><em>server_processing_time</em> a duration stats object for the time
+the server took after it received the packet to when it sent the
+response <strong>(only available when both send and receive timestamps
+are enabled)</strong></li>
+<li><em>timer_err_percent</em> the mean of the absolute values of the
+timer error, as a percentage of the interval</li>
+<li><em>timer_misses</em> the number of times the timer missed the
+interval (was at least 50% over the scheduled time)</li>
+<li><em>timer_miss_percent</em> 100 * <em>timer_misses</em> / expected
+packets sent</li>
+<li><em>send_rate</em> the send bitrate (bits-per-second and
+corresponding string), calculated using the number of UDP payload bytes
+sent between the time right before the first send call and the time
+right after the last send call</li>
+<li><em>receive_rate</em> the receive bitrate (bits-per-second and
+corresponding string), calculated using the number of UDP payload bytes
+received between the time right after the first receive call and the
+time right after the last receive call</li>
 </ul>
 <h2 id="round_trips">round_trips</h2>
 <p>each round-trip is a single request to / reply from the server</p>
@@ -1009,90 +1201,148 @@
         &quot;ipdv&quot;: {}
     }
 ]</code></pre>
-<p><strong>Note:</strong> <em>wall</em> values are from Go’s <em>time.Time.UnixNano()</em>, the number of nanoseconds elapsed since January 1, 1970 UTC</p>
-<p><strong>Note:</strong> <em>monotonic</em> values are the number of nanoseconds since some arbitrary point in time, so can only be relied on to measure duration</p>
+<p><strong>Note:</strong> <em>wall</em> values are from Go’s
+<em>time.Time.UnixNano()</em>, the number of nanoseconds elapsed since
+January 1, 1970 UTC</p>
+<p><strong>Note:</strong> <em>monotonic</em> values are the number of
+nanoseconds since some arbitrary point in time, so can only be relied on
+to measure duration</p>
 <ul>
 <li><em>seqno</em> the sequence number</li>
-<li><em>lost</em> the lost status of the packet, which can be one of <em>false</em>, <em>true</em>, <em>true_down</em> or <em>true_up</em>. The <em>true_down</em> and <em>true_up</em> values are only possible if the <em>ReceivedStats</em> parameter includes <em>ReceivedStatsWindow</em> (irtt client <em>--stats</em> flag). Even then, if it could not be determined whether the packet was lost upstream or downstream, the value <em>true</em> is used.</li>
+<li><em>lost</em> the lost status of the packet, which can be one of
+<em>false</em>, <em>true</em>, <em>true_down</em> or <em>true_up</em>.
+The <em>true_down</em> and <em>true_up</em> values are only possible if
+the <em>ReceivedStats</em> parameter includes
+<em>ReceivedStatsWindow</em> (irtt client <em>--stats</em> flag). Even
+then, if it could not be determined whether the packet was lost upstream
+or downstream, the value <em>true</em> is used.</li>
 <li><em>timestamps</em> the client and server timestamps
 <ul>
-<li><em>client</em> the client send and receive wall and monotonic timestamps <strong>(<em>receive</em> values only present if <em>lost</em> is false)</strong></li>
-<li><em>server</em> the server send and receive wall and monotonic timestamps <strong>(both <em>send</em> and <em>receive</em> values not present if <em>lost</em> is true)</strong>, and additionally:
+<li><em>client</em> the client send and receive wall and monotonic
+timestamps <strong>(<em>receive</em> values only present if
+<em>lost</em> is false)</strong></li>
+<li><em>server</em> the server send and receive wall and monotonic
+timestamps <strong>(both <em>send</em> and <em>receive</em> values not
+present if <em>lost</em> is true)</strong>, and additionally:
 <ul>
-<li><em>send</em> values are not present if the StampAt (irtt client <em>--tstamp</em> flag) does not include send timestamps</li>
-<li><em>receive</em> values are not present if the StampAt (irtt client <em>--tstamp</em> flag) does not include receive timestamps</li>
-<li><em>wall</em> values are not present if the Clock (irtt client <em>--clock</em> flag) does not include wall values or server timestamps are not enabled</li>
-<li><em>monotonic</em> values are not present if the Clock (irtt client <em>--clock</em> flag) does not include monotonic values or server timestamps are not enabled</li>
+<li><em>send</em> values are not present if the StampAt (irtt client
+<em>--tstamp</em> flag) does not include send timestamps</li>
+<li><em>receive</em> values are not present if the StampAt (irtt client
+<em>--tstamp</em> flag) does not include receive timestamps</li>
+<li><em>wall</em> values are not present if the Clock (irtt client
+<em>--clock</em> flag) does not include wall values or server timestamps
+are not enabled</li>
+<li><em>monotonic</em> values are not present if the Clock (irtt client
+<em>--clock</em> flag) does not include monotonic values or server
+timestamps are not enabled</li>
 </ul></li>
 </ul></li>
 <li><em>delay</em> an object containing the delay values
 <ul>
-<li><em>receive</em> the one-way receive delay, in nanoseconds <strong>(present only if server timestamps are enabled and at least one wall clock value is available)</strong></li>
-<li><em>rtt</em> the round-trip time, in nanoseconds, always present</li>
-<li><em>send</em> the one-way send delay, in nanoseconds <strong>(present only if server timestamps are enabled and at least one wall clock value is available)</strong></li>
+<li><em>receive</em> the one-way receive delay, in nanoseconds
+<strong>(present only if server timestamps are enabled and at least one
+wall clock value is available)</strong></li>
+<li><em>rtt</em> the round-trip time, in nanoseconds, always
+present</li>
+<li><em>send</em> the one-way send delay, in nanoseconds
+<strong>(present only if server timestamps are enabled and at least one
+wall clock value is available)</strong></li>
 </ul></li>
-<li><em>ipdv</em> an object containing the <a href="https://en.wikipedia.org/wiki/Packet_delay_variation">IPDV</a> values <strong>(attributes present only for <em>seqno</em> &gt; 0, and if <em>lost</em> is <em>false</em> for both the current and previous <em>round_trip</em>)</strong>
+<li><em>ipdv</em> an object containing the <a
+href="https://en.wikipedia.org/wiki/Packet_delay_variation">IPDV</a>
+values <strong>(attributes present only for <em>seqno</em> &gt; 0, and
+if <em>lost</em> is <em>false</em> for both the current and previous
+<em>round_trip</em>)</strong>
 <ul>
-<li><em>receive</em> the difference in receive delay relative to the previous packet <strong>(present only if at least one server timestamp is available)</strong></li>
-<li><em>rtt</em> the difference in round-trip time relative to the previous packet (always present for <em>seqno</em> &gt; 0)</li>
-<li><em>send</em> the difference in send delay relative to the previous packet <strong>(present only if at least one server timestamp is available)</strong></li>
+<li><em>receive</em> the difference in receive delay relative to the
+previous packet <strong>(present only if at least one server timestamp
+is available)</strong></li>
+<li><em>rtt</em> the difference in round-trip time relative to the
+previous packet (always present for <em>seqno</em> &gt; 0)</li>
+<li><em>send</em> the difference in send delay relative to the previous
+packet <strong>(present only if at least one server timestamp is
+available)</strong></li>
 </ul></li>
 </ul>
 <h1 id="exit-status">EXIT STATUS</h1>
-<p><em>irtt client</em> exits with one of the following status codes:</p>
+<p><em>irtt client</em> exits with one of the following status
+codes:</p>
 <table class="pure-table pure-table-striped">
 <thead>
-<tr class="header">
+<tr>
 <th>Code</th>
 <th>Meaning</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>0</td>
 <td>Success</td>
 </tr>
-<tr class="even">
+<tr>
 <td>1</td>
 <td>Runtime error</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>2</td>
 <td>Command line error</td>
 </tr>
-<tr class="even">
+<tr>
 <td>3</td>
 <td>Two interrupt signals received</td>
 </tr>
 </tbody>
 </table>
 <h1 id="warnings">WARNINGS</h1>
-<p>It is possible with the irtt client to dramatically harm network performance by using intervals that are too low, particularly in combination with large packet lengths. Careful consideration should be given before using sub-millisecond intervals, not only because of the impact on the network, but also because:</p>
+<p>It is possible with the irtt client to dramatically harm network
+performance by using intervals that are too low, particularly in
+combination with large packet lengths. Careful consideration should be
+given before using sub-millisecond intervals, not only because of the
+impact on the network, but also because:</p>
 <ul>
-<li>Timer accuracy at sub-millisecond intervals may begin to suffer without the use of a custom kernel or the busy timer (which pins the CPU)</li>
-<li>Memory consumption for results storage and system CPU time both rise rapidly</li>
-<li>The granularity of the results reported may very well not be required</li>
+<li>Timer accuracy at sub-millisecond intervals may begin to suffer
+without the use of a custom kernel or the busy timer (which pins the
+CPU)</li>
+<li>Memory consumption for results storage and system CPU time both rise
+rapidly</li>
+<li>The granularity of the results reported may very well not be
+required</li>
 </ul>
 <h1 id="examples">EXAMPLES</h1>
 <dl>
 <dt>$ irtt client localhost</dt>
-<dd>Sends requests once per second for one minute to localhost.
+<dd>
+Sends requests once per second for one minute to localhost.
 </dd>
 <dt>$ irtt client -i 200ms -d 10s -o - localhost</dt>
-<dd>Sends requests every 0.2 sec for 10 seconds to localhost. Writes JSON output to stdout.
+<dd>
+Sends requests every 0.2 sec for 10 seconds to localhost. Writes JSON
+output to stdout.
 </dd>
-<dt>$ irtt client -i 20ms -d 1m -l 172 --fill=rand --sfill=rand 192.168.100.10</dt>
-<dd>Sends requests every 20ms for one minute to 192.168.100.10. Fills both the client and server payload with random data. This simulates a G.711 VoIP conversation, one of the most commonly used codecs for VoIP as of this writing.
+<dt>$ irtt client -i 20ms -d 1m -l 172 --fill=rand --sfill=rand
+192.168.100.10</dt>
+<dd>
+Sends requests every 20ms for one minute to 192.168.100.10. Fills both
+the client and server payload with random data. This simulates a G.711
+VoIP conversation, one of the most commonly used codecs for VoIP as of
+this writing.
 </dd>
 <dt>$ irtt client -i 0.1s -d 5s -6 --dscp=46 irtt.example.org</dt>
-<dd>Sends requests with IPv6 every 100ms for 5 seconds to irtt.example.org. Sets the DSCP value (ToS field) of requests and responses to 46 (Expedited Forwarding).
+<dd>
+Sends requests with IPv6 every 100ms for 5 seconds to irtt.example.org.
+Sets the DSCP value (ToS field) of requests and responses to 46
+(Expedited Forwarding).
 </dd>
 <dt>$ irtt client --hmac=secret -d 10s “[2001:db8:8f::2/32]:64381”</dt>
-<dd>Sends requests to the specified IPv6 IP on port 64381 every second for 10 seconds. Adds an HMAC to each packet with the key <em>secret</em>.
+<dd>
+Sends requests to the specified IPv6 IP on port 64381 every second for
+10 seconds. Adds an HMAC to each packet with the key <em>secret</em>.
 </dd>
 </dl>
 <h1 id="see-also">SEE ALSO</h1>
-<p><a href="irtt.html">irtt(1)</a>, <a href="irtt-server.html">irtt-server(1)</a></p>
-<p><a href="https://github.com/heistp/irtt/">IRTT GitHub repository</a></p>
+<p><a href="irtt.html">irtt(1)</a>, <a
+href="irtt-server.html">irtt-server(1)</a></p>
+<p><a href="https://github.com/heistp/irtt/">IRTT GitHub
+repository</a></p>
 </body>
 </html>

@@ -10,6 +10,8 @@ const exitCodeBadCommandLine = 2
 
 const exitCodeDoubleSignal = 3
 
+const defaultRaw = false
+
 const defaultQuiet = false
 
 const defaultReallyQuiet = false

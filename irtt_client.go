@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"math"
 	"os"
 	"os/signal"
 	"strconv"
@@ -36,6 +37,7 @@ func clientUsage() {
 	printf("               if extension is .gz, it's changed to .json.gz, output is gzipped")
 	printf("               if extension is .json, output is not gzipped")
 	printf("               output to stdout is not gzipped, pipe to gzip if needed")
+	printf("-r             raw mode, emit space delimited data to stdout, and events to stderr")
 	printf("-q             quiet, suppress per-packet output")
 	printf("-Q             really quiet, suppress all output except errors to stderr")
 	printf("-n             no test, connect to the server and validate test parameters")
@@ -161,6 +163,7 @@ func runClientCLI(args []string) {
 	var tsatStr = fs.String("tstamp", DefaultStampAt.String(), "stamp at")
 	var clockStr = fs.String("clock", DefaultClock.String(), "clock")
 	var outputStr = fs.StringP("o", "o", "", "output file")
+	var raw = fs.BoolP("r", "r", defaultRaw, "raw mode")
 	var quiet = fs.BoolP("q", "q", defaultQuiet, "quiet")
 	var reallyQuiet = fs.BoolP("Q", "Q", defaultReallyQuiet, "really quiet")
 	var dscpStr = fs.String("dscp", strconv.Itoa(DefaultDSCP), "dscp value")
@@ -267,8 +270,8 @@ func runClientCLI(args []string) {
 	}
 	raddrStr := fs.Args()[0]
 
-	// send regular output to stderr if json going to stdout
-	if *outputStr == "-" {
+	// send regular output to stderr if raw mode, or json going to stdout
+	if *outputStr == "-" || *raw {
 		printTo = os.Stderr
 	}
 
@@ -315,7 +318,13 @@ func runClientCLI(args []string) {
 	cfg.Filler = filler
 	cfg.FillOne = *fillOne
 	cfg.HMACKey = hmacKey
-	cfg.Handler = &clientHandler{*quiet, *reallyQuiet}
+	if *quiet || *reallyQuiet {
+		cfg.Handler = &discardHandler{}
+	} else if *raw {
+		cfg.Handler = &rawHandler{}
+	} else {
+		cfg.Handler = &humanHandler{}
+	}
 	cfg.ThreadLock = *threadLock
 
 	// run test
@@ -458,50 +467,98 @@ func writeResultJSON(r *Result, output string, cancelled bool) error {
 	return e.Encode(r)
 }
 
-type clientHandler struct {
-	quiet       bool
-	reallyQuiet bool
+// humanHandler emits output for human consumption.
+type humanHandler struct {
 }
 
-func (c *clientHandler) OnSent(seqno Seqno, rtd *RoundTripData) {
+func (c *humanHandler) OnSent(seqno Seqno, rtd *RoundTripData) {
 }
 
-func (c *clientHandler) OnReceived(seqno Seqno, rtd *RoundTripData,
+func (c *humanHandler) OnReceived(seqno Seqno, rtd *RoundTripData,
 	prtd *RoundTripData, late bool, dup bool) {
-	if !c.reallyQuiet {
-		if dup {
-			printf("DUP! seq=%d", seqno)
-			return
-		}
+	if dup {
+		printf("DUP! seq=%d", seqno)
+		return
+	}
 
-		if !c.quiet {
-			ipdv := "n/a"
-			if prtd != nil {
-				dv := rtd.IPDVSince(prtd)
-				if dv != InvalidDuration {
-					ipdv = rdur(AbsDuration(dv)).String()
-				}
-			}
-			rd := ""
-			if rtd.ReceiveDelay() != InvalidDuration {
-				rd = fmt.Sprintf(" rd=%s", rdur(rtd.ReceiveDelay()))
-			}
-			sd := ""
-			if rtd.SendDelay() != InvalidDuration {
-				sd = fmt.Sprintf(" sd=%s", rdur(rtd.SendDelay()))
-			}
-			sl := ""
-			if late {
-				sl = " (LATE)"
-			}
-			printf("seq=%d rtt=%s%s%s ipdv=%s%s", seqno, rdur(rtd.RTT()),
-				rd, sd, ipdv, sl)
+	ipdv := "n/a"
+	if prtd != nil {
+		dv := rtd.IPDVSince(prtd)
+		if dv != InvalidDuration {
+			ipdv = rdur(AbsDuration(dv)).String()
 		}
 	}
+	rd := ""
+	if rtd.ReceiveDelay() != InvalidDuration {
+		rd = fmt.Sprintf(" rd=%s", rdur(rtd.ReceiveDelay()))
+	}
+	sd := ""
+	if rtd.SendDelay() != InvalidDuration {
+		sd = fmt.Sprintf(" sd=%s", rdur(rtd.SendDelay()))
+	}
+	sl := ""
+	if late {
+		sl = " (LATE)"
+	}
+	printf("seq=%d rtt=%s%s%s ipdv=%s%s", seqno, rdur(rtd.RTT()),
+		rd, sd, ipdv, sl)
 }
 
-func (c *clientHandler) OnEvent(e *Event) {
-	if !c.reallyQuiet {
-		printf("%s", e)
+func (c *humanHandler) OnEvent(e *Event) {
+	printf("%s", e)
+}
+
+// rawHandler emits space separated output for machine consumption.
+type rawHandler struct {
+}
+
+func (r *rawHandler) OnSent(seqno Seqno, rtd *RoundTripData) {
+}
+
+func (r *rawHandler) OnReceived(seqno Seqno, rtd *RoundTripData,
+	prtd *RoundTripData, late bool, dup bool) {
+	if dup {
+		fmt.Printf("%d NaN NaN NaN NaN 1 NaN\n", seqno)
+		return
 	}
+
+	rtt := float64(rtd.RTT()) / float64(time.Millisecond)
+	rd := math.NaN()
+	if rtd.ReceiveDelay() != InvalidDuration {
+		rd = float64(rtd.ReceiveDelay()) / float64(time.Millisecond)
+	}
+	sd := math.NaN()
+	if rtd.SendDelay() != InvalidDuration {
+		sd = float64(rtd.SendDelay()) / float64(time.Millisecond)
+	}
+	ipdv := math.NaN()
+	if prtd != nil {
+		dv := rtd.IPDVSince(prtd)
+		if dv != InvalidDuration {
+			ipdv = float64(dv) / float64(time.Millisecond)
+		}
+	}
+	l := 0
+	if late {
+		l = 1
+	}
+	fmt.Printf("%d %f %f %f %f 0 %d\n", seqno, rtt, rd, sd, ipdv, l)
+}
+
+func (r *rawHandler) OnEvent(e *Event) {
+	printf("%s", e)
+}
+
+// discardHandler ignores all Handler calls.
+type discardHandler struct {
+}
+
+func (discardHandler) OnSent(seqno Seqno, rtd *RoundTripData) {
+}
+
+func (discardHandler) OnReceived(seqno Seqno, rtd *RoundTripData,
+	prtd *RoundTripData, late bool, dup bool) {
+}
+
+func (discardHandler) OnEvent(e *Event) {
 }

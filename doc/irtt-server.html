@@ -9,9 +9,6 @@
   <title>IRTT-SERVER(1) v0.9.0 | IRTT Manual</title>
   <style>
     html {
-      line-height: 1.5;
-      font-family: Georgia, serif;
-      font-size: 20px;
       color: #1a1a1a;
       background-color: #fdfdfd;
     }
@@ -23,17 +20,23 @@
       padding-top: 50px;
       padding-bottom: 50px;
       hyphens: auto;
-      word-wrap: break-word;
+      overflow-wrap: break-word;
       text-rendering: optimizeLegibility;
       font-kerning: normal;
     }
     @media (max-width: 600px) {
       body {
         font-size: 0.9em;
-        padding: 1em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
       }
     }
     @media print {
+      html {
+        background-color: white;
+      }
       body {
         background-color: transparent;
         color: black;
@@ -57,6 +60,10 @@
       color: #1a1a1a;
     }
     img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
       max-width: 100%;
     }
     h1, h2, h3, h4, h5, h6 {
@@ -83,9 +90,10 @@
       color: #606060;
     }
     code {
-      font-family: Menlo, Monaco, 'Lucida Console', Consolas, monospace;
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
       font-size: 85%;
       margin: 0;
+      hyphens: manual;
     }
     pre {
       margin: 1em 0;
@@ -94,6 +102,7 @@
     pre code {
       padding: 0;
       overflow: visible;
+      overflow-wrap: normal;
     }
     .sourceCode {
      background-color: transparent;
@@ -135,20 +144,31 @@
     #TOC li {
       list-style: none;
     }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
     #TOC a:not(:hover) {
       text-decoration: none;
     }
     code{white-space: pre-wrap;}
     span.smallcaps{font-variant: small-caps;}
-    span.underline{text-decoration: underline;}
-    div.column{display: inline-block; vertical-align: top; width: 50%;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
     div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
-    ul.task-list{list-style: none;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
     .display.math{display: block; text-align: center; margin: 0.5rem auto;}
   </style>
-  <!--[if lt IE 9]>
-    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
-  <![endif]-->
   <meta name=viewport content="width=device-width, initial-scale=1">
   <link rel="stylesheet" href="https://unpkg.com/purecss@1.0.0/build/pure-min.css"
   	integrity="sha384-nn4HPE8lTHyVtfCBi5yW9d20FjT8BJwUXyWZT9InLYax14RDjBj46LmSztkmNP9w"
@@ -196,114 +216,140 @@
 <h1 id="synopsis">SYNOPSIS</h1>
 <p>irtt server [<em>args</em>]</p>
 <h1 id="description">DESCRIPTION</h1>
-<p><em>irtt server</em> is the server for <a href="irtt.html">irtt(1)</a>.</p>
+<p><em>irtt server</em> is the server for <a
+href="irtt.html">irtt(1)</a>.</p>
 <h1 id="options">OPTIONS</h1>
 <dl>
 <dt>-b <em>addresses</em></dt>
-<dd><p>Bind addresses (default “:2112”), comma separated list of:</p>
+<dd>
+<p>Bind addresses (default “:2112”), comma separated list of:</p>
 <table class="pure-table pure-table-striped">
+<colgroup>
+<col style="width: 47%" />
+<col style="width: 52%" />
+</colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>Format</th>
 <th>Address Type</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>:port</td>
 <td>unspecified address with port, use with care</td>
 </tr>
-<tr class="even">
+<tr>
 <td>host</td>
-<td>host with default port 2112, see <a href="#host-formats">Host formats</a> below</td>
+<td>host with default port 2112, see <a href="#host-formats">Host
+formats</a> below</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>host:port</td>
-<td>host with specified port, see <a href="#host-formats">Host formats</a> below</td>
+<td>host with specified port, see <a href="#host-formats">Host
+formats</a> below</td>
 </tr>
-<tr class="even">
+<tr>
 <td>%iface</td>
 <td>all addresses on interface iface with default port 2112</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>%iface:port</td>
 <td>all addresses on interface iface with port</td>
 </tr>
 </tbody>
 </table>
-<p><strong>Note:</strong> iface strings may contain * to match multiple interfaces</p>
+<p><strong>Note:</strong> iface strings may contain * to match multiple
+interfaces</p>
 </dd>
 <dt>-d <em>duration</em></dt>
-<dd>Max test duration, or 0 for no maximum (default 0s, see <a href="#duration-units">Duration units</a> below)
+<dd>
+Max test duration, or 0 for no maximum (default 0s, see <a
+href="#duration-units">Duration units</a> below)
 </dd>
 <dt>-i <em>interval</em></dt>
-<dd>Min send interval, or 0 for no minimum (default 10ms, see <a href="#duration-units">Duration units</a> below)
+<dd>
+Min send interval, or 0 for no minimum (default 10ms, see <a
+href="#duration-units">Duration units</a> below)
 </dd>
 <dt>-l <em>length</em></dt>
-<dd>Max packet length (default 0), or 0 for no maximum. Numbers less than size of required headers will cause test packets to be dropped.
+<dd>
+Max packet length (default 0), or 0 for no maximum. Numbers less than
+size of required headers will cause test packets to be dropped.
 </dd>
 <dt>--hmac=<em>key</em></dt>
-<dd><p>Add HMAC with <em>key</em> (0x for hex) to all packets, provides:</p>
+<dd>
+<p>Add HMAC with <em>key</em> (0x for hex) to all packets, provides:</p>
 <ul>
 <li>Dropping of all packets without a correct HMAC</li>
 <li>Protection for server against unauthorized discovery and use</li>
 </ul>
 </dd>
 <dt>--syslog=<em>uri</em></dt>
-<dd><p>Log events to syslog (default don’t use syslog). URI format: protocol://host:port/tag. Examples:</p>
+<dd>
+<p>Log events to syslog (default don’t use syslog). URI format:
+protocol://host:port/tag. Examples:</p>
 <table class="pure-table pure-table-striped">
 <thead>
-<tr class="header">
+<tr>
 <th>URI</th>
 <th>Result</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>local:</td>
 <td>Log to local syslog, default tag irtt</td>
 </tr>
-<tr class="even">
+<tr>
 <td>local:/irttsrv</td>
 <td>Log to local syslog, tag irttsrv</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>udp://logsrv:514/irttsrv</td>
 <td>UDP to logsrv:514, tag irttsrv</td>
 </tr>
-<tr class="even">
+<tr>
 <td>tcp://logsrv:8514/</td>
 <td>TCP to logsrv:8514, default tag irtt</td>
 </tr>
 </tbody>
 </table>
-<p><strong>Note:</strong> not available on Windows, Plan 9 or Google Native Client</p>
+<p><strong>Note:</strong> not available on Windows, Plan 9 or Google
+Native Client</p>
 </dd>
 <dt>--timeout=<em>duration</em></dt>
-<dd>Timeout for closing connections if no requests received on a connection (default 1m0s, see <a href="#duration-units">Duration units</a> below). 0 means no timeout (not recommended, especially on public servers). Max client interval will be restricted to timeout/4.
+<dd>
+Timeout for closing connections if no requests received on a connection
+(default 1m0s, see <a href="#duration-units">Duration units</a> below).
+0 means no timeout (not recommended, especially on public servers). Max
+client interval will be restricted to timeout/4.
 </dd>
 <dt>--pburst=<em>#</em></dt>
-<dd>Packet burst allowed before enforcing minimum interval (default 5)
+<dd>
+Packet burst allowed before enforcing minimum interval (default 5)
 </dd>
 <dt>--fill=<em>fill</em></dt>
-<dd><p>Payload fill if not requested (default pattern:69727474). Possible values include:</p>
+<dd>
+<p>Payload fill if not requested (default pattern:69727474). Possible
+values include:</p>
 <table class="pure-table pure-table-striped">
 <thead>
-<tr class="header">
+<tr>
 <th>Value</th>
 <th>Fill</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><em>none</em></td>
 <td>Echo client payload (insecure on public servers)</td>
 </tr>
-<tr class="even">
+<tr>
 <td><em>rand</em></td>
 <td>Use random bytes from Go’s math.rand</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><em>pattern:</em>XX</td>
 <td>Use repeating pattern of hex (default 69727474)</td>
 </tr>
@@ -311,32 +357,35 @@
 </table>
 </dd>
 <dt>--allow-fills=<em>fills</em></dt>
-<dd><p>Comma separated patterns of fill requests to allow (default rand). See options for <em>–fill</em>. Notes:</p>
+<dd>
+<p>Comma separated patterns of fill requests to allow (default rand).
+See options for <em>–fill</em>. Notes:</p>
 <ul>
 <li>Patterns may contain * for matching</li>
 <li>Allowing non-random fills insecure on public servers</li>
-<li>Use <em>--allow-fills=""</em> to disallow all fill requests</li>
+<li>Use <em>--allow-fills=““</em> to disallow all fill requests</li>
 </ul>
 </dd>
 <dt>--tstamp=<em>modes</em></dt>
-<dd><p>Timestamp modes to allow (default dual). Possible values:</p>
+<dd>
+<p>Timestamp modes to allow (default dual). Possible values:</p>
 <table class="pure-table pure-table-striped">
 <thead>
-<tr class="header">
+<tr>
 <th>Value</th>
 <th>Allowed Timestamps</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><em>none</em></td>
 <td>Don’t allow any timestamps</td>
 </tr>
-<tr class="even">
+<tr>
 <td><em>single</em></td>
 <td>Allow a single timestamp (send, receive or midpoint)</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><em>dual</em></td>
 <td>Allow dual timestamps</td>
 </tr>
@@ -344,115 +393,149 @@
 </table>
 </dd>
 <dt>--no-dscp</dt>
-<dd>Don’t allow setting dscp (default false)
+<dd>
+Don’t allow setting dscp (default false)
 </dd>
 <dt>--set-src-ip</dt>
-<dd>Set source IP address on all outgoing packets from listeners on unspecified IP addresses (use for more reliable reply routing, but increases per-packet heap allocations)
+<dd>
+Set source IP address on all outgoing packets from listeners on
+unspecified IP addresses (use for more reliable reply routing, but
+increases per-packet heap allocations)
+</dd>
+<dt>--ecn</dt>
+<dd>
+Ship ECN bits to be logged by the client. Forces –set-src-ip, disables
+UDP replies from server
 </dd>
 <dt>--thread</dt>
-<dd>Lock request handling goroutines to OS threads
+<dd>
+Lock request handling goroutines to OS threads
 </dd>
 <dt>-h</dt>
-<dd>Show help
+<dd>
+Show help
 </dd>
 <dt>-v</dt>
-<dd>Show version
+<dd>
+Show version
 </dd>
 </dl>
 <h2 id="host-formats">Host formats</h2>
-<p>Hosts may be either hostnames (for IPv4 or IPv6) or IP addresses. IPv6 addresses must be surrounded by brackets and may include a zone after the % character. Examples:</p>
+<p>Hosts may be either hostnames (for IPv4 or IPv6) or IP addresses.
+IPv6 addresses must be surrounded by brackets and may include a zone
+after the % character. Examples:</p>
 <table class="pure-table pure-table-striped">
 <thead>
-<tr class="header">
+<tr>
 <th>Type</th>
 <th>Example</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>IPv4 IP</td>
 <td>192.168.1.10</td>
 </tr>
-<tr class="even">
+<tr>
 <td>IPv6 IP</td>
 <td>[2001:db8:8f::2/32]</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>IPv4/6 hostname</td>
 <td>localhost</td>
 </tr>
 </tbody>
 </table>
-<p><strong>Note:</strong> IPv6 addresses must be quoted in most shells.</p>
+<p><strong>Note:</strong> IPv6 addresses must be quoted in most
+shells.</p>
 <h2 id="duration-units">Duration units</h2>
-<p>Durations are a sequence of decimal numbers, each with optional fraction, and unit suffix, such as: “300ms”, “1m30s” or “2.5m”. Sanity not enforced.</p>
+<p>Durations are a sequence of decimal numbers, each with optional
+fraction, and unit suffix, such as: “300ms”, “1m30s” or “2.5m”. Sanity
+not enforced.</p>
 <table class="pure-table pure-table-striped">
 <thead>
-<tr class="header">
+<tr>
 <th>Suffix</th>
 <th>Unit</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>h</td>
 <td>hours</td>
 </tr>
-<tr class="even">
+<tr>
 <td>m</td>
 <td>minutes</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>s</td>
 <td>seconds</td>
 </tr>
-<tr class="even">
+<tr>
 <td>ms</td>
 <td>milliseconds</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>ns</td>
 <td>nanoseconds</td>
 </tr>
 </tbody>
 </table>
 <h1 id="security">SECURITY</h1>
-<p>Running an IRTT server that’s open to the outside world requires some additional attention. For starters, the command line flags should be used to, at a minimum:</p>
+<p>Running an IRTT server that’s open to the outside world requires some
+additional attention. For starters, the command line flags should be
+used to, at a minimum:</p>
 <ul>
-<li>Restrict the duration (<em>-d</em>), interval (<em>-i</em>) and length (<em>-l</em>) of tests, particularly for public servers</li>
-<li>Set an HMAC key (<em>--hmac</em>) for private servers to prevent unauthorized discovery and use</li>
+<li>Restrict the duration (<em>-d</em>), interval (<em>-i</em>) and
+length (<em>-l</em>) of tests, particularly for public servers</li>
+<li>Set an HMAC key (<em>--hmac</em>) for private servers to prevent
+unauthorized discovery and use</li>
 </ul>
-<p>In addition, there are various systemd(1) options available for securing services. The irtt.service file included with the distribution sets some commonly used options, but should not be considered exhaustive.</p>
-<p>To secure a server for public use, additional steps may be taken that are outside of the scope of this documentation, including but not limited to:</p>
+<p>In addition, there are various systemd(1) options available for
+securing services. The irtt.service file included with the distribution
+sets some commonly used options, but should not be considered
+exhaustive.</p>
+<p>To secure a server for public use, additional steps may be taken that
+are outside of the scope of this documentation, including but not
+limited to:</p>
 <ul>
 <li>Installing irtt in an unprivileged container</li>
-<li>Setting up an iptables firewall (only UDP port 2112 must be open)</li>
+<li>Setting up an iptables firewall (only UDP port 2112 must be
+open)</li>
 <li>Setting up a chroot jail</li>
 </ul>
-<p>It should be noted that there are no known security vulnerabilities in the Go language at this time, and the steps above, in particular the chroot jail, may or may not serve to enhance security in any way. Go-based servers are generally regarded as safe because of Go’s high-level language constructs for memory management, and at this time IRTT makes no use of Go’s <a href="https://golang.org/pkg/unsafe/">unsafe</a> package.</p>
+<p>It should be noted that there are no known security vulnerabilities
+in the Go language at this time, and the steps above, in particular the
+chroot jail, may or may not serve to enhance security in any way.
+Go-based servers are generally regarded as safe because of Go’s
+high-level language constructs for memory management, and at this time
+IRTT makes no use of Go’s <a
+href="https://golang.org/pkg/unsafe/">unsafe</a> package.</p>
 <h1 id="exit-status">EXIT STATUS</h1>
-<p><em>irtt server</em> exits with one of the following status codes:</p>
+<p><em>irtt server</em> exits with one of the following status
+codes:</p>
 <table class="pure-table pure-table-striped">
 <thead>
-<tr class="header">
+<tr>
 <th>Code</th>
 <th>Meaning</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>0</td>
 <td>Success</td>
 </tr>
-<tr class="even">
+<tr>
 <td>1</td>
 <td>Runtime error</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>2</td>
 <td>Command line error</td>
 </tr>
-<tr class="even">
+<tr>
 <td>3</td>
 <td>Two interrupt signals received</td>
 </tr>
@@ -461,17 +544,28 @@
 <h1 id="examples">EXAMPLES</h1>
 <dl>
 <dt>$ irtt server</dt>
-<dd>Starts the server and listens on all addresses (unspecified address)
+<dd>
+Starts the server and listens on all addresses (unspecified address)
 </dd>
-<dt>$ irtt server -d 30s -i 20ms -l 256 --fill=rand --allow-fills=""</dt>
-<dd>Starts the server and listens on all addresses, setting the maximum test duration to 30 seconds, minimum interval to 20 ms, and maximum packet length to 256 bytes. Disallows fill requests and forces all return packets to be filled with random data.
+<dt>$ irtt server -d 30s -i 20ms -l 256 --fill=rand
+--allow-fills=“”</dt>
+<dd>
+Starts the server and listens on all addresses, setting the maximum test
+duration to 30 seconds, minimum interval to 20 ms, and maximum packet
+length to 256 bytes. Disallows fill requests and forces all return
+packets to be filled with random data.
 </dd>
 <dt>$ irtt server -b 192.168.100.11:64381 --hmac=secret</dt>
-<dd>Starts the server and binds to IPv4 address 192.168.100.11, port 64381. Requires a valid HMAC on all packets with the key <em>secret</em>, otherwise packets are dropped.
+<dd>
+Starts the server and binds to IPv4 address 192.168.100.11, port 64381.
+Requires a valid HMAC on all packets with the key <em>secret</em>,
+otherwise packets are dropped.
 </dd>
 </dl>
 <h1 id="see-also">SEE ALSO</h1>
-<p><a href="irtt.html">irtt(1)</a>, <a href="irtt-client.html">irtt-client(1)</a></p>
-<p><a href="https://github.com/heistp/irtt/">IRTT GitHub repository</a></p>
+<p><a href="irtt.html">irtt(1)</a>, <a
+href="irtt-client.html">irtt-client(1)</a></p>
+<p><a href="https://github.com/heistp/irtt/">IRTT GitHub
+repository</a></p>
 </body>
 </html>
