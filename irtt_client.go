@@ -125,7 +125,7 @@ func hostUsage() {
 	printf("")
 	printf("IPv4 IP: 192.168.1.10")
 	printf("IPv6 IP: ::1")
-	printf("IPv6 IP/port: [fe80::426c:8fff:fe13:9feb%en0]:2112")
+	printf("IPv6 IP/port: [fe80::426c:8fff:fe13:9feb%%en0]:2112")
 	printf("IPv4/6 hostname: localhost")
 	printf("")
 	printf("Note: IPv6 addresses may need to be quoted in your shell.")
