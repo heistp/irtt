@@ -475,7 +475,7 @@ func (c *humanHandler) OnSent(seqno Seqno, rtd *RoundTripData) {
 }
 
 func (c *humanHandler) OnReceived(seqno Seqno, rtd *RoundTripData,
-	prtd *RoundTripData, late bool, dup bool) {
+	prtd *RoundTripData, dup bool) {
 	if dup {
 		printf("DUP! seq=%d", seqno)
 		return
@@ -497,7 +497,7 @@ func (c *humanHandler) OnReceived(seqno Seqno, rtd *RoundTripData,
 		sd = fmt.Sprintf(" sd=%s", rdur(rtd.SendDelay()))
 	}
 	sl := ""
-	if late {
+	if rtd.Late {
 		sl = " (LATE)"
 	}
 	printf("seq=%d rtt=%s%s%s ipdv=%s%s", seqno, rdur(rtd.RTT()),
@@ -516,7 +516,7 @@ func (r *rawHandler) OnSent(seqno Seqno, rtd *RoundTripData) {
 }
 
 func (r *rawHandler) OnReceived(seqno Seqno, rtd *RoundTripData,
-	prtd *RoundTripData, late bool, dup bool) {
+	prtd *RoundTripData, dup bool) {
 	if dup {
 		fmt.Printf("%d NaN NaN NaN NaN 1 NaN\n", seqno)
 		return
@@ -539,7 +539,7 @@ func (r *rawHandler) OnReceived(seqno Seqno, rtd *RoundTripData,
 		}
 	}
 	l := 0
-	if late {
+	if rtd.Late {
 		l = 1
 	}
 	fmt.Printf("%d %f %f %f %f 0 %d\n", seqno, rtt, rd, sd, ipdv, l)
@@ -557,7 +557,7 @@ func (discardHandler) OnSent(seqno Seqno, rtd *RoundTripData) {
 }
 
 func (discardHandler) OnReceived(seqno Seqno, rtd *RoundTripData,
-	prtd *RoundTripData, late bool, dup bool) {
+	prtd *RoundTripData, dup bool) {
 }
 
 func (discardHandler) OnEvent(e *Event) {

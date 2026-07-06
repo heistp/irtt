@@ -11,6 +11,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Allow IPv6 addresses without brackets
 - Use LookupIP for client hostname lookups and log on multiple addresses
 - Use LookupIP for server bind addresses
+- Record a per-packet "late" field and add to the output json
+- Rename "Ecn" field in json to "ecn" for consistency
 
 ## 0.9.1 - 2021-05-18
 
