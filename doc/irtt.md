@@ -25,8 +25,14 @@ packets sent on a fixed period, and produces both text and JSON output.
 *server*
 :   runs the server
 
+*report*
+:   emits results from a JSON file
+
 *bench*
 :   runs HMAC and fill benchmarks
+
+*timer*
+:   runs timer resolution test
 
 *clock*
 :   runs wall vs monotonic clock test

@@ -39,7 +39,6 @@ func (r Bitrate) String() string {
 
 // MarshalJSON implements the json.Marshaler interface.
 func (r Bitrate) MarshalJSON() ([]byte, error) {
-	type Alias DurationStats
 	j := &struct {
 		BPS    uint64 `json:"bps"`
 		String string `json:"string"`
@@ -48,4 +47,16 @@ func (r Bitrate) MarshalJSON() ([]byte, error) {
 		String: r.String(),
 	}
 	return json.Marshal(j)
+}
+
+// UnmarshalJSON implements the json.Unmarshaler interface.
+func (r *Bitrate) UnmarshalJSON(data []byte) error {
+	j := struct {
+		BPS uint64 `json:"bps"`
+	}{}
+	if err := json.Unmarshal(data, &j); err != nil {
+		return err
+	}
+	*r = Bitrate(j.BPS)
+	return nil
 }

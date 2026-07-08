@@ -366,7 +366,6 @@ type DurationStats struct {
 	N        uint          `json:"n"`
 	Min      time.Duration `json:"min"`
 	Max      time.Duration `json:"max"`
-	m        float64
 	s        float64
 	mean     float64
 	median   float64
@@ -448,6 +447,37 @@ func (s *DurationStats) MarshalJSON() ([]byte, error) {
 		j.Median = m
 	}
 	return json.Marshal(j)
+}
+
+// UnmarshalJSON implements the json.Unmarshaler interface.
+func (s *DurationStats) UnmarshalJSON(data []byte) error {
+	type Alias DurationStats
+	j := &struct {
+		*Alias
+		Mean     time.Duration `json:"mean"`
+		Median   time.Duration `json:"median,omitempty"`
+		Stddev   time.Duration `json:"stddev"`
+		Variance time.Duration `json:"variance"`
+	}{}
+	if err := json.Unmarshal(data, &j); err != nil {
+		return err
+	}
+	// reverse engineer s from the variance
+	var ss float64
+	if j.N > 1 {
+		ss = float64(j.Variance) * float64(j.N-1)
+	}
+	*s = DurationStats{
+		j.Total,
+		j.N,
+		j.Min,
+		j.Max,
+		ss,
+		float64(j.Mean),
+		float64(j.Median),
+		j.Median != 0,
+	}
+	return nil
 }
 
 // AbsDuration returns the absolute value of a duration.

@@ -7,15 +7,19 @@ import (
 	"time"
 )
 
+type PrintableResult struct {
+	SendErr    error `json:"send_err,omitempty"`
+	ReceiveErr error `json:"receive_err,omitempty"`
+	*Stats     `json:"stats"`
+}
+
 // Result is returned from Run.
 type Result struct {
 	VersionInfo *VersionInfo  `json:"version"`
 	SystemInfo  *SystemInfo   `json:"system_info"`
 	Config      *ClientConfig `json:"config"`
-	SendErr     error         `json:"send_err,omitempty"`
-	ReceiveErr  error         `json:"receive_err,omitempty"`
-	*Stats      `json:"stats"`
-	RoundTrips  []RoundTrip `json:"round_trips"`
+	PrintableResult
+	RoundTrips []RoundTrip `json:"round_trips"`
 }
 
 func newResult(rec *Recorder, cfg *ClientConfig, serr error, rerr error) *Result {
@@ -24,9 +28,11 @@ func newResult(rec *Recorder, cfg *ClientConfig, serr error, rerr error) *Result
 		VersionInfo: NewVersionInfo(),
 		SystemInfo:  NewSystemInfo(),
 		Config:      cfg,
-		SendErr:     serr,
-		ReceiveErr:  rerr,
-		Stats:       stats,
+		PrintableResult: PrintableResult{
+			SendErr:    serr,
+			ReceiveErr: rerr,
+			Stats:      stats,
+		},
 	}
 
 	// calculate total duration (monotonic time since start)
@@ -239,7 +245,7 @@ func (rt *RoundTrip) MarshalJSON() ([]byte, error) {
 type Stats struct {
 	*Recorder
 	Duration                  time.Duration `json:"duration"`
-	ExpectedPacketsSent       uint          `json:"-"`
+	ExpectedPacketsSent       uint          `json:"expected_packets_sent"`
 	PacketsSent               uint          `json:"packets_sent"`
 	PacketsReceived           uint          `json:"packets_received"`
 	PacketLossPercent         float64       `json:"packet_loss_percent"`

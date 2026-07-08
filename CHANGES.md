@@ -6,6 +6,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## Unreleased
 
+### Added
+
 - Added --ecn server option to ship ECN bits (currently IPv6 only)
 - Move to Go 1.25, x/net 0.56 and x/sys 0.46
 - Allow IPv6 addresses without brackets
@@ -13,6 +15,16 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Use LookupIP for server bind addresses
 - Record a per-packet "late" field and add to the output json
 - Rename "Ecn" field in json to "ecn" for consistency
+- Add report command that reads and emits saved results
+
+### Changed
+
+- Add `expected_packets_sent` field to JSON to support report command
+
+### Removed
+
+- Remove packet length from report output to support reading results from JSON
+  (avoids unmarshaling large ClientConfig struct for one field)
 
 ## 0.9.1 - 2021-05-18
 
