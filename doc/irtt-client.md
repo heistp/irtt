@@ -110,6 +110,10 @@ irtt client [*args*]
     40    | CS5- Video
     46    | EF- Expedited forwarding
 
+    Note that despite the flag's name dscp, you are really setting the whole
+    DS (ToS) byte, so DSCP values must be left shifted 2 bits to avoid the
+    ECN field.
+
     [DSCP & ToS](https://www.tucny.com/Home/dscp-tos)
 
 \--df=*DF*

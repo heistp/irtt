@@ -426,6 +426,9 @@ values:</p>
 </tr>
 </tbody>
 </table>
+<p>Note that despite the flag’s name dscp, you are really setting the
+whole DS (ToS) byte, so DSCP values must be left shifted 2 bits to avoid
+the ECN field.</p>
 <p><a href="https://www.tucny.com/Home/dscp-tos">DSCP &amp; ToS</a></p>
 </dd>
 <dt>--df=<em>DF</em></dt>
