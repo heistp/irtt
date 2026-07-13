@@ -233,6 +233,9 @@ func (c *cconn) open(ctx context.Context) (err error) {
 
 	// start sending open requests
 	sp := newPacket(0, maxHeaderLen, c.cfg.HMACKey)
+	if c.dscpSupport {
+		sp.dscp = c.cfg.DSCP
+	}
 	defer func() {
 		if err != nil {
 			c.close()
@@ -344,6 +347,9 @@ func (c *cconn) close() (err error) {
 		cp := newPacket(0, maxHeaderLen, c.cfg.HMACKey)
 		if err = cp.setFields(fcloseRequest, true); err != nil {
 			return
+		}
+		if c.dscpSupport {
+			cp.dscp = c.cfg.DSCP
 		}
 		cp.setFlagBits(flClose)
 		cp.setConnToken(c.ctoken)

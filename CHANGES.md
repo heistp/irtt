@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Record a per-packet "late" field and add to the output json
 - Rename "Ecn" field in json to "ecn" for consistency
 - Add report command that reads and emits saved results
+- Set DSCP on all packets, including opening handshake and close packets
 
 ### Changed
 

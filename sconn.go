@@ -78,6 +78,9 @@ func accept(l *listener, p *packet) (sc *sconn, err error) {
 	if sc.SetSrcIP {
 		p.srcIP = p.dstIP
 	}
+	if sc.AllowDSCP && sc.conn.dscpSupport {
+		p.dscp = sc.params.DSCP
+	}
 	p.setConnToken(sc.ctoken)
 	p.setReply(true)
 	p.setPayload(params.bytes())
