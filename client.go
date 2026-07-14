@@ -326,7 +326,7 @@ func (c *Client) send(ctx context.Context) error {
 
 		// return on error
 		if err != nil {
-			c.rec.removeLastStamps()
+			c.rec.removeLastRoundTrip()
 			return err
 		}
 

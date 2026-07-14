@@ -80,7 +80,7 @@ func (r *Recorder) recordPreSend() Time {
 	return tsend
 }
 
-func (r *Recorder) removeLastStamps() {
+func (r *Recorder) removeLastRoundTrip() {
 	r.mtx.Lock()
 	defer r.mtx.Unlock()
 	r.RoundTripData = r.RoundTripData[:len(r.RoundTripData)-1]
