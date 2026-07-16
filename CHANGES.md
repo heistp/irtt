@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Rename "Ecn" field in json to "ecn" for consistency
 - Add report command that reads and emits saved results
 - Set DSCP on all packets, including opening handshake and close packets
+- Add support for streaming mode (-s), for infinite duration tests
 
 ### Changed
 

@@ -3,6 +3,7 @@ package irtt
 import (
 	"context"
 	"fmt"
+	"math"
 	"math/rand"
 	"net"
 	"runtime"
@@ -99,11 +100,19 @@ func (c *Client) Run(ctx context.Context) (r *Result, err error) {
 		}
 	}
 
-	// create recorder
-	if c.rec, err = newRecorder(pcount(c.Duration, c.Interval), c.TimeSource,
-		c.Handler); err != nil {
-		return
+	// count maximum number of round trips
+	maxRoundTrips := pcount(c.Duration, c.Interval)
+
+	// set RoundTripData buffer capacity
+	var bufCap uint
+	if c.Stream {
+		bufCap = uint(c.StreamBufLen)
+	} else {
+		bufCap = maxRoundTrips
 	}
+
+	// create recorder
+	c.rec = newRecorder(maxRoundTrips, bufCap, c.TimeSource, c.Handler)
 
 	// wait group for goroutine completion
 	wg := sync.WaitGroup{}
@@ -310,12 +319,15 @@ func (c *Client) send(ctx context.Context) error {
 	// record the start time of the test and calculate the end
 	t := c.TimeSource.Now(BothClocks)
 	c.rec.Start = t
-	end := c.rec.Start.Add(c.Duration)
+	var end Time
+	if c.Duration < time.Duration(math.MaxInt64) {
+		end = c.rec.Start.Add(c.Duration)
+	}
 
 	// keep sending until the duration has passed
 	for {
 		// send to network and record times right before and after
-		tsend := c.rec.recordPreSend()
+		tsend := c.rec.recordPreSend(seqno)
 		var err error
 		if clientDropsPercent == 0 || rand.Float32() > clientDropsPercent {
 			err = c.conn.send(p)
@@ -326,12 +338,14 @@ func (c *Client) send(ctx context.Context) error {
 
 		// return on error
 		if err != nil {
-			c.rec.removeLastRoundTrip()
+			if !c.Stream {
+				c.rec.removeLastRoundTrip()
+			}
 			return err
 		}
 
 		// record send call
-		c.rec.recordPostSend(tsend, p.tsent, uint64(p.length()))
+		c.rec.recordPostSend(seqno, tsend, p.tsent, uint64(p.length()))
 
 		// prepare next packet (before sleep, so the next send time is as
 		// precise as possible)
@@ -359,7 +373,7 @@ func (c *Client) send(ctx context.Context) error {
 		}
 
 		// break if tnext is after the end of the test
-		if !tnext.Before(end) {
+		if !end.IsZero() && !tnext.Before(end) {
 			break
 		}
 
@@ -435,9 +449,13 @@ func (c *Client) receive() error {
 		sts := p.timestamp()
 
 		// record receive if all went well (may fail if seqno not found)
-		ok := c.rec.recordReceive(p, &sts)
+		ok, err := c.rec.recordReceive(p, &sts)
+		if err != nil {
+			return err
+		}
 		if !ok {
-			return Errorf(UnexpectedSequenceNumber, "unexpected reply sequence number %d", p.seqno())
+			printf("packet with seqno %d aged out of circular buffer, consider increasing --stream-buflen",
+				p.seqno())
 		}
 	}
 }

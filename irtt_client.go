@@ -25,93 +25,100 @@ func clientUsage() {
 	printf("Flags:")
 	printf("------")
 	printf("")
-	printf("-d duration    total time to send (default %s, see Duration units below)", DefaultDuration)
-	printf("-i interval    send interval (default %s, see Duration units below)", DefaultInterval)
-	printf("-l length      length of packet (including irtt headers, default %d)", DefaultLength)
-	printf("               increased as necessary for irtt headers, common values:")
-	printf("               1472 (max unfragmented size of IPv4 datagram for 1500 byte MTU)")
-	printf("               1452 (max unfragmented size of IPv6 datagram for 1500 byte MTU)")
-	printf("-o file        write JSON output to file (use '-' for stdout)")
-	printf("               if file has no extension, .json.gz is added, output is gzipped")
-	printf("               if extension is .json.gz, output is gzipped")
-	printf("               if extension is .gz, it's changed to .json.gz, output is gzipped")
-	printf("               if extension is .json, output is not gzipped")
-	printf("               output to stdout is not gzipped, pipe to gzip if needed")
-	printf("-r             raw mode, emit space delimited data to stdout, and events to stderr")
-	printf("-q             quiet, suppress per-packet output")
-	printf("-Q             really quiet, suppress all output except errors to stderr")
-	printf("-n             no test, connect to the server and validate test parameters")
-	printf("               but don't run the test")
-	printf("--stats=stats  server stats on received packets (default %s)", DefaultReceivedStats.String())
-	printf("               none: no server stats on received packets")
-	printf("               count: total count of received packets")
-	printf("               window: receipt status of last 64 packets with each reply")
-	printf("               both: both count and window")
-	printf("--tstamp=mode  server timestamp mode (default %s)", DefaultStampAt.String())
-	printf("               none: request no timestamps")
-	printf("               send: request timestamp at server send")
-	printf("               receive: request timestamp at server receive")
-	printf("               both: request both send and receive timestamps")
-	printf("               midpoint: request midpoint timestamp (send/receive avg)")
-	printf("--clock=clock  clock/s used for server timestamps (default %s)", DefaultClock)
-	printf("               wall: wall clock only")
-	printf("               monotonic: monotonic clock only")
-	printf("               both: both clocks")
-	printf("--dscp=dscp    DSCP (ToS) value (default %s, 0x for hex), common values:", strconv.Itoa(DefaultDSCP))
-	printf("               0 (Best effort)")
-	printf("               0x10 (CS1- Bulk)")
-	printf("               0xa0 (CS5- Video)")
-	printf("               0xb8 (EF- Expedited forwarding)")
-	printf("               https://www.tucny.com/Home/dscp-tos")
-	printf("--df=DF        setting for do not fragment (DF) bit in all packets")
-	printf("               default: OS default")
-	printf("               false: DF bit not set")
-	printf("               true: DF bit set")
-	printf("--wait=wait    wait time at end of test for unreceived replies (default %s)", DefaultWait.String())
-	printf("               - Valid formats -")
+	printf("-d duration     total time to send (see Duration units below)")
+	printf("                default %s, or infinite in streaming mode", DefaultDuration)
+	printf("-i interval     send interval (default %s, see Duration units below)", DefaultInterval)
+	printf("-l length       length of packet (including irtt headers, default %d)", DefaultLength)
+	printf("                increased as necessary for irtt headers, common values:")
+	printf("                1472 (max unfragmented size of IPv4 datagram for 1500 byte MTU)")
+	printf("                1452 (max unfragmented size of IPv6 datagram for 1500 byte MTU)")
+	printf("-s              streaming mode, allows infinitely long tests")
+	printf("                test duration is infinite by default")
+	printf("                does not record results or analyze statistics")
+	printf("                see also --stream-buflen")
+	printf("-o file         write JSON output to file (use '-' for stdout)")
+	printf("                if file has no extension, .json.gz is added, output is gzipped")
+	printf("                if extension is .json.gz, output is gzipped")
+	printf("                if extension is .gz, it's changed to .json.gz, output is gzipped")
+	printf("                if extension is .json, output is not gzipped")
+	printf("                output to stdout is not gzipped, pipe to gzip if needed")
+	printf("-r              raw mode, emit space delimited milliseconds to stdout")
+	printf("-q              quiet, suppress per-packet output")
+	printf("-Q              really quiet, suppress all output except errors to stderr")
+	printf("-n              no test, connect to the server and validate test parameters")
+	printf("                but don't run the test")
+	printf("--stream-buflen number of round trips to store in circular buffer for stream mode")
+	printf("                defaults to 3 seconds of round trips based on interval")
+	printf("--stats=stats   server stats on received packets (default %s)", DefaultReceivedStats.String())
+	printf("                none: no server stats on received packets")
+	printf("                count: total count of received packets")
+	printf("                window: receipt status of last 64 packets with each reply")
+	printf("                both: both count and window")
+	printf("--tstamp=mode   server timestamp mode (default %s)", DefaultStampAt.String())
+	printf("                none: request no timestamps")
+	printf("                send: request timestamp at server send")
+	printf("                receive: request timestamp at server receive")
+	printf("                both: request both send and receive timestamps")
+	printf("                midpoint: request midpoint timestamp (send/receive avg)")
+	printf("--clock=clock   clock/s used for server timestamps (default %s)", DefaultClock)
+	printf("                wall: wall clock only")
+	printf("                monotonic: monotonic clock only")
+	printf("                both: both clocks")
+	printf("--dscp=dscp     DSCP (ToS) value (default %s, 0x for hex), common values:", strconv.Itoa(DefaultDSCP))
+	printf("                0 (Best effort)")
+	printf("                0x10 (CS1- Bulk)")
+	printf("                0xa0 (CS5- Video)")
+	printf("                0xb8 (EF- Expedited forwarding)")
+	printf("                https://www.tucny.com/Home/dscp-tos")
+	printf("--df=DF         setting for do not fragment (DF) bit in all packets")
+	printf("                default: OS default")
+	printf("                false: DF bit not set")
+	printf("                true: DF bit set")
+	printf("--wait=wait     wait time at end of test for unreceived replies (default %s)", DefaultWait.String())
+	printf("                - Valid formats -")
 	for _, wfac := range WaiterFactories {
-		printf("               %s", wfac.Usage)
+		printf("                %s", wfac.Usage)
 	}
-	printf("               - Examples -")
-	printf("               3x4s: 3 times max RTT, or 4 seconds if no response")
-	printf("               1500ms: fixed 1500 milliseconds")
-	printf("--timer=timer  timer for waiting to send packets (default %s)", DefaultTimer.String())
+	printf("                - Examples -")
+	printf("                3x4s: 3 times max RTT, or 4 seconds if no response")
+	printf("                1500ms: fixed 1500 milliseconds")
+	printf("--timer=timer   timer for waiting to send packets (default %s)", DefaultTimer.String())
 	for _, tfac := range TimerFactories {
-		printf("               %s", tfac.Usage)
+		printf("                %s", tfac.Usage)
 	}
-	printf("--tcomp=alg    comp timer averaging algorithm (default %s)", DefaultCompTimerAverage.String())
+	printf("--tcomp=alg     comp timer averaging algorithm (default %s)", DefaultCompTimerAverage.String())
 	for _, afac := range AveragerFactories {
-		printf("               %s", afac.Usage)
+		printf("                %s", afac.Usage)
 	}
-	printf("--fill=fill    fill payload with given data (default none)")
-	printf("               none: leave payload as all zeroes")
+	printf("--fill=fill     fill payload with given data (default none)")
+	printf("                none: leave payload as all zeroes")
 	for _, ffac := range FillerFactories {
-		printf("               %s", ffac.Usage)
+		printf("                %s", ffac.Usage)
 	}
-	printf("--fill-one     fill only once and repeat for all packets")
-	printf("--sfill=fill   request server fill (default not specified)")
-	printf("               see options for --fill")
-	printf("               server must support and allow this fill with --allow-fills")
-	printf("--local=addr   local address (default from OS), valid formats:")
-	printf("               :port (all IPv4/IPv6 addresses with port)")
-	printf("               host (host with dynamic port, see Host formats below)")
-	printf("               host:port (host with specified port, see Host formats below)")
-	printf("--hmac=key     add HMAC with key (0x for hex) to all packets, provides:")
-	printf("               dropping of all packets without a correct HMAC")
-	printf("               protection for server against unauthorized discovery and use")
-	printf("-4             IPv4 only")
-	printf("-6             IPv6 only")
-	printf("--timeouts=drs timeouts used when connecting to server (default %s)", DefaultOpenTimeouts.String())
-	printf("               comma separated list of durations (see Duration units below)")
-	printf("               total wait time will be up to the sum of these Durations")
-	printf("               max packets sent is up to the number of Durations")
-	printf("               minimum timeout duration is %s", minOpenTimeout)
-	printf("--ttl=ttl      time to live (default %d, meaning use OS default)", DefaultTTL)
-	printf("--loose        accept and use any server restricted test parameters instead")
-	printf("               of exiting with nonzero status")
-	printf("--thread       lock sending and receiving goroutines to OS threads")
-	printf("-h             show help")
-	printf("-v             show version")
+	printf("--fill-one      fill only once and repeat for all packets")
+	printf("--sfill=fill    request server fill (default not specified)")
+	printf("                see options for --fill")
+	printf("                server must support and allow this fill with --allow-fills")
+	printf("--local=addr    local address (default from OS), valid formats:")
+	printf("                :port (all IPv4/IPv6 addresses with port)")
+	printf("                host (host with dynamic port, see Host formats below)")
+	printf("                host:port (host with specified port, see Host formats below)")
+	printf("--hmac=key      add HMAC with key (0x for hex) to all packets, provides:")
+	printf("                dropping of all packets without a correct HMAC")
+	printf("                protection for server against unauthorized discovery and use")
+	printf("-4              IPv4 only")
+	printf("-6              IPv6 only")
+	printf("--timeouts=drs  timeouts used when connecting to server (default %s)", DefaultOpenTimeouts.String())
+	printf("                comma separated list of durations (see Duration units below)")
+	printf("                total wait time will be up to the sum of these Durations")
+	printf("                max packets sent is up to the number of Durations")
+	printf("                minimum timeout duration is %s", minOpenTimeout)
+	printf("--ttl=ttl       time to live (default %d, meaning use OS default)", DefaultTTL)
+	printf("--loose         accept and use any server restricted test parameters instead")
+	printf("                of exiting with nonzero status")
+	printf("--thread        lock sending and receiving goroutines to OS threads")
+	printf("-h              show help")
+	printf("-v              show version")
 	printf("")
 	hostUsage()
 	printf("")
@@ -155,10 +162,12 @@ func runClientCLI(args []string) {
 	fs.Usage = func() {
 		usageAndExit(clientUsage, exitCodeBadCommandLine)
 	}
-	var durationStr = fs.StringP("d", "d", DefaultDuration.String(), "total time to send")
+	var durationStr = fs.StringP("d", "d", "", "total time to send")
 	var intervalStr = fs.StringP("i", "i", DefaultInterval.String(), "send interval")
 	var length = fs.IntP("l", "l", DefaultLength, "packet length")
+	var stream = fs.BoolP("s", "s", false, "streaming mode")
 	var noTest = fs.BoolP("n", "n", false, "no test")
+	var streamBufLen = fs.Int("stream-buflen", 0, "stream mode buffer length")
 	var rsStr = fs.String("stats", DefaultReceivedStats.String(), "received stats")
 	var tsatStr = fs.String("tstamp", DefaultStampAt.String(), "stamp at")
 	var clockStr = fs.String("clock", DefaultClock.String(), "clock")
@@ -198,8 +207,14 @@ func runClientCLI(args []string) {
 	}
 
 	// parse duration
-	duration, err := time.ParseDuration(*durationStr)
-	if err != nil {
+	var duration time.Duration
+	if *durationStr == "" {
+		if *stream {
+			duration = time.Duration(math.MaxInt64)
+		} else {
+			duration = DefaultDuration
+		}
+	} else if duration, err = time.ParseDuration(*durationStr); err != nil {
 		exitOnError(fmt.Errorf("%s (use s for seconds)", err),
 			exitCodeBadCommandLine)
 	}
@@ -270,6 +285,14 @@ func runClientCLI(args []string) {
 	}
 	raddrStr := fs.Args()[0]
 
+	// -o not compatible with -s
+	if *outputStr != "" && *stream {
+		exitOnError(fmt.Errorf("output not possible in streaming mode"),
+			exitCodeBadCommandLine)
+	}
+
+	// set default buflen for stream mode
+
 	// send regular output to stderr if raw mode, or json going to stdout
 	if *outputStr == "-" || *raw {
 		printTo = os.Stderr
@@ -309,6 +332,8 @@ func runClientCLI(args []string) {
 	cfg.Clock = clock
 	cfg.DSCP = int(dscp)
 	cfg.ServerFill = *sfillStr
+	cfg.Stream = *stream
+	cfg.StreamBufLen = *streamBufLen
 	cfg.Loose = *loose
 	cfg.IPVersion = ipVer
 	cfg.DF = df
@@ -327,6 +352,11 @@ func runClientCLI(args []string) {
 	}
 	cfg.ThreadLock = *threadLock
 
+	// set default for stream buflen
+	if cfg.StreamBufLen == 0 {
+		cfg.StreamBufLen = int(time.Duration(3*time.Second) / cfg.Interval)
+	}
+
 	// run test
 	c := NewClient(cfg)
 	r, err := c.Run(ctx)
@@ -340,7 +370,7 @@ func runClientCLI(args []string) {
 	}
 
 	// print results
-	if !*reallyQuiet {
+	if !*reallyQuiet && !*stream {
 		printResult(&r.PrintableResult)
 	}
 

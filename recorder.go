@@ -34,7 +34,10 @@ type Recorder struct {
 	Wait                  time.Duration   `json:"wait"`
 	RoundTripData         []RoundTripData `json:"-"`
 	RecorderHandler       RecorderHandler `json:"-"`
-	lastSeqno             Seqno
+	sentIndex             uint            // index of most recently sent RTD
+	maxRoundTrips         uint            // max number of round trips in test
+	priorSent             Seqno
+	priorReceived         Seqno
 	timeSource            TimeSource
 	mtx                   sync.RWMutex
 }
@@ -49,34 +52,49 @@ func (r *Recorder) RUnlock() {
 	r.mtx.RUnlock()
 }
 
-func newRecorder(rtrips uint, ts TimeSource, h RecorderHandler) (rec *Recorder, err error) {
-	defer func() {
-		if r := recover(); r != nil {
-			err = Errorf(AllocateResultsPanic,
-				"failed to allocate results buffer for %d round trips (%s)",
-				rtrips, r)
-		}
-	}()
+func newRecorder(maxRoundTrips, bufCap uint, ts TimeSource, h RecorderHandler) (
+	rec *Recorder) {
 	rec = &Recorder{
-		RoundTripData:   make([]RoundTripData, 0, rtrips),
+		RoundTripData:   make([]RoundTripData, 0, bufCap),
 		RecorderHandler: h,
+		maxRoundTrips:   maxRoundTrips,
 		timeSource:      ts,
 	}
 	return
 }
 
-func (r *Recorder) recordPreSend() Time {
+func (r *Recorder) recordPreSend(seqno Seqno) Time {
 	r.mtx.Lock()
 	defer r.mtx.Unlock()
 
-	// add round trip before timestamp, so any re-allocation happens before the
-	// time is set
-	r.RoundTripData = append(r.RoundTripData, RoundTripData{})
+	// create RoundTripData and stamp time
+	rtd := RoundTripData{}
 	tsend := r.timeSource.Now(BothClocks)
-	r.RoundTripData[len(r.RoundTripData)-1].Client.Send = tsend
+	rtd.Client.Send = tsend
+
+	// update sent index
+	if len(r.RoundTripData) > 0 {
+		r.sentIndex++
+	}
+
+	// append to RoundTripData or wrap around at capacity
+	if len(r.RoundTripData) < cap(r.RoundTripData) {
+		r.RoundTripData = append(r.RoundTripData, rtd)
+	} else {
+		if r.sentIndex == uint(len(r.RoundTripData)) {
+			r.sentIndex = 0
+		}
+		r.RoundTripData[r.sentIndex] = rtd
+	}
+
+	// record first send
 	if r.FirstSend.IsZero() {
 		r.FirstSend = tsend
 	}
+
+	// update send index and prior sent seqno (must be updated together)
+	r.priorSent = seqno
+
 	return tsend
 }
 
@@ -86,7 +104,7 @@ func (r *Recorder) removeLastRoundTrip() {
 	r.RoundTripData = r.RoundTripData[:len(r.RoundTripData)-1]
 }
 
-func (r *Recorder) recordPostSend(tsend Time, tsent Time, n uint64) {
+func (r *Recorder) recordPostSend(seqno Seqno, tsend, tsent Time, n uint64) {
 	r.mtx.Lock()
 	defer r.mtx.Unlock()
 
@@ -101,8 +119,13 @@ func (r *Recorder) recordPostSend(tsend Time, tsent Time, n uint64) {
 
 	// call handler
 	if r.RecorderHandler != nil {
-		seqno := Seqno(len(r.RoundTripData)) - 1
-		r.RecorderHandler.OnSent(seqno, &r.RoundTripData[seqno])
+		var i int
+		if r.sentIndex == 0 {
+			i = len(r.RoundTripData) - 1
+		} else {
+			i = int(r.sentIndex)
+		}
+		r.RecorderHandler.OnSent(seqno, &r.RoundTripData[i])
 	}
 }
 
@@ -112,44 +135,67 @@ func (r *Recorder) recordTimerErr(terr time.Duration) {
 	r.TimerErrorStats.push(AbsDuration(terr))
 }
 
-func (r *Recorder) recordReceive(p *packet, sts *Timestamp) bool {
+func (r *Recorder) recordReceive(p *packet, sts *Timestamp) (
+	ok bool, err error) {
 	r.mtx.Lock()
 	defer r.mtx.Unlock()
 
 	// check for invalid sequence number
 	seqno := p.seqno()
-	if int(seqno) >= len(r.RoundTripData) {
-		return false
+	if seqno > r.priorSent {
+		err = Errorf(UnexpectedSequenceNumber,
+			"unexpected reply sequence number %d is > prior sent %d",
+			seqno, r.priorSent)
+		return
 	}
 
-	// valid result
-	rtd := &r.RoundTripData[seqno]
+	// get RoundTripData, if it's in the buffer
+	o := int(r.priorSent - seqno) // offset
+	if o >= len(r.RoundTripData) {
+		// RoundTripData aged out, discard this receive and return ok=false
+		return
+	}
+	ok = true
+
+	// set RoundTripData by calculating index in buffer
+	i := int(r.sentIndex) - o
+	if i < 0 {
+		i += len(r.RoundTripData)
+	}
+	rtd := &r.RoundTripData[i]
+
+	// set prior RoundTripData, if available
 	var prtd *RoundTripData
 	if seqno > 0 {
-		prtd = &r.RoundTripData[seqno-1]
+		var j int
+		if i == 0 {
+			j = len(r.RoundTripData) - 1
+		} else {
+			j = i - 1
+		}
+		prtd = &r.RoundTripData[j]
+	}
+
+	// check for duplicate (don't update stats for duplicates)
+	if rtd.ReplyReceived() {
+		r.Duplicates++
+		if r.RecorderHandler != nil {
+			r.RecorderHandler.OnReceived(seqno, rtd, prtd, true)
+		}
+		return
 	}
 
 	// check for lateness
-	rtd.Late = seqno < r.lastSeqno
+	rtd.Late = seqno < r.priorReceived
+	if rtd.Late {
+		r.LatePackets++
+	}
 
 	// Transfer ECN from packet so it will be dumped
 	rtd.Ecn = p.ecn
 
-	// check for duplicate (don't update stats for duplicates)
-	if !rtd.Client.Receive.IsZero() {
-		r.Duplicates++
-		// call recorder handler
-		if r.RecorderHandler != nil {
-			r.RecorderHandler.OnReceived(p.seqno(), rtd, prtd, true)
-		}
-		return true
-	}
-
-	// record late packet
-	if rtd.Late {
-		r.LatePackets++
-	}
-	r.lastSeqno = seqno
+	// update prior received seqno
+	r.priorReceived = seqno
 
 	// update client received times
 	rtd.Client.Receive = p.trcvd
@@ -187,10 +233,10 @@ func (r *Recorder) recordReceive(p *packet, sts *Timestamp) bool {
 
 	// call recorder handler
 	if r.RecorderHandler != nil {
-		r.RecorderHandler.OnReceived(p.seqno(), rtd, prtd, false)
+		r.RecorderHandler.OnReceived(seqno, rtd, prtd, false)
 	}
 
-	return true
+	return
 }
 
 // RoundTripData contains the information recorded for each round trip during

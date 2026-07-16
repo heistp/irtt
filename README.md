@@ -386,6 +386,8 @@ _Planned for v0.9.2..._
 
 _Collection area..._
 
+- Factor out use of uint where it makes no sense because the core type for
+  slices is int according to the language spec (e.g. len builtin returns int).
 - Refactor handshake params to use signed values and straight bytes as
   appropriate.
 - Improve client output flexibility:

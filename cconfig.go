@@ -14,19 +14,21 @@ type ClientConfig struct {
 	OpenTimeouts  Durations
 	NoTest        bool
 	Params
-	Loose      bool
-	IPVersion  IPVersion
-	DF         DF
-	TTL        int
-	Timer      Timer
-	TimeSource TimeSource
-	Waiter     Waiter
-	Filler     Filler
-	FillOne    bool
-	HMACKey    []byte
-	Handler    ClientHandler
-	ThreadLock bool
-	Supplied   *ClientConfig
+	Stream       bool
+	StreamBufLen int
+	Loose        bool
+	IPVersion    IPVersion
+	DF           DF
+	TTL          int
+	Timer        Timer
+	TimeSource   TimeSource
+	Waiter       Waiter
+	Filler       Filler
+	FillOne      bool
+	HMACKey      []byte
+	Handler      ClientHandler
+	ThreadLock   bool
+	Supplied     *ClientConfig
 }
 
 // NewClientConfig returns a new ClientConfig with the default settings.
