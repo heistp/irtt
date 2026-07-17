@@ -12,7 +12,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Add raw mode for fixed units output to stdout during test
 - Use LookupIP for client hostname lookups and log on multiple addresses
 - Use LookupIP for server bind addresses
-- Move to Go 1.25, x/net 0.56 and x/sys 0.46
+- Move to Go 1.25, x/net 0.57 and x/sys 0.47
 - Record a per-packet "late" field for out-of-order and add to the output json
 - Add report command that reads and emits saved results
 - Allow IPv6 addresses without brackets
