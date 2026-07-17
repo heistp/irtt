@@ -28,7 +28,7 @@ const (
 	DefaultDF                      = DFDefault
 	DefaultCompTimerMinErrorFactor = 0.0
 	DefaultCompTimerMaxErrorFactor = 2.0
-	DefaultHybridTimerSleepFactor  = 0.95
+	DefaultHybridTimerSleepFactor  = 0.90
 	DefaultAverageWindow           = 5
 	DefaultExponentialAverageAlpha = 0.1
 )
