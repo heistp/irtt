@@ -1,6 +1,6 @@
-% IRTT(1) v0.9.0 | IRTT Manual
+% IRTT(1) v0.9.2 | IRTT Manual
 %
-% February 11, 2018
+% July 17, 2026
 
 # NAME
 
@@ -140,9 +140,11 @@ protocol provides important benefits to the user, including:
 ## In-memory results storage
 
 Results for each round-trip are stored in memory as the test is being run. Each
-result takes 72 bytes in memory (8 64-bit timestamps and a 64-bit server
-received packet window), so this limits the effective duration of the test,
-especially at very small send intervals. However, the advantages are:
+result takes 77 bytes in memory (maybe 80 with alignment). When in streaming
+mode, this isn't a problem as a circular buffer is used for round-trip data. But
+when in standard mode (needed for statistics and json output), this limits the
+effective duration of the test, especially at very low send intervals.
+However, the advantages are:
 
 - It's easier to perform statistical analysis (like calculation of the median)
 	on fixed arrays than on running data values
@@ -153,10 +155,12 @@ especially at very small send intervals. However, the advantages are:
 	inadvertently affecting the results
 - It simplifies the API
 
-As a consequence of storing results in memory, packet sequence numbers are fixed
-at 32-bits. If all 2^32 sequence numbers were used, the results would require
-over 300 Gb of virtual memory to record while the test is running. That is
-why 64-bit sequence numbers are currently unnecessary.
+Before streaming mode was implemented, a decision was made to use 32-bit
+unsigned ints for sequence numbers, because in-memory results storage meant it
+would be impractical to use up the sequence number space. With streaming mode,
+it's more likely that the sequence number space could wrap around. At a 10ms
+interval, the counter will wrap around in 497 days with undefined results.
+Keep that in mind if doing very long, low interval tests.
 
 ## 64-bit received window
 

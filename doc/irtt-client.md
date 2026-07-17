@@ -1,6 +1,6 @@
-% IRTT-CLIENT(1) v0.9.0 | IRTT Manual
+% IRTT-CLIENT(1) v0.9.2 | IRTT Manual
 %
-% February 11, 2018
+% July 17, 2026
 
 # NAME
 
@@ -29,6 +29,14 @@ irtt client [*args*]
 
     - 1472 (max unfragmented size of IPv4 datagram for 1500 byte MTU)
     - 1452 (max unfragmented size of IPv6 datagram for 1500 byte MTU)
+
+-s
+:   Streaming mode, allows long running tests (subject to the limit of
+    the 32-bit unsigned sequence number).
+
+    - Test duration is infinite by default
+    - Does not record results or analyze statistics
+    - See also --stream-buflen
 
 -o *file*
 :   Write JSON output to file (use '-' for stdout).  The extension used for
@@ -69,6 +77,10 @@ irtt client [*args*]
 -n
 :   No test, connect to the server and validate test parameters but don't run
     the test
+
+\--stream-buflen=*len*
+:   Number of round trips to store in circular buffer for stream mode. Defaults
+    to 3 seconds of round trips based on interval.
 
 \--stats=*stats*
 :   Server stats on received packets (default *both*). Possible values:
@@ -224,16 +236,18 @@ irtt client [*args*]
 ## Host formats
 
 Hosts may be either hostnames (for IPv4 or IPv6) or IP addresses. IPv6
-addresses must be surrounded by brackets and may include a zone after the %
-character. Examples:
+addresses must be surrounded by brackets if a port is included, and may
+include a zone after the % character. Examples:
 
-Type            | Example
---------------- | -------
-IPv4 IP         | 192.168.1.10
-IPv6 IP         | [2001:db8:8f::2/32]
-IPv4/6 hostname | localhost
+Type                 | Example
+-------------------- | -------
+IPv4 IP              | 192.168.1.10
+IPv6 IP              | ::1
+IPv6 IP/port         | [2001:db8:8f::2/32]:2112
+IPv4/6 hostname      | localhost
+IPv4/6 hostname/port | irtt.example.org:2112
 
-**Note:** IPv6 addresses must be quoted in most shells.
+**Note:** IPv6 addresses may need to be quoted in your shell.
 
 ## Duration units
 
@@ -459,6 +473,7 @@ statistics for the results
     "late_packets": 0,
     "wait": 403380,
     "duration": 400964028,
+    "expected_packets_sent": 3,
     "packets_sent": 3,
     "packets_received": 2,
     "packet_loss_percent": 33.333333333333336,
@@ -556,6 +571,7 @@ The regular attributes in *stats* are as follows:
 - *duration* the actual duration of the test, in nanoseconds, from the time just
 	before the first packet was sent to the time after the last packet was
 	received and results are starting to be calculated
+- *expected_packets_sent* the expected number of packets sent for a full test
 - *packets_sent* the number of packets sent to the server
 - *packets_received* the number of packets received from the server
 - *packet_loss_percent* 100 * (*packets_sent* - *packets_received*) / *packets_sent*
@@ -621,6 +637,7 @@ each round-trip is a single request to / reply from the server
                     "monotonic": 32644363306
                 }
             }
+            "late": false,
         },
         "delay": {
             "receive": 45177,
@@ -653,6 +670,7 @@ each round-trip is a single request to / reply from the server
                     "monotonic": 32844409171
                 }
             }
+            "late": false,
         },
         "delay": {
             "receive": 45268,
@@ -680,6 +698,7 @@ each round-trip is a single request to / reply from the server
                 "receive": {},
                 "send": {}
             }
+            "late": false,
         },
         "delay": {},
         "ipdv": {}
@@ -713,6 +732,7 @@ point in time, so can only be relied on to measure duration
       not include wall values or server timestamps are not enabled
     - *monotonic* values are not present if the Clock (irtt client *\--clock*
       flag) does not include monotonic values or server timestamps are not enabled
+  - *late* true if the packet was late (out-of-order)
 - *delay* an object containing the delay values
   - *receive* the one-way receive delay, in nanoseconds **(present only if
     server timestamps are enabled and at least one wall clock value is
@@ -778,6 +798,10 @@ $ irtt client -i 0.1s -d 5s -6 \--dscp=46 irtt.example.org
 $ irtt client \--hmac=secret -d 10s "[2001:db8:8f::2/32]:64381"
 :   Sends requests to the specified IPv6 IP on port 64381 every second for
     10 seconds. Adds an HMAC to each packet with the key *secret*.
+
+$ irtt client -i 1s -s -r localhost
+:   Sends one request every second indefinitely, in streaming mode with
+    raw output. Useful for handling raw RTT, OWD, IPDV and late/dup flags.
 
 # SEE ALSO
 

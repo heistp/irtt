@@ -4,24 +4,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
-## Unreleased
+## 0.9.2 - 2026-07-17
 
 ### Added
 
-- Added --ecn server option to ship ECN bits (currently IPv6 only)
-- Move to Go 1.25, x/net 0.56 and x/sys 0.46
-- Allow IPv6 addresses without brackets
+- Add support for streaming mode (-s), for infinite duration tests
+- Add raw mode for fixed units output to stdout during test
 - Use LookupIP for client hostname lookups and log on multiple addresses
 - Use LookupIP for server bind addresses
-- Record a per-packet "late" field and add to the output json
-- Rename "Ecn" field in json to "ecn" for consistency
+- Move to Go 1.25, x/net 0.56 and x/sys 0.46
+- Record a per-packet "late" field for out-of-order and add to the output json
 - Add report command that reads and emits saved results
+- Allow IPv6 addresses without brackets
 - Set DSCP on all packets, including opening handshake and close packets
-- Add support for streaming mode (-s), for infinite duration tests
+- Add `expected_packets_sent` field to JSON to support report command
 
 ### Changed
 
-- Add `expected_packets_sent` field to JSON to support report command
+- Change default hybrid timer sleep factor from 0.95 to 0.9
 
 ### Removed
 

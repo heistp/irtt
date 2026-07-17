@@ -4,10 +4,9 @@ IRTT measures round-trip time, one-way delay and other metrics using UDP
 packets sent on a fixed period, and produces both user and machine parseable
 output.
 
-IRTT has reached version 0.9.1. I would appreciate any feedback, which you can
-send under Issues. However, it could be useful to first review the
-[Roadmap](#roadmap) section of the documentation before submitting a new bug or
-feature request.
+IRTT has reached version 0.9.2. You may send feedback or submit Issues, however,
+please review the [Roadmap](#roadmap) section of the documentation before
+submitting a new bug or feature request.
 
 ## Table of Contents
 
@@ -70,6 +69,7 @@ The goals of this project are to:
 	- [Bitrate](https://en.wikipedia.org/wiki/Bit_rate)
 	- Timer error, send call time and server processing time
 - Statistics: min, max, mean, median (for most quantities) and standard deviation
+- Streaming mode for indefinite duration tests (without statistics)
 - One nanosecond time precision on Linux and OS/X, and 100ns on Windows
 - Robustness in the face of clock drift and NTP corrections through the use of
   both wall and monotonic clocks
@@ -361,26 +361,21 @@ sections to get started quickly:
     We need to keep the executable size as small as possible for embedded
     devices, and most external libaries are not compatible with this.
 
+20) How does IRTT choose between IPv4 and IPv6?
+
+    As of version 0.9.2, net.DefaultResolver.LookupIP is used to resolve IP
+    addresses from hostnames. Its default ordering is used, so if a hostname
+    resolves to both IPv6 and IPv4 addresses, IPv6 is preferred. No attempt
+    is made to do Happy Eyeballs
+    [RFC 8305](https://datatracker.ietf.org/doc/html/rfc8305), as in this case
+    we usually don't want non-deterministic selection of the IP protocol. On
+    systems with broken IPv6 support, use the `-4` flag to force IPv4.
+
 ## Changes
 
 See [CHANGES.md](CHANGES.md).
 
 ## Roadmap
-
-### v0.9.2
-
-_Planned for v0.9.2..._
-
-- Allow infinite duration tests that stream output
-- Add support for fixed-units output to stdout during test
-- Move to recent Go version and pull in new x/sys and x/net libs
-- Record out of order info per-packet with a `late` flag on RoundTrip
-- Add report command that reads and emits saved results
-- Allow IPv6 addresses without brackets
-- Switch to Lookup* methods for name resolution
-- Measure and document difference between ping and irtt response times
-- Allow sending *all* packets with a DSCP (currently the handshake uses DSCP 0)
-- Refresh documentation
 
 ### Inbox
 
@@ -402,8 +397,6 @@ _Collection area..._
   and support unit tests
 - Add DSCP text values and return an error when ECN bits are passed to --dscp
 - Improve open/close process:
-  - Do Happy Eyeballs (RFC 8305) to better handle multiple address families and
-    addresses
   - Make timeout support automatic exponential backoff, like 4x15s
   - Repeat close packets until acknowledgement, like open
   - Include final stats in the close acknowledgement from the server
@@ -455,15 +448,12 @@ _Collection area..._
 - Add an overhead test mode to compare ping vs irtt
 - Add client flag to skip sleep and catch up after timer misses
 - Add seqno to the Max and maybe Min columns in the text output
-- Prototype TCP throughput test and compare straight Go vs iperf/netperf
 - Support a range of server ports to improve concurrency and maybe defeat
   latency "slotting" on multi-queue interfaces
 - Add more unit tests
 - Add support for load balanced conns (multiple source addresses for same conn)
 - Use unsafe package to speed up packet buffer manipulation
-- Add encryption
 - Add estimate for HMAC calculation time and correct send timestamp by this time
-- Implement web interface for client and server
 - Set DSCP per-packet, at least for IPv6
 - Add NAT hole punching
 - Use a larger, internal received window on the server to increase up/down loss accuracy
@@ -472,12 +462,10 @@ _Collection area..._
 - Make it possible to add custom per-round-trip statistics programmatically
 - Allow Server to listen on multiple IPs for a hostname
 - Prompt to write JSON file on cancellation
+- Request a reserved IANA port
 - Open questions:
   - What do I do for IPDV when there are out of order packets?
-  - Does exposing both monotonic and wall clock values, as well as dual
-    timestamps, open the server to any timing attacks?
   - Is there any way to make the server concurrent without inducing latency?
-  - Should I request a reserved IANA port?
 
 ## Thanks
 

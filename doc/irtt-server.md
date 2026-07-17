@@ -1,6 +1,6 @@
-% IRTT-SERVER(1) v0.9.0 | IRTT Manual
+% IRTT-SERVER(1) v0.9.2 | IRTT Manual
 %
-% February 11, 2018
+% July 17, 2026
 
 # NAME
 
@@ -119,16 +119,18 @@ irtt server [*args*]
 ## Host formats
 
 Hosts may be either hostnames (for IPv4 or IPv6) or IP addresses. IPv6
-addresses must be surrounded by brackets and may include a zone after the %
-character. Examples:
+addresses must be surrounded by brackets if a port is included, and may
+include a zone after the % character. Examples:
 
-Type            | Example
---------------- | -------
-IPv4 IP         | 192.168.1.10
-IPv6 IP         | [2001:db8:8f::2/32]
-IPv4/6 hostname | localhost
+Type                 | Example
+-------------------- | -------
+IPv4 IP              | 192.168.1.10
+IPv6 IP              | ::1
+IPv6 IP/port         | [2001:db8:8f::2/32]:2112
+IPv4/6 hostname      | localhost
+IPv4/6 hostname/port | irtt.example.org:2112
 
-**Note:** IPv6 addresses must be quoted in most shells.
+**Note:** IPv6 addresses may need to be quoted in your shell.
 
 ## Duration units
 
