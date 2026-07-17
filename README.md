@@ -153,13 +153,16 @@ sections to get started quickly:
 
 1) Why not just use ping?
 
-   Ping may be the preferred tool when measuring minimum latency, or for other
-   reasons. IRTT's reported mean RTT is likely to be a bit higher (on the order
-   of a couple hundred microseconds) and a bit more variable than the results
-   reported by ping, due to the overhead of entering userspace, together with
-   Go's system call overhead and scheduling variability. That said, this
-   overhead should be negligible at most Internet RTTs, and there are advantages
-   that IRTT has over ping when minimum RTT is not what you're measuring:
+   Ping may be the preferred tool when tens of microseconds matter, or for other
+   reasons. IRTT's reported RTT is likely to be a bit higher (on the order of
+   tens to a couple hundred microseconds) and a bit more variable than the
+   results reported by ping, due to Go's system call overhead and scheduling
+   variability. The following comparison gives some idea:
+
+   ![Ping vs IRTT](doc/ping-vs-irtt.svg "Ping vs IRTT")
+
+   If this level of precision is sufficient for your application, there are
+   advantages that IRTT has over ping:
 
 	 - In addition to round-trip time, IRTT also measures OWD, IPDV and upstream
 	   vs downstream packet loss.
@@ -170,19 +173,9 @@ sections to get started quickly:
 	 - IRTT has a three-way handshake to prevent test traffic redirection from
 		 spoofed source IPs.
 	 - IRTT can fill the payload (if included) with random or arbitrary data.
-   - On Windows, ping has a precision of 0.5ms, while IRTT uses high resolution
-     timer functions for a precision of 100ns (high resolution wall clock only
-     available on Windows 8 or Windows 2012 Server and later).
-
-   Also note the following behavioral differences between ping and IRTT:
-
-   - IRTT makes a stateful connection to the server, whereas ping is stateless.
-   - By default, ping waits for a reply before sending its next request, while
-     IRTT keeps sending requests on the specified interval regardless of whether
-     or not replies are received. The effect of this, for example, is that a
-     fixed-length pause in server packet processing (with packets buffered
-     during the pause) will look like a single high RTT in ping, and multiple
-     high then descending RTTs in IRTT for the duration of the maximum RTT.
+   - On some Windows versions, ping has a precision of 0.5ms, while IRTT uses
+     high resolution timer functions for a precision of 100ns (high resolution
+     wall clock only available on Windows 8 or Windows 2012 Server and later).
 
 2) Is there a public server I can use?
 
