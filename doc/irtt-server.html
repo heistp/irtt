@@ -5,8 +5,8 @@
   <meta name="generator" content="pandoc" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
   <meta name="author" content="" />
-  <meta name="dcterms.date" content="2018-02-11" />
-  <title>IRTT-SERVER(1) v0.9.0 | IRTT Manual</title>
+  <meta name="dcterms.date" content="2026-07-17" />
+  <title>IRTT-SERVER(1) v0.9.2 | IRTT Manual</title>
   <style>
     html {
       color: #1a1a1a;
@@ -207,9 +207,9 @@
 </head>
 <body>
 <header id="title-block-header">
-<h1 class="title">IRTT-SERVER(1) v0.9.0 | IRTT Manual</h1>
+<h1 class="title">IRTT-SERVER(1) v0.9.2 | IRTT Manual</h1>
 <p class="author"></p>
-<p class="date">February 11, 2018</p>
+<p class="date">July 17, 2026</p>
 </header>
 <h1 id="name">NAME</h1>
 <p>irtt-server - Isochronous Round-Trip Time Server</p>
@@ -422,8 +422,8 @@ Show version
 </dl>
 <h2 id="host-formats">Host formats</h2>
 <p>Hosts may be either hostnames (for IPv4 or IPv6) or IP addresses.
-IPv6 addresses must be surrounded by brackets and may include a zone
-after the % character. Examples:</p>
+IPv6 addresses must be surrounded by brackets if a port is included, and
+may include a zone after the % character. Examples:</p>
 <table class="pure-table pure-table-striped">
 <thead>
 <tr>
@@ -438,16 +438,24 @@ after the % character. Examples:</p>
 </tr>
 <tr>
 <td>IPv6 IP</td>
-<td>[2001:db8:8f::2/32]</td>
+<td>::1</td>
+</tr>
+<tr>
+<td>IPv6 IP/port</td>
+<td>[2001:db8:8f::2/32]:2112</td>
 </tr>
 <tr>
 <td>IPv4/6 hostname</td>
 <td>localhost</td>
 </tr>
+<tr>
+<td>IPv4/6 hostname/port</td>
+<td>irtt.example.org:2112</td>
+</tr>
 </tbody>
 </table>
-<p><strong>Note:</strong> IPv6 addresses must be quoted in most
-shells.</p>
+<p><strong>Note:</strong> IPv6 addresses may need to be quoted in your
+shell.</p>
 <h2 id="duration-units">Duration units</h2>
 <p>Durations are a sequence of decimal numbers, each with optional
 fraction, and unit suffix, such as: “300ms”, “1m30s” or “2.5m”. Sanity

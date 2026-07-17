@@ -5,8 +5,8 @@
   <meta name="generator" content="pandoc" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
   <meta name="author" content="" />
-  <meta name="dcterms.date" content="2018-02-11" />
-  <title>IRTT-CLIENT(1) v0.9.0 | IRTT Manual</title>
+  <meta name="dcterms.date" content="2026-07-17" />
+  <title>IRTT-CLIENT(1) v0.9.2 | IRTT Manual</title>
   <style>
     html {
       color: #1a1a1a;
@@ -207,9 +207,9 @@
 </head>
 <body>
 <header id="title-block-header">
-<h1 class="title">IRTT-CLIENT(1) v0.9.0 | IRTT Manual</h1>
+<h1 class="title">IRTT-CLIENT(1) v0.9.2 | IRTT Manual</h1>
 <p class="author"></p>
-<p class="date">February 11, 2018</p>
+<p class="date">July 17, 2026</p>
 </header>
 <h1 id="name">NAME</h1>
 <p>irtt-client - Isochronous Round-Trip Time Client</p>
@@ -237,6 +237,16 @@ headers), common values:</p>
 <ul>
 <li>1472 (max unfragmented size of IPv4 datagram for 1500 byte MTU)</li>
 <li>1452 (max unfragmented size of IPv6 datagram for 1500 byte MTU)</li>
+</ul>
+</dd>
+<dt>-s</dt>
+<dd>
+<p>Streaming mode, allows long running tests (subject to the limit of
+the 32-bit unsigned sequence number).</p>
+<ul>
+<li>Test duration is infinite by default</li>
+<li>Does not record results or analyze statistics</li>
+<li>See also –stream-buflen</li>
 </ul>
 </dd>
 <dt>-o <em>file</em></dt>
@@ -304,6 +314,11 @@ Really quiet, suppress all output except errors to stderr
 <dd>
 No test, connect to the server and validate test parameters but don’t
 run the test
+</dd>
+<dt>--stream-buflen=<em>len</em></dt>
+<dd>
+Number of round trips to store in circular buffer for stream mode.
+Defaults to 3 seconds of round trips based on interval.
 </dd>
 <dt>--stats=<em>stats</em></dt>
 <dd>
@@ -682,8 +697,8 @@ Show version
 </dl>
 <h2 id="host-formats">Host formats</h2>
 <p>Hosts may be either hostnames (for IPv4 or IPv6) or IP addresses.
-IPv6 addresses must be surrounded by brackets and may include a zone
-after the % character. Examples:</p>
+IPv6 addresses must be surrounded by brackets if a port is included, and
+may include a zone after the % character. Examples:</p>
 <table class="pure-table pure-table-striped">
 <thead>
 <tr>
@@ -698,16 +713,24 @@ after the % character. Examples:</p>
 </tr>
 <tr>
 <td>IPv6 IP</td>
-<td>[2001:db8:8f::2/32]</td>
+<td>::1</td>
+</tr>
+<tr>
+<td>IPv6 IP/port</td>
+<td>[2001:db8:8f::2/32]:2112</td>
 </tr>
 <tr>
 <td>IPv4/6 hostname</td>
 <td>localhost</td>
 </tr>
+<tr>
+<td>IPv4/6 hostname/port</td>
+<td>irtt.example.org:2112</td>
+</tr>
 </tbody>
 </table>
-<p><strong>Note:</strong> IPv6 addresses must be quoted in most
-shells.</p>
+<p><strong>Note:</strong> IPv6 addresses may need to be quoted in your
+shell.</p>
 <h2 id="duration-units">Duration units</h2>
 <p>Durations are a sequence of decimal numbers, each with optional
 fraction, and unit suffix, such as: “300ms”, “1m30s” or “2.5m”. Sanity
@@ -960,6 +983,7 @@ restrictions based on its configuration</li>
     &quot;late_packets&quot;: 0,
     &quot;wait&quot;: 403380,
     &quot;duration&quot;: 400964028,
+    &quot;expected_packets_sent&quot;: 3,
     &quot;packets_sent&quot;: 3,
     &quot;packets_received&quot;: 2,
     &quot;packet_loss_percent&quot;: 33.333333333333336,
@@ -1067,6 +1091,8 @@ nanoseconds</li>
 from the time just before the first packet was sent to the time after
 the last packet was received and results are starting to be
 calculated</li>
+<li><em>expected_packets_sent</em> the expected number of packets sent
+for a full test</li>
 <li><em>packets_sent</em> the number of packets sent to the server</li>
 <li><em>packets_received</em> the number of packets received from the
 server</li>
@@ -1140,6 +1166,7 @@ time right after the last receive call</li>
                     &quot;monotonic&quot;: 32644363306
                 }
             }
+            &quot;late&quot;: false,
         },
         &quot;delay&quot;: {
             &quot;receive&quot;: 45177,
@@ -1172,6 +1199,7 @@ time right after the last receive call</li>
                     &quot;monotonic&quot;: 32844409171
                 }
             }
+            &quot;late&quot;: false,
         },
         &quot;delay&quot;: {
             &quot;receive&quot;: 45268,
@@ -1199,6 +1227,7 @@ time right after the last receive call</li>
                 &quot;receive&quot;: {},
                 &quot;send&quot;: {}
             }
+            &quot;late&quot;: false,
         },
         &quot;delay&quot;: {},
         &quot;ipdv&quot;: {}
@@ -1239,6 +1268,7 @@ are not enabled</li>
 <em>--clock</em> flag) does not include monotonic values or server
 timestamps are not enabled</li>
 </ul></li>
+<li><em>late</em> true if the packet was late (out-of-order)</li>
 </ul></li>
 <li><em>delay</em> an object containing the delay values
 <ul>
@@ -1340,6 +1370,11 @@ Sets the DSCP value (ToS field) of requests and responses to 46
 <dd>
 Sends requests to the specified IPv6 IP on port 64381 every second for
 10 seconds. Adds an HMAC to each packet with the key <em>secret</em>.
+</dd>
+<dt>$ irtt client -i 1s -s -r localhost</dt>
+<dd>
+Sends one request every second indefinitely, in streaming mode with raw
+output. Useful for handling raw RTT, OWD, IPDV and late/dup flags.
 </dd>
 </dl>
 <h1 id="see-also">SEE ALSO</h1>
