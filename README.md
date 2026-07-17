@@ -374,10 +374,11 @@ See [CHANGES.md](CHANGES.md).
 
 _Collection area..._
 
+- Rewrite support for capturing ECN/DS field
 - Factor out use of uint where it makes no sense because the core type for
-  slices is int according to the language spec (e.g. len builtin returns int).
+  slices is int according to the language spec (e.g. len builtin returns int)
 - Refactor handshake params to use signed values and straight bytes as
-  appropriate.
+  appropriate
 - Improve client output flexibility:
   - Allow specifying a format string for text output with optional units for times
   - Add format abbreviations for CSV, space delimited, etc.
