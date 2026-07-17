@@ -1,10 +1,10 @@
 package irtt
 
-// Version is the IRTT version number (replaced during build).
-var Version = "0.9.1"
+// Version is the IRTT version number.
+var Version = "0.9.2"
 
-// ProtocolVersion is the protocol version number, which must match between client
-// and server.
+// ProtocolVersion is the protocol version number, which must match between
+// client and server.
 var ProtocolVersion = 1
 
 // JSONFormatVersion is the JSON format number.
