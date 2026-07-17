@@ -191,9 +191,6 @@ func (r *Recorder) recordReceive(p *packet, sts *Timestamp) (
 		r.LatePackets++
 	}
 
-	// Transfer ECN from packet so it will be dumped
-	rtd.Ecn = p.ecn
-
 	// update prior received seqno
 	r.priorReceived = seqno
 
@@ -245,7 +242,6 @@ type RoundTripData struct {
 	Client         Timestamp `json:"client"`
 	Server         Timestamp `json:"server"`
 	receivedWindow ReceivedWindow
-	Ecn            int  `json:"ecn"`
 	Late           bool `json:"late"`
 }
 

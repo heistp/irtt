@@ -183,7 +183,6 @@ type packet struct {
 	srcIP   net.IP
 	dstIP   net.IP
 	dscp    int
-	ecn     int
 }
 
 func newPacket(tlen int, cap int, hmacKey []byte) *packet {

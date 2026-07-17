@@ -104,9 +104,6 @@ irtt server [*args*]
     unspecified IP addresses (use for more reliable reply routing, but
     increases per-packet heap allocations)
 
-\--ecn
-:   Ship ECN bits to be logged by the client.  Forces --set-src-ip, disables UDP replies from server
-
 \--thread
 :   Lock request handling goroutines to OS threads
 
