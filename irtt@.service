@@ -8,7 +8,7 @@ Documentation=man:irtt-server(1)
 
 [Service]
 ExecStart=/usr/bin/irtt server -b %%%i
-User=nobody
+DynamicUser=yes
 Restart=on-failure
 
 # Sandboxing

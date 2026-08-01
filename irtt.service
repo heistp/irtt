@@ -8,7 +8,7 @@ Documentation=man:irtt-server(1)
 #ExecStartPre=/sbin/iptables -A INPUT -p udp -m udp --dport 2112 -j ACCEPT
 ExecStart=/usr/bin/irtt server
 #ExecStopPost=/sbin/iptables -D INPUT -p udp -m udp --dport 2112 -j ACCEPT
-User=nobody
+DynamicUser=yes
 Restart=on-failure
 
 # Sandboxing
