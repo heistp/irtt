@@ -1,0 +1,6 @@
+#!/bin/sh
+
+USER=nobody
+IMAGE=liske/irtt
+
+exec docker run --rm -it --network=host --read-only "--user=$USER" "$IMAGE" $@

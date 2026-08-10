@@ -1,0 +1,8 @@
+version: '3'
+services:
+  irtt:
+    image: liske/irtt
+    network_mode: host
+    read_only: true
+    user: nobody
+    command: server
